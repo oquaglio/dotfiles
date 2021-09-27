@@ -2,8 +2,8 @@
 	insteadOf = https://github.com
 
 [user]
-	email = jellyfish77@gmx.com
-	name = jellyfish77
+	email = otto.q@gmx.com
+	name = oquaglio
 
 [credential]
 	helper = cache --timeout=28800 		# tell git to cache your password for 8 hours.
