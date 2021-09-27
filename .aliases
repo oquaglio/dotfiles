@@ -1,4 +1,5 @@
 # Aliases and functions
+# These should work in bash and zsh
 
 ########################################################################
 #
@@ -7,9 +8,9 @@
 ########################################################################
 
 #alias g=git
-# When invoked without arguments g will do a status, otherwise it will 
-# just pass on the given arguments to the git command. Status is likely 
-# to the be Git command one will execute the most, hence this simple 
+# When invoked without arguments g will do a status, otherwise it will
+# just pass on the given arguments to the git command. Status is likely
+# to the be Git command one will execute the most, hence this simple
 # enhancement does prove very useful in practice.
 #alias g='_f() { if [[ $# == 0 ]]; then git status --short --branch; else git "$@"; fi }; _f'
 alias g='_f() { if [[ $# == 0 ]]; then git status; else git "$@"; fi }; _f'
@@ -26,8 +27,8 @@ alias gke='find . -type d -empty -not -path "./.git/*" -not -path "./.metadata/*
 # Docker aliases
 #
 ########################################################################
-# When invoked without arguments will do a ps, otherwise it will 
-# just pass on the given arguments to the docker command. 
+# When invoked without arguments will do a ps, otherwise it will
+# just pass on the given arguments to the docker command.
 alias d='_f() { if [[ $# == 0 ]]; then docker ps -a; else docker "$@"; fi }; _f'
 alias dr='_f() { if [[ $# == 0 ]]; then d ps; else docker "$@"; fi }; _f'
 alias di='d images'
@@ -90,19 +91,19 @@ alias meminfo='free -m -l -t'
 
 # Processes ###################################################################
 # Process Tree
-alias pt='ps -axjf --headers' 			
+alias pt='ps -axjf --headers'
 
 # get top process eating memory
 alias psmem='ps auxf | sort -nr -k 4'
 alias psmem10='ps auxf | sort -nr -k 4 | head -10'
- 
+
 # get top process eating cpu ##
 alias pscpu='ps auxf | sort -nr -k 3'
 alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
- 
+
 ## Get server cpu info ##
 alias cpi='lscpu'
-  
+
 ## get GPU ram on desktop / laptop##
 alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
 
@@ -154,7 +155,7 @@ pathadd() {
 }
 
 # set env variable to dir IF dir exists
-# $1 = env var 
+# $1 = env var
 # $2 = dir
 setenv() {
 	if [ -d "$2" ]; then
@@ -178,31 +179,31 @@ contains() {
 # Functions to detect file changes
 #
 #   Access - the last time the file was read
-#   Modify - the last time the file content has been modified OR file has been 
+#   Modify - the last time the file content has been modified OR file has been
 #            saved
 #   Change - the last time meta data of the file was changed (e.g. permissions)
 #            AND also when file is modified
 #
 # 	Note   - can't rely on modified time to detect new files from installs
-#	         as it can remain an older time (presume from original creating 
+#	         as it can remain an older time (presume from original creating
 #			 time)
 ###############################################################################
 
 # start find changes - set MARK modificaton time to now
 sfch() {
-	touch -m /tmp/MARK	
+	touch -m /tmp/MARK
 }
 
-# find modified files since MARK was modified 
-# usage: 
-# 	fch
+# find modified files since MARK was modified
+# usage:
+# 	sudo fch
 # 	fch descr-of-change
-# 	(will add desc-of-change to end of file name) 
+# 	(will add desc-of-change to end of file name)
 fch() {
 	path="$HOME/logs/install"
 	mkdir -p -- "$path"  # if not exist, create
 	datetimenow=$(date -r /tmp/MARK +"%Y%m%d-%H%M%S")
-	fn="$datetimenow-file-changes" 
+	fn="$datetimenow-file-changes"
 	if (( $# == 1 )); then
 		fn=$fn-$1
 	fi
@@ -211,7 +212,7 @@ fch() {
 	#echo $file_path
 	date=$(date -r /tmp/MARK +"%Y-%m-%d %H:%M:%S") # modified time of MARK
     printf "Searching for files modified after $date...\n" | tee "$file_path"
-	sudo find / -type d \( -name .mozilla -o -name .cache \) -prune -o -path /dev -prune -o -path /var/cache -prune -o -path /run -prune -o -path /tmp -prune -o -path /sys -prune -o -path /proc -prune -o -newercm /tmp/MARK -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" | tee -a "$file_path"
+	find / -type d \( -name .mozilla -o -name .cache \) -prune -o -path /dev -prune -o -path /var/cache -prune -o -path /run -prune -o -path /tmp -prune -o -path /sys -prune -o -path /proc -prune -o -newercm /tmp/MARK -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" | tee -a "$file_path"
 	printf "Done. File changes written to: '$file_path'\n"
 }
 
