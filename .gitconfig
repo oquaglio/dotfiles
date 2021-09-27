@@ -1,4 +1,4 @@
-[url "https://jellyfish77@github.com"]
+[url "https://oquaglio@github.com"]
 	insteadOf = https://github.com
 
 [user]
@@ -163,7 +163,6 @@
 	excludesfile = ~/.gitignore_global
 
 [gui]
-	recentrepo = /home/otto/IBM/IIBT10
 
 [diff]
     tool = vimdiff
