@@ -1,6 +1,6 @@
 #!/bin/bash
 # caution - will overwrite existing files
-ln -sf ~/.dotfiles/.bash_aliases ~/.bash_aliases
+ln -sf ~/.dotfiles/.aliases ~/.aliases
 ln -sf ~/.dotfiles/.bash_env ~/.bash_env
 ln -sf ~/.dotfiles/.gitconfig ~/.gitconfig
 ln -sf ~/.dotfiles/.gitmessage ~/.gitmessage
