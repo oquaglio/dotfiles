@@ -43,15 +43,13 @@ alias dn='d network ls'
 ########################################################################
 
 #list command
-alias l='ls -la | grep "^d" && ls -la | grep "^-" && ls -la | grep "^l"'
-alias ls='ls --color --classify --human-readable'
-alias ll='ls -l'
-#alias ll='ls -al --color=auto'
-alias ll.='ls -la'
-alias lls='ls -la --sort=size'
-alias llt='ls -la --sort=time'
-#list files larger than x bytes, e.g. llfs +10k
-alias llfs='_f(){ find . -type f -size "$1" -exec ls --color --classify --human-readable -l {} \; ; }; _f'
+#alias l='ls -la | grep "^d" && ls -la | grep "^-" && ls -la | grep "^l"'
+alias l='ls --format=long --almost-all --human-readable --group-directories-first --time-style="+%Y-%m-%d %H:%M:%S"'
+alias lz='l --sort=size'
+alias lt='l --sort=time'
+
+#recursively find files larger than x bytes, e.g. llfs +10k
+alias f='_f(){ find . -type f -size "$1" -exec ls --color --classify --human-readable -l {} \; ; }; _f'
 
 alias tt='tree -alpugifhDFC'
 
