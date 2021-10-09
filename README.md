@@ -1,10 +1,10 @@
 # dotfiles
 Dot files for Linux
 
-First clone into:
+Clone:
 
-git clone https://github.com/jellyfish77/dotfiles.git ~/.dotfiles
+git clone https://github.com/oquaglio/dotfiles.git ~/.dotfiles
 
 Then, run:
 
-.dotfiles/create_symlinks.sh 
+.dotfiles/create_symlinks.sh
