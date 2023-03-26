@@ -117,6 +117,14 @@ alias rm='/bin/rm -i'
 alias k='kill -9' #  send kill signal to process id, e.g. ks 3301 (kill cannot be intercepted; it will pulll the plug on a process)
 alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (terminate can be intercepted, allowing process to shutdown gracefully)
 
+########################################################################
+#
+# Program Aliases
+#
+########################################################################
+
+alias tf = 'terraform'
+
 
 ########################################################################
 #
