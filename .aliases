@@ -169,7 +169,6 @@ setenv() {
 	fi
 }
 
-
 contains() {
     string="$1"
     substring="$2"
@@ -178,6 +177,17 @@ contains() {
         return 0    # $substring is in $string
     else
         return 1    # $substring is not in $string
+    fi
+}
+
+# Get AWS current account number (set by env vars AWS_DEFAULT_PROFILE or AWS_PROFILE
+# alias awsacc='aws sts get-caller-identity --query "Account" --output text'
+# command 'aws acc'
+aws() {
+    if [[ $@ == "acc" ]]; then
+        command aws sts get-caller-identity --query "Account" --output text
+    else
+        command aws "$@"
     fi
 }
 
