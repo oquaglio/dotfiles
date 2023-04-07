@@ -117,7 +117,6 @@ alias rm='/bin/rm -i'
 alias k='kill -9' #  send kill signal to process id, e.g. ks 3301 (kill cannot be intercepted; it will pulll the plug on a process)
 alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (terminate can be intercepted, allowing process to shutdown gracefully)
 
-alias e='pe'
 alias a='aws'
 
 ########################################################################
@@ -138,7 +137,7 @@ alias tf='terraform'
 ########################################################################
 
 # print environment
-pe() {
+e() {
 	bash -c printenv | grep -i "$1";
 	printf "Matches: " && bash -c printenv | grep -i -c "$1";
 }
@@ -150,7 +149,7 @@ dp() {
 }
 
 #reload (re-source) bash profile
-rl() {
+s() {
 	. ~/.profile
 }
 
