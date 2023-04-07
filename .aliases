@@ -150,7 +150,7 @@ dp() {
 }
 
 #reload (re-source) bash profile
-s() {
+rl() {
 	. ~/.profile
 }
 
