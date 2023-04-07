@@ -118,7 +118,7 @@ alias k='kill -9' #  send kill signal to process id, e.g. ks 3301 (kill cannot b
 alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (terminate can be intercepted, allowing process to shutdown gracefully)
 
 alias a='aws'
-alias ud='cd ~/.dotfiles/; git pull; cd ~; . ~/.profile'
+alias ud='PREV_DIR=$PWD; cd ~/.dotfiles/; git pull; cd ~; . ~/.profile; cd $PREV_DIR'
 
 ########################################################################
 #
