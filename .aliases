@@ -118,7 +118,7 @@ alias k='kill -9' #  send kill signal to process id, e.g. ks 3301 (kill cannot b
 alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (terminate can be intercepted, allowing process to shutdown gracefully)
 
 alias a='aws'
-alias ud='PREV_DIR=$PWD; cd ~/.dotfiles/; git pull; . ~/.profile; cd $PREV_DIR'
+alias updot='PREV_DIR=$PWD; cd ~/.dotfiles/; git pull; . ~/.profile; cd $PREV_DIR; rl'
 alias x='exa --all --long --time-style=long-iso'
 
 ########################################################################
@@ -150,8 +150,20 @@ dp() {
 	printf "Matches: " && bash -c 'netstat -tulanp' | grep -i -c "$1";
 }
 
-#reload (re-source) bash profile
+#reload (re-source) shell config files
 rl() {
+	if [ "$(basename $SHELL)" = "zsh" ]; then
+  		. ~/.zshrc
+	fi
+
+	if [ "$(basename $SHELL)" = "bash" ]; then
+
+	fi
+
+	if [ "$(basename $SHELL)" = "fish" ]; then
+
+	fi
+
 	. ~/.profile
 }
 
