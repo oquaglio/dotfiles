@@ -32,8 +32,12 @@ fi
 Add the following to .zshrc:
 
 ``` SH
-if [ -f ~/.env ]; then
-    source ~/.env
+if [ -f $HOME/.dotfiles/.aliases ]; then
+    source $HOME/.dotfiles/.aliases
+fi
+
+if [ -f $HOME/.dotfiles/.env ]; then
+    source $HOME/.dotfiles/.env
 fi
 ```
 
