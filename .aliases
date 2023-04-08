@@ -119,7 +119,7 @@ alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (termina
 
 alias a='aws'
 alias updot='PREV_DIR=$PWD; cd ~/.dotfiles/; git pull; . ~/.profile; cd $PREV_DIR; rl'
-alias x='exa --all --long --time-style=long-iso'
+alias x='exa --all --long --time-style=long-iso --group-directories-first'
 
 ########################################################################
 #
