@@ -223,7 +223,7 @@ aws() {
 
 # start find changes - set MARK modificaton time to now
 sfch() {
-	touch -m /tmp/MARK
+	touch -m $HOME/tmp/MARK
 }
 
 # find modified files since MARK was modified
@@ -234,7 +234,7 @@ sfch() {
 fch() {
 	path="$HOME/logs/install"
 	mkdir -p -- "$path"  # if not exist, create
-	datetimenow=$(date -r /tmp/MARK +"%Y%m%d-%H%M%S")
+	datetimenow=$(date -r $HOME/tmp/MARK +"%Y%m%d-%H%M%S")
 	fn="$datetimenow-file-changes"
 	if (( $# == 1 )); then
 		fn=$fn-$1
@@ -242,9 +242,9 @@ fch() {
 	file_path="$path/$fn.log"
 	printf "Writing changed files to: '$file_path'\n"
 	#echo $file_path
-	date=$(date -r /tmp/MARK +"%Y-%m-%d %H:%M:%S") # modified time of MARK
+	date=$(date -r $HOME/tmp/MARK +"%Y-%m-%d %H:%M:%S") # modified time of MARK
     printf "Searching for files modified after $date...\n" | tee "$file_path"
-	find / -type d \( -name .mozilla -o -name .cache \) -prune -o -path /dev -prune -o -path /var/cache -prune -o -path /run -prune -o -path /tmp -prune -o -path /sys -prune -o -path /proc -prune -o -newercm /tmp/MARK -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" | tee -a "$file_path"
+	find / -type d \( -name .mozilla -o -name .cache \) -prune -o -path /dev -prune -o -path /var/cache -prune -o -path /run -prune -o -path /tmp -prune -o -path /sys -prune -o -path /proc -prune -o -newercm $HOME/tmp/MARK -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" | tee -a "$file_path"
 	printf "Done. File changes written to: '$file_path'\n"
 }
 
