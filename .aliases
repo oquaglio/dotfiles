@@ -229,23 +229,20 @@ sfch() {
 # find modified files since MARK was modified
 # usage:
 # 	sudo fch
-# 	fch descr-of-change
-# 	(will add desc-of-change to end of file name)
+# 	fch ~ 		only check home(~) dir for changes 	
 fch() {
-	log_path="$HOME/logs/install"
-	mkdir -p -- "$log_path"  # if not exist, create
-	datetimenow=$(date -r $HOME/tmp/MARK +"%Y%m%d-%H%M%S")
-	fn="$datetimenow-file-changes"
-	if (( $# == 1 )); then
-		fn=$fn-$1
-	fi
-	file_path="$log_path/$fn.log"
-	printf "Writing changed files to: '$file_path'\n"
-	#echo $file_path
-	date=$(date -r $HOME/tmp/MARK +"%Y-%m-%d %H:%M:%S") # modified time of MARK
+        log_path="$HOME/logs/install"
+        mkdir -p -- "$log_path"  # if not exist, create
+        datetimenow=$(date -r $HOME/tmp/MARK +"%Y%m%d-%H%M%S")
+        fn="$datetimenow-file-changes"
+	printf "$fn\n"        
+        file_path="$log_path/$fn.log"
+        printf "Writing changed files to: '$file_path'\n"
+        #echo $file_path
+        date=$(date -r $HOME/tmp/MARK +"%Y-%m-%d %H:%M:%S") # modified time of MARK
     printf "Searching for files modified after $date...\n" | tee "$file_path"
-	find / -type d \( -name .mozilla -o -name .cache \) -prune -o -path /dev -prune -o -path /var/cache -prune -o -path /run -prune -o -path /tmp -prune -o -path /sys -prune -o -path /proc -prune -o -newercm $HOME/tmp/MARK -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" | tee -a "$file_path"
-	printf "Done. File changes written to: '$file_path'\n"
+        find $1 -type d \( -name .mozilla -o -name .cache \) -prune -o -path /dev -prune -o -path /var/cache -prune -o -path /run -prune -o -path /tmp -prune -o -path /sys -prune -o -path /proc -prune -o -newercm $HOME/tmp/MARK -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" | tee -a "$file_path"
+        printf "Done. File changes written to: '$file_path'\n"
 }
 
 foo(){ echo "Hello"; }
