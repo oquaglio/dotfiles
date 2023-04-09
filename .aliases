@@ -160,10 +160,6 @@ rl() {
 		. ~/.bashrc
 	fi
 
-	if [ "$(basename $SHELL)" = "fish" ]; then
-
-	fi
-
 	. ~/.profile
 }
 
