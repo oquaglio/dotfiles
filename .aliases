@@ -157,7 +157,7 @@ rl() {
 	fi
 
 	if [ "$(basename $SHELL)" = "bash" ]; then
-
+		. ~/.bashrc
 	fi
 
 	if [ "$(basename $SHELL)" = "fish" ]; then
