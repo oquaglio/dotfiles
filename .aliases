@@ -236,7 +236,7 @@ fch() {
 	printf "Writing changed files to: '$file_path'\n"        
 	date_of_mark=$(date -r $HOME/tmp/MARK +"%Y-%m-%d %H:%M:%S") # modified time of MARK
 	printf "Searching for files modified after $date_of_mark at $date_now_full...\n" | tee "$file_path"
-	find $1 -type d \( -name .mozilla -o -name .cache \) -prune -o -path /dev -prune -o -path /var/cache -prune -o -path /run -prune -o -path /tmp -prune -o -path /sys -prune -o -path /proc -prune -o -newercm $HOME/tmp/MARK -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" | tee -a "$file_path"
+	find $1 -type d \( -name .mozilla -o -name .cache \) -prune -o -path /mnt -prune -o -path /dev -prune -o -path /var/cache -prune -o -path /run -prune -o -path /tmp -prune -o -path /sys -prune -o -path /proc -prune -o -newercm $HOME/tmp/MARK -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" | tee -a "$file_path"
 	printf "Done. File changes written to: '$file_path'\n"
 }
 
