@@ -204,12 +204,13 @@ contains() {
 }
 
 # Get AWS current account number (set by env vars AWS_DEFAULT_PROFILE or AWS_PROFILE
+# 'command' prevents recursion by bypassing any function or alias with 'aws'
 # E.g. run 'aws acc'
 aws() {
     if [[ $@ == "acc" ]]; then
-        #command aws sts get-caller-identity --query "Account" --output text
-                command aws sts get-caller-identity --output text
-                command env | grep "AWS_" | sort
+        command aws sts get-caller-identity --query "Account" --output text
+	command aws configure get region
+	command env | grep "AWS_" | sort
     else
         command aws "$@"
     fi
