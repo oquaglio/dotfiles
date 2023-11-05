@@ -208,7 +208,7 @@ contains() {
 # E.g. run 'aws acc'
 aws() {
     if [[ $@ == "acc" ]]; then
-        #command aws sts get-caller-identity --query "Account" --output text
+        command aws sts get-caller-identity --query "Account" --output text
 	command aws configure get region
 	command env | grep "^AWS_" | sort
     else
