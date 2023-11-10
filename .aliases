@@ -262,7 +262,7 @@ fch() {
     echo "Searching for files modified after $date_of_mark at $current_datetime_full..."
 
     # Run the find command and write results to the log file and stdout
-    find "$1" -type d \( -name .mozilla -o -name .cache \) -prune -o \
+    find "${1:-$HOME}" -type d \( -name .mozilla -o -name .cache \) -prune -o \
         -path /mnt -prune -o \
         -path /dev -prune -o \
         -path /var/cache -prune -o \
