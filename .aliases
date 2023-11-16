@@ -109,6 +109,9 @@ alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
 alias df='df -H'
 alias du='du -ch'
 
+alias l='ls -alhti --color --group-directories-first' # all files, long format, human readable
+alias lr='ls -alhRti --color' # all files, long format, human readable, recursive (tree)
+
 #Confirm unsafe file operations
 alias cp='/bin/cp -i'
 alias mv='/bin/mv -i'
@@ -120,7 +123,6 @@ alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (termina
 alias a='aws acc'
 alias sa='export AWS_PROFILE=$1'
 alias updot='PREV_DIR=$PWD; cd ~/.dotfiles/; git pull; . ~/.profile; cd $PREV_DIR; rl'
-alias x='exa --all --long --time-style=long-iso --group-directories-first'
 
 alias clip=clip.exe
 alias explorer=explorer.exe
@@ -129,7 +131,7 @@ export BROWSER='/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
 alias h='history'
 alias x='exa -lFagh --group-directories-first'
 alias xt='exa -lFaghT --group-directories-first'
-
+#alias x='exa --all --long --time-style=long-iso --group-directories-first'
 
 
 ########################################################################
