@@ -128,9 +128,9 @@ alias explorer=explorer.exe
 export BROWSER='/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 
 alias h='history'
-alias x='exa -lFagh --group-directories-first'
+#alias x='exa -lFagh --group-directories-first'
 alias xt='exa -lFaghT --group-directories-first --icons'
-#alias x='exa --all --long --time-style=long-iso --group-directories-first --git --icons'
+alias x='exa --all --long --time-style=long-iso --group-directories-first --git --icons'
 
 
 ########################################################################
