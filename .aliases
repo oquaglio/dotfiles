@@ -44,9 +44,9 @@ alias dn='d network ls'
 
 #list command
 #alias l='ls -la | grep "^d" && ls -la | grep "^-" && ls -la | grep "^l"'
-alias l='ls --sort=time --format=long --color --almost-all --human-readable --group-directories-first --time-style="+%Y-%m-%d %H:%M:%S"'
-alias lz='l --sort=size'
-alias lt='l --sort=time'
+#alias l='ls --sort=time --format=long --color --almost-all --human-readable --group-directories-first --time-style="+%Y-%m-%d %H:%M:%S"'
+#alias lz='l --sort=size'
+#alias lt='l --sort=time'
 #alias l='ls -alht --color --group-directories-first' # all files, long format, human readable
 alias lr='ls -alhRt --color' # all files, long format, human readable, recursive (tree)
 
@@ -131,6 +131,8 @@ alias h='history'
 #alias x='exa -lFagh --group-directories-first'
 alias xt='exa -lFaghT --group-directories-first --icons'
 alias x='exa -Fg --header --all --long --time-style=long-iso --group-directories-first --git --icons'
+
+alias l='eza -Fg --header --all --long --time-style=long-iso --group-directories-first --git --icons'
 
 
 ########################################################################
