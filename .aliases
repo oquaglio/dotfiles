@@ -275,17 +275,18 @@ fch() {
     # -newerct for change time and -newerat for access time to the find command, in 
     # addition to -newermt for modification time. It uses a logical OR (-o) between these
     # conditions, meaning it will find files that meet any of these criteria.
-    find "${1:-$HOME}" -type d \( -name .mozilla -o -name .cache \) -prune -o \
-        -path /mnt -prune -o \
-        -path /dev -prune -o \
-        -path /var/cache -prune -o \
-        -path /run -prune -o \
-        -path /tmp -prune -o \
-        -path /sys -prune -o \
-        -path /proc -prune -o \
-        -newermt "$date_of_mark" -o -newerct "$date_of_mark" -o -newerat "$date_of_mark" \
-        -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] [Chg: %CY-%Cm-%Cd %CH:%CM:%.2CS] %p\n"
-    | tee -a "$log_filepath"
+    {
+        find "${1:-$HOME}" -type d \( -name .mozilla -o -name .cache \) -prune -o \
+            -path /mnt -prune -o \
+            -path /dev -prune -o \
+            -path /var/cache -prune -o \
+            -path /run -prune -o \
+            -path /tmp -prune -o \
+            -path /sys -prune -o \
+            -path /proc -prune -o \
+            \( -newermt "$date_of_mark" -o -newerct "$date_of_mark" -o -newerat "$date_of_mark" \) \
+            -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] [Chg: %CY-%Cm-%Cd %CH:%CM:%.2CS] %p\n"
+    } | tee -a "$log_filepath"
 
     echo "Done. File changes written to: '$log_filepath'"
 }
