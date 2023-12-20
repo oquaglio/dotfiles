@@ -227,9 +227,11 @@ aws() {
 #   Modify - the last time the file content has been modified OR file has been
 #            saved
 #   Change - the last time meta data of the file was changed (e.g. permissions)
-#            AND also when file is modified
+#            AND also when file is modified            
 #
-# 	Note   - can't rely on modified time to detect new files from installs
+#   Notes
+#          - Linux does not track the creation time
+#          - can't rely on modified time to detect new files from installs
 #	         as it can remain an older time (presume from original creating
 #			 time)
 ###############################################################################
@@ -270,6 +272,9 @@ fch() {
     echo "Searching for files modified after $date_of_mark at $current_datetime_full..."
 
     # Run the find command and write results to the log file and stdout
+    # -newerct for change time and -newerat for access time to the find command, in 
+    # addition to -newermt for modification time. It uses a logical OR (-o) between these
+    # conditions, meaning it will find files that meet any of these criteria.
     find "${1:-$HOME}" -type d \( -name .mozilla -o -name .cache \) -prune -o \
         -path /mnt -prune -o \
         -path /dev -prune -o \
@@ -278,7 +283,8 @@ fch() {
         -path /tmp -prune -o \
         -path /sys -prune -o \
         -path /proc -prune -o \
-        -newermt "$date_of_mark" -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] %p\n" \
+        \( -newermt "$date_of_mark" -o -newerct "$date_of_mark" -o -newerat "$date_of_mark" \) \
+            -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] [Chg: %CY-%Cm-%Cd %CH:%CM:%.2CS] %p\n"
     | tee -a "$log_filepath"
 
     echo "Done. File changes written to: '$log_filepath'"
