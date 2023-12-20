@@ -73,3 +73,15 @@ Source aliases:
 ``` SH
 . ~/.aliases
 ```
+
+## Using fch Function
+
+Before changes:
+``` SH
+sudo bash -c 'source /home/otto/.aliases; sfch'
+```
+
+Capture changes:
+``` SH
+sudo bash -c 'source /home/otto/.aliases; fch /'
+```
