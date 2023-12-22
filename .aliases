@@ -165,17 +165,20 @@ dp() {
 }
 
 #reload (re-source) shell config files
-rl() {
-	if [ "$(basename $SHELL)" = "zsh" ]; then
-  		. ~/.zshrc
-	fi
+reload_shell_config() {
+    if [ "$(basename "$SHELL")" = "zsh" ] && [ -r ~/.zshrc ]; then
+        . ~/.zshrc
+    fi
 
-	if [ "$(basename $SHELL)" = "bash" ]; then
-		. ~/.bashrc
-	fi
+    if [ "$(basename "$SHELL")" = "bash" ] && [ -r ~/.bashrc ]; then
+        . ~/.bashrc
+    fi
 
-	. ~/.profile
+    if [ -r ~/.profile ]; then
+        . ~/.profile
+    fi
 }
+alias rl='reload_shell_config'
 
 # Add dir (string) to the PATH if not already in PATH AND dir exists
 # Note that PATH should already be marked as exported, so reexporting is not needed
