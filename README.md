@@ -85,3 +85,7 @@ Capture changes:
 ``` SH
 sudo bash -c 'source /home/otto/.aliases; fch /'
 ```
+
+``` SH
+sudo bash -c 'source /home/otto/.aliases; fch /home/otto'
+```
