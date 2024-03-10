@@ -1,6 +1,7 @@
 # dotfiles
 
-My dotfiles for Linux
+My dotfiles for Linux.
+
 
 ## Setup
 
@@ -15,6 +16,19 @@ Create symlinks:
 ``` SH
 .dotfiles/create_symlinks.sh
 ```
+
+Create ~/.gitconfig with your env specific stuff, e.g.:
+
+```SH
+[user]
+	email = <email>
+	name = <user>
+
+[include]
+    path = ~/.git_aliases
+    path = ~/.gitconfig_custom
+```
+
 
 ## BASH Setup
 
