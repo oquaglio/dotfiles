@@ -1,0 +1,307 @@
+# Aliases and functions
+# These should work in bash and zsh
+
+########################################################################
+#
+# Git aliases
+#
+########################################################################
+
+#alias g=git
+# When invoked without arguments g will do a status, otherwise it will
+# just pass on the given arguments to the git command. Status is likely
+# to the be Git command one will execute the most, hence this simple
+# enhancement does prove very useful in practice.
+#alias g='_f() { if [[ $# == 0 ]]; then git status --short --branch; else git "$@"; fi }; _f'
+alias g='_f() { if [[ $# == 0 ]]; then git status; else git "$@"; fi }; _f'
+#complete -o default -o nospace -F _git g
+
+# [g]it [f]ind [e]mpty - search for empty dirs (git will not add to tree)
+alias gfe='find . -type d -empty -not -path "./.git/*" -not -path "./.metadata/*" -not -path "*/target/*"'
+# [g]it [k]eep [e]mpty - add .gitkeep files to all empty dirs to make git to add to tree
+alias gke='find . -type d -empty -not -path "./.git/*" -not -path "./.metadata/*" -not -path "*/target/*" -exec touch {}/.gitkeep \;'
+
+
+########################################################################
+#
+# Docker aliases
+#
+########################################################################
+# When invoked without arguments will do a ps, otherwise it will
+# just pass on the given arguments to the docker command.
+alias d='_f() { if [[ $# == 0 ]]; then docker ps -a; else docker "$@"; fi }; _f'
+alias dr='_f() { if [[ $# == 0 ]]; then d ps; else docker "$@"; fi }; _f'
+alias di='d images'
+alias dl='d logs'
+alias dn='d network ls'
+
+
+########################################################################
+#
+# Command Aliases
+#
+########################################################################
+
+#list command
+#alias l='ls -la | grep "^d" && ls -la | grep "^-" && ls -la | grep "^l"'
+#alias l='ls --sort=time --format=long --color --almost-all --human-readable --group-directories-first --time-style="+%Y-%m-%d %H:%M:%S"'
+#alias lz='l --sort=size'
+#alias lt='l --sort=time'
+#alias l='ls -alht --color --group-directories-first' # all files, long format, human readable
+alias lr='ls -alhRt --color' # all files, long format, human readable, recursive (tree)
+
+#recursively find files larger than x bytes, e.g. llfs +10k
+alias f='_f(){ find . -type f -size "$1" -exec ls --color --classify --human-readable -l {} \; ; }; _f'
+
+alias tt='tree -alpugifhDFC'
+
+#easy nav
+alias -- -='cd -'   # toggle between current and last dir (-)
+alias ..='cd ..'
+alias ..2='..; ..'
+alias ..3='..2; ..'
+alias ..4='..3; ..'
+alias ..5='..4; ..'
+
+## Colorize the grep command output for ease of use (good for log files)##
+alias grep='grep --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+
+# handy short cuts #
+alias s=sudo
+alias c='clear'
+alias h='history'
+alias j='jobs -l'
+alias n='nano'
+alias sn='sudo nano'
+alias v='vim'
+alias sv='sudo vim'
+alias t='type'			# show what an alias expands to
+
+alias path='echo -e ${PATH//:/\\n}'
+alias now='date +"%T"'
+alias nowtime=now
+alias nowdate='date +"%d-%m-%Y"'
+
+alias ports='netstat -tulanp'
+
+## pass options to free ##
+alias meminfo='free -m -l -t -h'
+
+# Processes ###################################################################
+# Process Tree
+alias pt='ps -axjf --headers'
+
+# get top process eating memory
+alias psmem='ps auxf | sort -nr -k 4'
+alias psmem10='ps auxf | sort -nr -k 4 | head -10'
+
+# get top process eating cpu ##
+alias pscpu='ps auxf | sort -nr -k 3'
+alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
+
+## Get server cpu info ##
+alias cpi='lscpu'
+
+## get GPU ram on desktop / laptop##
+alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
+
+## set some other defaults ##
+alias df='df -H'
+alias du='du -ch'
+
+#Confirm unsafe file operations
+alias cp='/bin/cp -i'
+alias mv='/bin/mv -i'
+alias rm='/bin/rm -i'
+
+alias k='kill -9' #  send kill signal to process id, e.g. ks 3301 (kill cannot be intercepted; it will pulll the plug on a process)
+alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (terminate can be intercepted, allowing process to shutdown gracefully)
+
+alias a='aws acc'
+alias sa='export AWS_PROFILE=$1'
+alias updot='PREV_DIR=$PWD; cd ~/.dotfiles/; git pull; . ~/.profile; echo "Creating symlinks..."; ./create_symlinks.sh; cd $PREV_DIR; rl'
+
+alias clip=clip.exe
+alias explorer=explorer.exe
+export BROWSER='/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
+
+alias h='history'
+#alias x='exa -lFagh --group-directories-first'
+alias xt='exa -lFaghT --group-directories-first --icons'
+alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
+
+alias l='eza -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
+
+
+########################################################################
+#
+# Program Aliases
+#
+########################################################################
+
+alias tf='terraform'
+
+
+########################################################################
+#
+# Function Definitions
+#
+# Can be called as commands in bash
+#
+########################################################################
+
+# print environment
+e() {
+	bash -c printenv | grep -i "$1";
+	printf "Matches: " && bash -c printenv | grep -i -c "$1";
+}
+
+#display ports
+dp() {
+	bash -c 'netstat -tulanp' | grep -i "$1";
+	printf "Matches: " && bash -c 'netstat -tulanp' | grep -i -c "$1";
+}
+
+#reload (re-source) shell config files
+reload_shell_config() {
+    if [ "$(basename "$SHELL")" = "zsh" ] && [ -r ~/.zshrc ]; then
+		echo "Reloading .zshrc..."
+        . ~/.zshrc
+    fi
+
+    if [ "$(basename "$SHELL")" = "bash" ] && [ -r ~/.bashrc ]; then
+		echo "Reloading .bashrc..."
+        . ~/.bashrc
+    fi
+
+    if [ -r ~/.profile ]; then
+		echo "Reloading .profile..."
+        . ~/.profile
+    fi
+}
+alias rl='reload_shell_config'
+
+# Add dir (string) to the PATH if not already in PATH AND dir exists
+# Note that PATH should already be marked as exported, so reexporting is not needed
+# $1 = dir to add to path
+pathadd() {
+    if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
+        PATH="${PATH:+"$PATH:"}$1"
+    fi
+}
+
+# set env variable to dir IF dir exists
+# $1 = env var
+# $2 = dir
+setenv() {
+	if [ -d "$2" ]; then
+		export $1=$2
+	fi
+}
+
+contains() {
+    string="$1"
+    substring="$2"
+    if test "${string#*$substring}" != "$string"
+    then
+        return 0    # $substring is in $string
+    else
+        return 1    # $substring is not in $string
+    fi
+}
+
+# Get AWS current account number (set by env vars AWS_DEFAULT_PROFILE or AWS_PROFILE
+# 'command' prevents recursion by bypassing any function or alias with 'aws'
+# E.g. run 'aws acc'
+aws() {
+    if [[ $@ == "acc" ]]; then
+        #command aws sts get-caller-identity --query "Account" --output text
+	command aws sts get-caller-identity | jq -r ".Account"
+	command aws configure get region
+	command env | grep "^AWS_" | sort
+    else
+        command aws "$@"
+    fi
+}
+
+# list all files recursive by last modified and include size in bytes
+git_files_info() {
+    git ls-files -z | xargs -0 -I{} sh -c 'echo "$(git log -1 --format="%ai" -- "{}") $(stat -c%s "{}") {}"' | sort -r
+}
+alias gf='git_files_info'
+
+
+###############################################################################
+# Functions to detect file changes
+#
+#   Access - the last time the file was read
+#   Modify - the last time the file content has been modified OR file has been
+#            saved
+#   Change - the last time meta data of the file was changed (e.g. permissions)
+#            AND also when file is modified
+#
+#   Notes
+#          - Linux does not track the creation time
+#          - can't rely on modified time to detect new files from installs
+#	         as it can remain an older time (presume from original creating
+#			 time)
+###############################################################################
+
+# start find changes - set MARK modificaton time to now
+sfch() {
+	mkdir -p $HOME/temp
+	touch -m $HOME/temp/MARK
+}
+
+# find modified files since MARK was modified
+# usage:
+# 	sudo fch
+# 	fch ~ 		only check home(~) dir for changes
+fch() {
+    if [ -z "$1" ]; then
+        echo "Usage: fch <path>"
+        return 1
+    fi
+
+    log_dir="$HOME/logs/install"
+    mkdir -p -- "$log_dir" || { echo "Failed to create log directory: $log_dir"; return 1; }
+
+    current_datetime=$(date +"%Y%m%d-%H%M%S")
+    current_datetime_full=$(date +"%Y-%m-%d %H:%M:%S")
+    log_filename="${current_datetime}-file-changes.log"
+    log_filepath="$log_dir/$log_filename"
+
+    echo "Writing changed files to: '$log_filepath'"
+
+    # Attempt to get the modified time of MARK and handle errors
+    mark_filepath="$HOME/temp/MARK"
+    if ! date_of_mark=$(date -r "$mark_filepath" +"%Y-%m-%d %H:%M:%S" 2>/dev/null); then
+        echo "The mark file '$mark_filepath' does not exist or cannot be read."
+        return 1
+    fi
+
+    echo "Searching for files modified after $date_of_mark at $current_datetime_full..."
+
+    # Run the find command and write results to the log file and stdout
+    # -newerct for change time and -newerat for access time to the find command, in
+    # addition to -newermt for modification time. It uses a logical OR (-o) between these
+    # conditions, meaning it will find files that meet any of these criteria.
+    {
+        find "${1:-$HOME}" -type d \( -name .mozilla -o -name .cache \) -prune -o \
+            -path /mnt -prune -o \
+            -path /dev -prune -o \
+            -path /var/cache -prune -o \
+            -path /run -prune -o \
+            -path /tmp -prune -o \
+            -path /sys -prune -o \
+            -path /proc -prune -o \
+            \( -newermt "$date_of_mark" -o -newerct "$date_of_mark" -o -newerat "$date_of_mark" \) \
+            -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] [Chg: %CY-%Cm-%Cd %CH:%CM:%.2CS] %p\n"
+    } | tee -a "$log_filepath"
+
+    echo "Done. File changes written to: '$log_filepath'"
+}
+
+foo(){ echo "Hello"; }

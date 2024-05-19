@@ -1,0 +1,45 @@
+[url "https://oquaglio@github.com"]
+	insteadOf = https://github.com
+
+[user]
+	email = otto.q@gmx.com
+	name = Otto Quaglio
+
+[credential]
+	helper = store
+	helper = cache --timeout=28800 		# tell git to cache your password for 8 hours.
+
+[commit]
+    template = ~/.gitmessage
+
+[cola]
+	spellcheck = false
+
+[color]
+    diff = auto
+    status = auto
+    branch = auto
+    ui = true
+
+[http]
+	postBuffer = 1048576000
+	maxRequestBuffer = 100M
+
+[core]
+	compression = 0
+	#pager = cat
+	pager = awk 1
+	excludesfile = /home/otto/.gitignore
+
+[diff]
+[gui]
+	recentrepo = C:/Users/Otto/AnypointStudio/mule4-indepth-beginner-to-expert-workspace/83-deploy-to-multiple-env-using-maven-profiles
+	recentrepo = C:/Users/Otto/AnypointStudio/studio-workspace2/movie-sapi
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+
+[include]
+    path = ~/.git_aliases
