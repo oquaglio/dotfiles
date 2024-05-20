@@ -1,8 +1,10 @@
-[credential]
-	helper = cache --timeout=28800 		# tell git to cache your password for 8 hours.
+
 
 [commit]
     template = ~/.gitmessage
+
+[include]
+    path = ~/.git_aliases
 
 [core]
 	compression = 0

@@ -17,12 +17,11 @@ Create symlinks:
 .dotfiles/create_symlinks.sh
 ```
 
-Update ~/.gitconfig.local with any local-only config, e.g.:
+Add to ~/.gitconfig:
 
 ```SH
-[user]
-	email = <email>
-	name = <user>
+[include]
+    path = ~/.gitconfig.custom
 ```
 
 Update ~/.env.local with any local-only config, e.g.:
