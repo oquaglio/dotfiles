@@ -11,3 +11,7 @@ ln -sf ~/.dotfiles/.nanorc ~/.nanorc
 ln -sf ~/.dotfiles/.nano ~/.nano
 ln -sf ~/.dotfiles/.vimrc ~/.vimrc
 #ln -sf ~/.dotfiles/.zshrc ~/.zshrc
+
+# create file for local config (not commited)
+touch ~/.gitconfig.local
+touch ~/.env.local

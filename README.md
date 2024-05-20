@@ -17,17 +17,15 @@ Create symlinks:
 .dotfiles/create_symlinks.sh
 ```
 
-Create ~/.gitconfig with your env specific stuff, e.g.:
+Update ~/.gitconfig.local with any local-only config, e.g.:
 
 ```SH
 [user]
 	email = <email>
 	name = <user>
-
-[include]
-    path = ~/.git_aliases
-    path = ~/.gitconfig_custom
 ```
+
+Update ~/.env.local with any local-only config, e.g.:
 
 
 ## BASH Setup
@@ -50,8 +48,14 @@ if [ -f $HOME/.dotfiles/.aliases ]; then
     source $HOME/.dotfiles/.aliases
 fi
 
-if [ -f $HOME/.dotfiles/.env ]; then
-    source $HOME/.dotfiles/.env
+# Source global environment variables
+if [ -f "$HOME/.dotfiles/.env" ]; then
+    source "$HOME/.dotfiles/.env"
+fi
+
+# Source local environment variables, which will override the global ones if they exist
+if [ -f "$HOME/.local.env" ]; then
+    source "$HOME/.env.local"
 fi
 ```
 

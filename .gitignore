@@ -12,3 +12,6 @@
 
 # vscode folders
 .vscode
+
+# Ignore all files and directories containing .local in their names
+*.local*
