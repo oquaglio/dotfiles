@@ -3,7 +3,7 @@
 My dotfiles for Linux.
 
 
-## Setup
+## Inital Setup
 
 Clone:
 
@@ -26,6 +26,12 @@ Add to ~/.gitconfig:
 
 Update ~/.env.local with any local-only config, e.g.:
 
+
+## Updates
+
+```SH
+updot
+```
 
 ## BASH Setup
 
