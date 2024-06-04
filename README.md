@@ -11,6 +11,8 @@ Clone:
 git clone https://github.com/oquaglio/dotfiles.git ~/.dotfiles
 ```
 
+# Git Setup
+
 Add to ~/.gitconfig:
 
 ```SH
