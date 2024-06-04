@@ -64,37 +64,11 @@ if [ -f "$HOME/.local.env" ]; then
 fi
 ```
 
-Add to ~/.profile (to expose to)
-
-```SH
-# if running zshrc
-if [ -n "$ZSH_VERSION" ]; then
-    # include .zshrc if it exists
-    if [ -f "$HOME/.zschrc" ]; then
-    . "$HOME/.bashrc"
-    fi
-fi
-```
-
-
 ## Refresh
 
-Pull from github (or fetch & merge etc):
-
-``` SH
-git pull
-```
-
-Source the changes:
-
-``` SH
-. ~/.profile
-```
-
-Source aliases:
-
-``` SH
-. ~/.aliases
+Alias for this:
+```SH
+updot
 ```
 
 ## Using fch Function
