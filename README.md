@@ -3,7 +3,7 @@
 My dotfiles for Linux.
 
 
-## Inital Setup
+## Get the dotfiles
 
 Clone:
 
@@ -11,7 +11,7 @@ Clone:
 git clone https://github.com/oquaglio/dotfiles.git ~/.dotfiles
 ```
 
-# Git Setup
+## Git Setup
 
 Add to ~/.gitconfig:
 
@@ -43,7 +43,6 @@ fi
 if [ -f "$HOME/.dotfiles/.env" ]; then
     source "$HOME/.dotfiles/.env"
 fi
-
 ```
 
 ## Update and Reload dotfiles
