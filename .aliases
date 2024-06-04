@@ -285,7 +285,10 @@ fch() {
     echo "Searching for files modified after $date_of_mark at $current_datetime_full..."
 
     # Run the find command and write results to the log file and stdout
-    # -newerct for change time and -newerat for access time to the find command, in
+    # -newerct = inode status change time 
+    # -newerat = access time 
+    # -newermt = modified time
+    # -newerBt = birth time
     # addition to -newermt for modification time. It uses a logical OR (-o) between these
     # conditions, meaning it will find files that meet any of these criteria.
     {
@@ -297,7 +300,7 @@ fch() {
             -path /tmp -prune -o \
             -path /sys -prune -o \
             -path /proc -prune -o \
-            \( -newermt "$date_of_mark" -o -newerct "$date_of_mark" -o -newerat "$date_of_mark" \) \
+            \( -newermt "$date_of_mark" -o -newerct "$date_of_mark" \) \
             -printf "[Acc: %AY-%Am-%Ad %AH:%AM:%.2AS] [Mod: %TY-%Tm-%Td %TH:%TM:%.2TS] [Chg: %CY-%Cm-%Cd %CH:%CM:%.2CS] %p\n"
     } | tee -a "$log_filepath"
 
