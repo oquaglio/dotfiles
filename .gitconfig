@@ -1,16 +1,16 @@
 
 
 [commit]
-    template = ~/.gitmessage
+    template = ~/dotfiles/.gitmessage
 
 [include]
-    path = ~/.git_aliases
+    path = ~/dotfiles/.git_aliases
 
 [core]
 	compression = 0
 	#pager = cat
 	pager = awk 1
-	excludesfile = ~/.gitignore_global
+	excludesfile = ~/dotfiles/.gitignore
 
 [filter "lfs"]
 	smudge = git-lfs smudge -- %f
