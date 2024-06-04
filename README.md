@@ -20,9 +20,8 @@ Create symlinks:
 Add to ~/.gitconfig:
 
 ```SH
-[include]
-    path = ~/.git_aliases
-    path = ~/.gitconfig
+[include]    
+    path = ~/dotfiles/.gitconfig
 ```
 
 Update ~/.env.local with any local-only config, e.g.:
@@ -59,10 +58,6 @@ if [ -f "$HOME/.dotfiles/.env" ]; then
     source "$HOME/.dotfiles/.env"
 fi
 
-# Source local environment variables, which will override the global ones if they exist
-if [ -f "$HOME/.local.env" ]; then
-    source "$HOME/.env.local"
-fi
 ```
 
 ## Refresh
