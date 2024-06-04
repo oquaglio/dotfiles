@@ -9,6 +9,7 @@ Clone:
 
 ``` SH
 git clone https://github.com/oquaglio/dotfiles.git ~/.dotfiles
+~/.dotfiles/create_symlinks.sh
 ```
 
 ## Git Setup
