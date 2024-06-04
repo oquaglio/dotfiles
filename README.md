@@ -11,26 +11,11 @@ Clone:
 git clone https://github.com/oquaglio/dotfiles.git ~/.dotfiles
 ```
 
-Create symlinks:
-
-``` SH
-.dotfiles/create_symlinks.sh
-```
-
 Add to ~/.gitconfig:
 
 ```SH
 [include]    
     path = ~/dotfiles/.gitconfig
-```
-
-Update ~/.env.local with any local-only config, e.g.:
-
-
-## Updates
-
-```SH
-updot
 ```
 
 ## BASH Setup
@@ -42,7 +27,6 @@ if [ -f ~/.bash_env ]; then
     source ~/.bash_env
 fi
 ```
-
 
 ## ZSH Setup
 
@@ -60,7 +44,7 @@ fi
 
 ```
 
-## Refresh
+## Update and Reload dotfiles
 
 Alias for this:
 ```SH
