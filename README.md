@@ -45,7 +45,7 @@ if [ -f "$HOME/.dotfiles/.env" ]; then
 fi
 ```
 
-## Update and Reload dotfiles
+## Update dotfiles and and Reload env
 
 Alias for this:
 ```SH
