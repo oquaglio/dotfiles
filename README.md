@@ -57,14 +57,14 @@ updot
 
 Before changes:
 ``` SH
-sudo bash -c 'source /home/otto/.aliases; sfch'
+sudo bash -c 'source /home/otto/.dotfiles/.aliases; sfch'
 ```
 
 Capture changes:
 ``` SH
-sudo bash -c 'source /home/otto/.aliases; fch /'
+sudo bash -c 'source /home/otto/.dotfiles/.aliases; fch /'
 ```
 
 ``` SH
-sudo bash -c 'source /home/otto/.aliases; fch /home/otto'
+sudo bash -c 'source /home/otto/.dotfiles/.aliases; fch /home/otto'
 ```
