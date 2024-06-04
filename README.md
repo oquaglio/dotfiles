@@ -21,7 +21,8 @@ Add to ~/.gitconfig:
 
 ```SH
 [include]
-    path = ~/.gitconfig.custom
+    path = ~/.git_aliases
+    path = ~/.gitconfig
 ```
 
 Update ~/.env.local with any local-only config, e.g.:
