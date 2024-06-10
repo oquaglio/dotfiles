@@ -191,7 +191,7 @@ alias rl='reload_shell_config'
 pathadd() {
     if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
         PATH="${PATH:+"$PATH:"}$1"
-	export PATH
+        export PATH
     fi
 }
 
