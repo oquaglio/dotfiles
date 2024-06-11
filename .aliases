@@ -134,7 +134,7 @@ alias h='history'
 alias xt='exa -lFaghT --group-directories-first --icons'
 alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
 
-alias l='eza -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
+alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons'
 
 
 ########################################################################
