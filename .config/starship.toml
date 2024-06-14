@@ -1,0 +1,136 @@
+# Get editor completions based on the config schema
+"$schema" = 'https://starship.rs/config-schema.json'
+
+command_timeout = 20000
+
+# Inserts a blank line between shell prompts
+add_newline = true
+
+format = """
+$username$hostname$env_var$directory$git_branch$git_status$git_state$python$docker_context$aws$cmd_duration$time\n$shell$character
+"""
+
+[env_var]
+symbol = "🐧 "
+variable = "WSL_DISTRO_NAME"
+default = ""
+#format = " ❯ [$env_value](bold dimmed red) "
+format = " [$env_value](bold red) "
+
+[username]
+style_user = "green bold"
+style_root = "red bold"
+format = "[$user]($style) "
+disabled = false
+show_always = true
+
+[hostname]
+ssh_only = false
+#format = 'on [$hostname](bold dimmed yellow)'
+format = 'on [$hostname](bold yellow)'
+trim_at = "."
+disabled = false
+
+# Directories displayed
+[directory]
+read_only = ' 🔒'
+truncation_length = 10
+truncation_symbol = '…/'
+truncate_to_repo = true # truncates directory to root folder if in github repo
+style = "bold blue"
+format = "in [$path]($style)$read_only "
+
+
+# Replace the '❯' symbol in the prompt with '➜'
+[character]
+success_symbol = '[➜](bold green)'
+error_symbol = '[✗](bold red)'
+
+[cmd_duration]
+min_time = 1000
+show_milliseconds = false
+disabled = false
+style = "bold italic red"
+format = "took [$duration]($style) "
+
+[shell]
+unknown_indicator = 'mystery shell'
+style = 'cyan bold'
+disabled = false
+
+[custom.bash_version]
+command = "bash --version | head -n 1"
+when = "env.SHELL == '/usr/bin/bash'"
+description = "The version of the bash shell"
+style = "bold green"
+format = "[$output]($style) "
+
+[custom.zsh_version]
+command = "zsh --version | head -n 1"
+when = "env.SHELL == '/usr/bin/zsh'"
+description = "The version of the zsh shell"
+style = "bold green"
+format = "[$output]($style) "
+
+[git_branch]
+symbol = '🌱 '
+#truncation_length = 4
+truncation_symbol = ''
+#ignore_branches = ['master', 'main']
+
+[git_state]
+format = '[\($state( $progress_current of $progress_total)\)]($style) '
+cherry_pick = '[🍒 PICKING](bold red)'
+
+[git_status]
+conflicted = "⚔️ "
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+#untracked = "🛤️  ×${count}"
+stashed = "📦 "
+#modified = "📝 ×${count}"
+staged = "🗃️  ×${count}"
+renamed = "📛 ×${count}"
+deleted = "x"
+style = "bright-white"
+format = "$all_status$ahead_behind "
+
+[aws]
+format = 'on [$symbol($profile )(\($region\) )]($style)'
+style = 'bold blue'
+symbol = '☁️ '
+
+# Disable the package module, hiding it from the prompt completely
+[package]
+disabled = true
+
+[time]
+disabled = false
+format = "at [$time]($style) "
+style = "#808080"
+use_12hr = false
+#time_format = "%T"
+utc_time_offset = "local"
+time_range = "-"
+
+[python]
+format = 'via [${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+#symbol = '🐍 '
+symbol = " "
+disabled = false
+style = "bold green"
+
+[docker_context]
+symbol = " "
+format = "via [$symbol$context]($style) "
+style = "blue bold"
+only_with_files = true
+detect_files = ["docker-compose.yml", "docker-compose.yaml", "Dockerfile"]
+detect_folders = []
+disabled = false
+
+[battery]
+full_symbol = "🔋"
+charging_symbol = "🔌"
+discharging_symbol = "⚡"
