@@ -198,7 +198,7 @@ pathadd() {
             PATH="${PATH:+"$PATH:"}$1"
             export PATH
         else
-            #echo "The directory '$1' is already in the PATH."
+            : #echo "The directory '$1' is already in the PATH."
         fi
     else
         echo "The directory '$1' does not exist."
