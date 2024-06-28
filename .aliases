@@ -170,9 +170,10 @@ dp() {
 #reload (re-source) shell config files
 reload_shell_config() {
     if [ "$(basename "$SHELL")" = "zsh" ] && [ -r ~/.zshrc ]; then
-	echo "Reloading .zshrc..."
+	# echo "Reloading .zshrc..."
         #. ~/.zshrc
 	# https://github.com/ohmyzsh/ohmyzsh/wiki/FAQ#how-do-i-reload-the-zshrc-file
+	echo 'Running "exec zsh"...'
 	exec zsh 
     fi
 
