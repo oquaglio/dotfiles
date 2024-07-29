@@ -55,7 +55,9 @@ updot
 
 ## Using fch Function
 
-Before changes:
+This function scans your disk for file changes.
+
+Run before changes (capture current timestamp):
 ``` SH
 sudo bash -c 'source /home/otto/.dotfiles/.aliases; sfch'
 ```
