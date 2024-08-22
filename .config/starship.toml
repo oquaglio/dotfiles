@@ -34,8 +34,8 @@ disabled = false
 # Directories displayed
 [directory]
 read_only = ' 🔒'
-truncation_length = 1
-truncation_symbol = ""
+truncation_length = 10
+truncation_symbol = ".../"
 truncate_to_repo = true # truncates directory to root folder if in github repo
 style = "bold blue"
 format = "[$path]($style)$read_only"
