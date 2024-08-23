@@ -131,7 +131,7 @@ alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (termina
 alias a='aws acc'
 alias sa='export AWS_PROFILE=$1'
 
-alias updot='PREV_DIR=$PWD; cd ~/.dotfiles/; git pull; echo "Creating symlinks..."; chmod +x ./create_symlinks.sh; ./create_symlinks.sh; cd $PREV_DIR; rl'
+alias updot='PREV_DIR=$PWD; clear; cd ~/.dotfiles/; git pull; echo "Creating symlinks..."; chmod +x ./create_symlinks.sh; ./create_symlinks.sh; cd $PREV_DIR; rl'
 
 alias clip=clip.exe
 alias explorer=explorer.exe
