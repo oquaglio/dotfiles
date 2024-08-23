@@ -65,6 +65,10 @@ fi
 alias f='fdfind --type f --hidden | fzf'
 alias cdf='cd $(fdfind --type d | fzf --preview "ls -la {}")'
 
+# https://taskfile.dev/
+alias t='task'
+alias tl='task --list-all'
+
 alias tt='tree -alpugifhDFC'
 
 #easy nav
