@@ -50,6 +50,14 @@ alias dn='d network ls'
 #alias l='ls -alht --color --group-directories-first' # all files, long format, human readable
 alias lr='ls -alhRt --color' # all files, long format, human readable, recursive (tree)
 
+#alias x='exa -lFagh --group-directories-first'
+alias xt='exa -lFaghT --group-directories-first --icons'
+alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
+
+$alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --sort modified --reverse --git --icons'
+alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons'
+alias lt='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons --total-size'
+
 #recursively find files larger than x bytes, e.g. llfs +10k
 #alias f='_f(){ find . -type f -size "$1" -exec ls --color --classify --human-readable -l {} \; ; }; _f'
 
@@ -144,13 +152,6 @@ alias mk="minikube kubectl --"
 alias k=kubectl
 
 alias h='history'
-#alias x='exa -lFagh --group-directories-first'
-alias xt='exa -lFaghT --group-directories-first --icons'
-alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
-
-alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --sort modified --reverse --git --icons'
-alias lt='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons --total-size'
-
 
 ########################################################################
 #
