@@ -5,7 +5,7 @@ rm -rf ~/.nanorc; rm -rf ~/.nano; rm -rf ~/.vimrc; rm -rf ~/.env; rm -rf ~/.alia
 
 ln -sf ~/.dotfiles/.config/starship.toml ~/.config/starship.toml
 
-#ln -sf ~/.dotfiles/.nanorc ~/.nanorc
+ln -sf ~/.dotfiles/.nanorc ~/.nanorc
 #ln -sf ~/.dotfiles/.nano ~/.nano
 #ln -sf ~/.dotfiles/.vimrc ~/.vimrc
 
