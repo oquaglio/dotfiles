@@ -116,9 +116,6 @@ alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 ## Get server cpu info ##
 alias cpi='lscpu'
 
-## get GPU ram on desktop / laptop##
-alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
-
 ## set some other defaults ##
 alias df='df -H'
 alias du='du -ch'
