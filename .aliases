@@ -200,23 +200,37 @@ reload_shell_config() {
 alias rl='reload_shell_config'
 
 # Add dir (string) to the PATH if not already in PATH AND dir exists
-# Note that PATH should already be marked as exported, so reexporting is not needed
-# $1 = dir to add to path
+# $1 (First Parameter): The directory you want to add to the path variable.
+# $2 (Second Parameter): The name of the path variable to update. If this parameter is not provided, it defaults to PATH.
+# Examples:
+# pathadd /usr/local/myapp/bin
+# pathadd /usr/local/myapp/bin MY_CUSTOM_PATH
+# pathadd $HOME/.local/bin
+# pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
 pathadd() {
-    # Check if the argument is a valid directory
-    if [ -d "$1" ]; then
-        # Check if the directory is already in the PATH
-        if [[ ":$PATH:" != *":$1:"* ]]; then
-            # Add the directory to PATH
-            PATH="${PATH:+"$PATH:"}$1"
-            export PATH
+    # First parameter: directory to add
+    dir_to_add="$1"
+    # Second parameter: variable to update (default to PATH if not provided)
+    path_var="${2:-PATH}"
+
+    # Check if the first argument is a valid directory
+    if [ -d "$dir_to_add" ]; then
+        # Get the current value of the specified PATH variable
+        current_path=$(eval echo \$$path_var)
+
+        # Check if the directory is already in the PATH variable
+        if [[ ":$current_path:" != *":$dir_to_add:"* ]]; then
+            # Add the directory to the PATH variable
+            new_path="${current_path:+"$current_path:"}$dir_to_add"
+            export $path_var="$new_path"
         else
-            : #echo "The directory '$1' is already in the PATH."
+            : # Optionally echo "The directory '$dir_to_add' is already in the $path_var."
         fi
     else
-        echo "The directory '$1' does not exist."
+        echo "The directory '$dir_to_add' does not exist."
     fi
 }
+
 
 # set env variable to dir IF dir exists
 # $1 = env var
