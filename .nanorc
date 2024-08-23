@@ -1,6 +1,3 @@
-# Enable smooth scrolling
-set smooth
-
 # Enable syntax highlighting (if available)
 include "/usr/share/nano/*.nanorc"
 
@@ -19,16 +16,11 @@ set historylog
 ## Use this tab size instead of the default; it must be greater than 0.
 set tabsize 4
 
-set morespace
-
 # Convert tabs to spaces
 set tabstospaces
 
 # Enable mouse support
 set mouse
-
-# Disable automatic line break at 80 characters
-unset fill
 
 # Enable auto-indent
 set autoindent
@@ -52,9 +44,6 @@ set matchbrackets "(<[{)>]}"
 ## sentences.
 ##
 set punct "!.?"
-
-## Allow nano to be suspended.
-set suspend
 
 ## Color setup
 ## Format:
