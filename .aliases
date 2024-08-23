@@ -224,10 +224,10 @@ pathadd() {
             new_path="${current_path:+"$current_path:"}$dir_to_add"
             export $path_var="$new_path"
         else
-            : # Optionally echo "The directory '$dir_to_add' is already in the $path_var."
+            : # echo "The directory '$dir_to_add' is already in the $path_var."
         fi
     else
-        echo "The directory '$dir_to_add' does not exist."
+        : # echo "The directory '$dir_to_add' does not exist."
     fi
 }
 
