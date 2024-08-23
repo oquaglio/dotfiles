@@ -52,7 +52,9 @@ alias lr='ls -alhRt --color' # all files, long format, human readable, recursive
 
 #recursively find files larger than x bytes, e.g. llfs +10k
 #alias f='_f(){ find . -type f -size "$1" -exec ls --color --classify --human-readable -l {} \; ; }; _f'
-alias fd=fdfind
+if [ ! -x /usr/bin/fd ]; then
+  alias fd='fdfind'
+fi
 alias f='fd --type f --hidden | fzf'
 
 alias tt='tree -alpugifhDFC'
