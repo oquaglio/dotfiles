@@ -1,7 +1,16 @@
+# Enable smooth scrolling
+set smooth
+
+# Enable syntax highlighting (if available)
+include "/usr/share/nano/*.nanorc"
+
+# Enable soft wrapping of lines
+set softwrap
+
 ## Constantly display the cursor position in the status bar.
 set constantshow
 
-set linenumbers
+#set linenumbers
 
 set autoindent
 
@@ -12,13 +21,17 @@ set tabsize 4
 
 set morespace
 
-#set mouse
+# Convert tabs to spaces
+set tabstospaces
 
-## Syntax Highlighting
+# Enable mouse support
+set mouse
 
-## Bourne shell scripts
-include "/usr/share/nano/sh.nanorc"
+# Disable automatic line break at 80 characters
+unset fill
 
+# Enable auto-indent
+set autoindent
 
 ## The characters treated as closing brackets when justifying
 ## paragraphs.  They cannot contain blank characters.  Only closing
@@ -42,7 +55,6 @@ set punct "!.?"
 
 ## Allow nano to be suspended.
 set suspend
-
 
 ## Color setup
 ## Format:
@@ -149,28 +161,28 @@ color brightblue start="/\*" end="\*/"
 
 ## Here is an example for your .nanorc
 ##
-syntax "nanorc" "[\.]*nanorc$"
-color white "^ *(set|unset).*$"
-color cyan "^ *(set|unset) (autoindent|backup|const|cut|fill|keypad|multibuffer|noconvert|nofollow|nohelp|nowrap|operatingdir|preserve|quotestr|regexp|smooth|speller|suspend|tabsize|tempfile|historylog|view)"
-color brightwhite "^ *syntax [^ ]*"
-color brightblue "^ *set\>" "^ *unset\>" "^ *syntax\>"
-color white "^ *color\>.*"
-color yellow "^ *color (bright)?(white|black|red|blue|green|yellow|magenta|cyan)\>"
-color magenta "^ *color\>"
-color green "^#.*$"
+#syntax "nanorc" "[\.]*nanorc$"
+# color white "^ *(set|unset).*$"
+# color cyan "^ *(set|unset) (autoindent|backup|const|cut|fill|keypad|multibuffer|noconvert|nofollow|nohelp|nowrap|operatingdir|preserve|quotestr|regexp|smooth|speller|suspend|tabsize|tempfile|historylog|view)"
+# color brightwhite "^ *syntax [^ ]*"
+# color brightblue "^ *set\>" "^ *unset\>" "^ *syntax\>"
+# color white "^ *color\>.*"
+# color yellow "^ *color (bright)?(white|black|red|blue|green|yellow|magenta|cyan)\>"
+# color magenta "^ *color\>"
+# color green "^#.*$"
 
 
 ## Syntax Highlighting
-include "~/.nano/apache2.nanorc"
-include "~/.nano/css.nanorc"
-include "~/.nano/default.nanorc"
-##include "~/.nano/etc-stuff.nanorc"
-include "~/.nano/html.nanorc"
-include "~/.nano/js.nanorc"
-include "~/.nano/man.nanorc"
-##include "~/.nano/nanorc.nanorc"
-##include "~/.nano/others.nanorc"
-include "~/.nano/perl.nanorc"
-include "~/.nano/python.nanorc"
-include "~/.nano/ruby.nanorc"
-include "~/.nano/sh.nanorc"
+#include "~/.nano/apache2.nanorc"
+#include "~/.nano/css.nanorc"
+#include "~/.nano/default.nanorc"
+#include "~/.nano/etc-stuff.nanorc"
+#include "~/.nano/html.nanorc"
+#include "~/.nano/js.nanorc"
+#include "~/.nano/man.nanorc"
+#include "~/.nano/nanorc.nanorc"
+#include "~/.nano/others.nanorc"
+#include "~/.nano/perl.nanorc"
+#include "~/.nano/python.nanorc"
+#include "~/.nano/ruby.nanorc"
+#include "~/.nano/sh.nanorc"
