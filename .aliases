@@ -54,7 +54,7 @@ alias lr='ls -alhRt --color' # all files, long format, human readable, recursive
 alias xt='exa -lFaghT --group-directories-first --icons'
 alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
 
-$alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --sort modified --reverse --git --icons'
+#alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --sort modified --reverse --git --icons'
 alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons'
 alias lt='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons --total-size'
 
