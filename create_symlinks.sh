@@ -1,8 +1,9 @@
 #!/bin/bash
+ln -sf ~/.dotfiles/.config/starship.toml ~/.config/starship.toml
+
 #ln -sf ~/.dotfiles/.nanorc ~/.nanorc
 #ln -sf ~/.dotfiles/.nano ~/.nano
-ln -sf ~/.dotfiles/.vimrc ~/.vimrc
-ln -sf ~/.dotfiles/.config/starship.toml ~/.config/starship.toml
+#ln -sf ~/.dotfiles/.vimrc ~/.vimrc
 
 #ln -sf ~/.dotfiles/.aliases ~/.aliases
 #ln -sf ~/.dotfiles/.bash_env ~/.bash_env
