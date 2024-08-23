@@ -12,3 +12,6 @@ ln -sf ~/.dotfiles/.config/starship.toml ~/.config/starship.toml
 #ln -sf ~/.dotfiles/.gitmessage ~/.gitmessage
 #ln -sf ~/.dotfiles/.gitignore ~/.gitignore
 #ln -sf ~/.dotfiles/.git_aliases ~/.git_aliases
+
+# cleanup
+rm -rf ~/.nanorc; rm -rf ~/.nano; rm -rf ~/.vimrc; rm -rf ~/.env; rm -rf ~/.aliases;
