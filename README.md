@@ -7,7 +7,7 @@ My dotfiles for Linux.
 Clone:
 
 ``` SH
-git clone https://github.com/oquaglio/dotfiles.git ~/.dotfiles
+git clone --depth 1 --branch master https://github.com/oquaglio/dotfiles.git /home/$USER/.dotfiles >/dev/null 2>&1;
 ```
 
 ## Git Setup
