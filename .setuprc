@@ -14,5 +14,5 @@ if [ -d "$TARGET_DIR/.git" ]; then
 else
     # The directory does not exist as a Git repository, so clone it
     echo "Cloning Neovim configuration..."
-    git clone "$REPO_URL" "$TARGET_DIR" > /dev/null
+    git clone --depth 1 --branch master "$REPO_URL" "$TARGET_DIR" > /dev/null
 fi
