@@ -1,5 +1,5 @@
 # Enable syntax highlighting (if available)
-include "/usr/share/nano/*.nanorc"
+#include "/usr/share/nano/*.nanorc"
 
 # Enable soft wrapping of lines
 set softwrap
@@ -20,10 +20,12 @@ set tabsize 4
 set tabstospaces
 
 # Enable mouse support
-set mouse
+# set mouse
 
 # Enable auto-indent
 set autoindent
+
+set terminalcolor
 
 ## The characters treated as closing brackets when justifying
 ## paragraphs.  They cannot contain blank characters.  Only closing
