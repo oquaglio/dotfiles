@@ -10,9 +10,9 @@ REPO_URL="https://github.com/oquaglio/kickstart.nvim.git"
 if [ -d "$TARGET_DIR/.git" ]; then
     # The directory exists and is a Git repository, so perform a git pull to update it
     # echo "Updating Neovim configuration..."
-    git -C "$TARGET_DIR" pull > /dev/null 2>&1
+    git -C "$TARGET_DIR" pull > /dev/null
 else
     # The directory does not exist as a Git repository, so clone it
     echo "Cloning Neovim configuration..."
-    git clone "$REPO_URL" "$TARGET_DIR" > /dev/null 2>&1
+    git clone "$REPO_URL" "$TARGET_DIR" > /dev/null
 fi
