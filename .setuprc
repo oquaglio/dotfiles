@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Define the target directory for the Neovim configuration
+TARGET_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
+
+# URL of the Git repository
+REPO_URL="https://github.com/oquaglio/kickstart.nvim.git"
+
+# Check if the directory exists and has a .git folder
+if [ -d "$TARGET_DIR/.git" ]; then
+    # The directory exists and is a Git repository, so perform a git pull to update it
+    # echo "Updating Neovim configuration..."
+    git -C "$TARGET_DIR" pull
+else
+    # The directory does not exist as a Git repository, so clone it
+    echo "Cloning Neovim configuration..."
+    git clone "$REPO_URL" "$TARGET_DIR"
+fi
+
+echo "Done."
