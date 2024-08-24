@@ -16,5 +16,3 @@ else
     echo "Cloning Neovim configuration..."
     git clone "$REPO_URL" "$TARGET_DIR"
 fi
-
-echo "Done."
