@@ -108,6 +108,35 @@ source_if_exists() {
     fi
 }
 
+# Function to source files from a specified root directory and pattern
+source_files() {
+    local search_dir="$1"  # Directory to search in
+    local file_pattern="$2"  # File pattern to match
+
+    # Check if parameters are provided
+    if [[ -z "$search_dir" || -z "$file_pattern" ]]; then
+        echo "Error: Both directory path and file pattern must be provided."
+        return 1  # Return with an error status
+    elif [[ ! -d "$search_dir" ]]; then
+        echo "Error: Provided path '$search_dir' is not a directory."
+        return 1
+    fi
+
+    # Finding and sourcing files based on the given pattern
+    local file
+    while IFS= read -r file; do
+        if [[ -r "$file" ]]; then  # Check if the file is readable
+            echo "Sourcing: $file"
+            source "$file"
+        else
+            echo "Warning: '$file' is not readable and will not be sourced."
+        fi
+    done < <(find "$search_dir" -type f -name "$file_pattern")
+
+    #echo "All applicable files sourced based on pattern '$file_pattern'."
+}
+
+
 
 ###############################################################################
 # Functions to detect file changes
