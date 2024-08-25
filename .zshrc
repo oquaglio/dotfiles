@@ -8,15 +8,15 @@ else
     exit 1  # Exit the script with a status of 1
 fi
 
+for file in $(find $DOTFILES_ROOT -type f -name "*.functions"); do
+    source $file
+done
+
 for file in $(find $DOTFILES_ROOT -type f -name "*.aliases"); do
     source $file
 done
 
 for file in $(find $DOTFILES_ROOT/functions -type f -name "*"); do
-    source $file
-done
-
-for file in $(find $DOTFILES_ROOT -type f -name "*.functions"); do
     source $file
 done
 
@@ -30,10 +30,5 @@ for file in $(find $DOTFILES_ROOT -type f -name "*.env"); do
     source $file
 done
 
-if [ -f $DOTFILES_ROOT/neovim/.setup ]; then
-    source $DOTFILES_ROOT/neovim/.setup
-fi
-
-if [ -f $DOTFILES_ROOT/.shellrc ]; then
-    source $DOTFILES_ROOT/.shellrc
-fi
+source_if_exists $DOTFILES_ROOT/neovim/.setup
+source_if_exists $DOTFILES_ROOT/.shellrc
