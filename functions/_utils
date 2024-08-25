@@ -95,6 +95,20 @@ contains() {
     fi
 }
 
+# Function to safely source a file if it exists
+source_if_exists() {
+    local filename="$1"  # Capture the filename argument
+
+    # Check if the file exists and is readable
+    if [[ -r "$filename" ]]; then
+        #echo "Sourcing $filename..."
+        source "$filename"
+    else
+        echo "Error: $filename does not exist or is not readable."
+    fi
+}
+
+
 ###############################################################################
 # Functions to detect file changes
 #
