@@ -95,38 +95,6 @@ contains() {
     fi
 }
 
-# Get AWS current account number (set by env vars AWS_DEFAULT_PROFILE or AWS_PROFILE
-# 'command' prevents recursion by bypassing any function or alias with 'aws'
-# E.g. run 'aws acc'
-aws() {
-    if [[ $@ == "acc" ]]; then
-        #command aws sts get-caller-identity --query "Account" --output text
-	command aws sts get-caller-identity | jq -r ".Account"
-	command aws configure get region
-	command env | grep "^AWS_" | sort
-    else
-        command aws "$@"
-    fi
-}
-
-check_aws_session() {
-    # Capture the output of the AWS identity information
-    aws_identity_output=$(aws sts get-caller-identity 2>&1)
-
-    # Check the exit status of the AWS CLI command
-    if [ $? -eq 0 ]; then
-        # Extract the Account ID from the JSON output using jq
-        account_id=$(echo "$aws_identity_output" | jq -r '.Account')
-        # Optionally, extract the user or role name
-        user_arn=$(echo "$aws_identity_output" | jq -r '.Arn')
-
-        echo "Valid AWS session found for Account ID: $account_id, ARN: $user_arn"
-        return 0  # Success exit code
-    else
-        echo "No valid AWS session found. Error: $aws_identity_output"
-        return 1  # Failure exit code
-    fi
-}
 
 # list all files recursive by last modified and include size in bytes
 git_files_info() {
