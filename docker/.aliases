@@ -5,4 +5,6 @@ alias dr='_f() { if [[ $# == 0 ]]; then d ps; else docker "$@"; fi }; _f'
 alias di='d images'
 alias dl='d logs'
 alias dn='d network ls'
+alias dc='d container ps'
+alias da='d container ps -a'
 
