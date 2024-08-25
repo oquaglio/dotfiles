@@ -43,7 +43,7 @@ Add to ~/.gitconfig:
 
 ```SH
 [include]    
-    path = ~/dotfiles/.gitconfig
+    path = ~/.dotfiles/.gitconfig
 ```
 
 
