@@ -105,7 +105,7 @@ alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (termina
 alias a='aws acc'
 alias sa='export AWS_PROFILE=$1'
 
-alias updot='clear; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Done."; echo -n "Creating symlinks... "; chmod +x $DOTFILES_ROOT/create_symlinks.sh && $DOTFILES_ROOT/create_symlinks.sh && echo "Pull done."; echo "Reloading shell files...";  rl'
+alias updot='clear; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Pull complete."; echo -n "Creating symlinks... "; chmod +x $DOTFILES_ROOT/create_symlinks.sh && $DOTFILES_ROOT/create_symlinks.sh && echo "Done."; echo "Reloading shell files...";  rl'
 
 alias clip=clip.exe
 alias explorer=explorer.exe
