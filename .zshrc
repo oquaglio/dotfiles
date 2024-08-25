@@ -8,6 +8,7 @@ else
     exit 1  # Exit the script with a status of 1
 fi
 
+source $DOTFILES_ROOT/.aliases
 source_files $DOTFILES_ROOT .functions
 source_files $DOTFILES_ROOT .aliases
 source_files $DOTFILES_ROOT/functions *
