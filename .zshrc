@@ -1,9 +1,5 @@
 echo "Reloading $(dirname "$0")/$(basename "$0")..."
-#export DOTFILES_USER=oquaglio
-#export DOTFILES_ROOT=$HOME/.dotfiles
 export DOTFILES_ROOT=$(dirname "$0")
-#cd "$(dirname "$0")/.."
-#DOTFILES_ROOT=$(pwd -P)
 
 if [ -f $DOTFILES_ROOT/dotfiles.cfg ]; then
     source $DOTFILES_ROOT/dotfiles.cfg
@@ -12,15 +8,15 @@ else
     exit 1  # Exit the script with a status of 1
 fi
 
-for file in $(find $DOTFILES_ROOT -type f -name "*.aliases"); do
+for file in $(find $DOTFILES_ROOT/ -type f -name "*.aliases"); do
     source $file
 done
 
-for file in $(find $DOTFILES_ROOT -type f -name "*.zsh"); do
+for file in $(find $DOTFILES_ROOT/ -type f -name "*.zsh"); do
     source $file
 done
 
-for file in $(find $DOTFILES_ROOT -type f -name "*.env"); do
+for file in $(find $DOTFILES_ROOT/ -type f -name "*.env"); do
     source $file
 done
 
