@@ -8,22 +8,22 @@ else
     exit 1  # Exit the script with a status of 1
 fi
 
-for file in $(find $DOTFILES_ROOT/ -type f -name "*.aliases"); do
+for file in $(find $DOTFILES_ROOT -type f -name "*.aliases"); do
     source $file
 done
 
-for file in $(find $DOTFILES_ROOT/ -type f -name "*.zsh"); do
+for file in $(find $DOTFILES_ROOT -type f -name "*.zsh"); do
     source $file
 done
 
-for file in $(find $DOTFILES_ROOT/ -type f -name "*.env"); do
+for file in $(find $DOTFILES_ROOT -type f -name "*.env"); do
     source $file
 done
 
-if [ -f $HOME/.dotfiles/.setuprc ]; then
-    source $HOME/.dotfiles/.setuprc
+if [ -f $DOTFILES_ROOT/.setuprc ]; then
+    source $DOTFILES_ROOT/.setuprc
 fi
 
-if [ -f $HOME/.dotfiles/.shellrc ]; then
-    source $HOME/.dotfiles/.shellrc
+if [ -f $DOTFILES_ROOT/.shellrc ]; then
+    source $DOTFILES_ROOT/.shellrc
 fi
