@@ -12,6 +12,10 @@ for file in $(find $DOTFILES_ROOT -type f -name "*.aliases"); do
     source $file
 done
 
+for file in $(find $DOTFILES_ROOT/functions -type f -name "*"); do
+    source $file
+done
+
 for file in $(find $DOTFILES_ROOT -type f -name "*.zsh"); do
     source $file
 done
