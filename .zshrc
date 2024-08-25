@@ -1,8 +1,5 @@
-if [ -f dotfiles.cfg ]; then
-    source dotfiles.cfg
-else
-    echo "Error: dotfiles.cfg does not exist or cannot be sourced."
-fi
+export DOTFILES_USER=oquaglio
+export DOTFILES_DIR=$HOME/.dotfiles
 
 for file in $(find $DOTFILES_DIR -type f -name "*.aliases"); do
     source $file
