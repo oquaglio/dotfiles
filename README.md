@@ -28,6 +28,7 @@ Get latest updates from github and reload everything:
 ```SH
 updot
 ```
+(<u>up</u>date _dot_files)
 
 Just reload without getting updates from github:
 
