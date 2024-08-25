@@ -96,16 +96,7 @@ contains() {
 }
 
 
-# list all files recursive by last modified and include size in bytes
-git_files_info() {
-    git ls-files -z | xargs -0 -I{} sh -c 'echo "$(git log -1 --format="%ai" -- "{}") $(stat -c%s "{}") {}"' | sort -r
-}
-alias gf='git_files_info'
 
-# Function to display Docker auths from config.json
-docker_auths() {
-    cat ~/.docker/config.json | jq -r '.auths | to_entries[] | .key + ": " + (.value.auth | @base64d)'
-}
 
 
 ###############################################################################
