@@ -1,10 +1,10 @@
-if [ -f $HOME/.dotfiles/.aliases ]; then
-    source $HOME/.dotfiles/dotfiles.cfg
+if [ -f dotfiles.cfg ]; then
+    source dotfiles.cfg
 fi
 
-if [ -f $HOME/.dotfiles/.aliases ]; then
-    source $HOME/.dotfiles/.aliases
-fi
+for file in $(find $DOTFILES_DIR -type f -name "*.aliases"); do
+    source $file
+done
 
 # Recursively source all .zsh files in the dotfiles directory
 for file in $(find $HOME/.dotfiles -type f -name "*.zsh"); do
