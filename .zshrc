@@ -20,6 +20,7 @@ done
 #    source $file
 #done
 
+# depends on pathadd alias
 for file in $(find $DOTFILES_ROOT -type f -name "*.env"); do
     source $file
 done
