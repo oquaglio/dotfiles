@@ -95,10 +95,6 @@ contains() {
     fi
 }
 
-
-
-
-
 ###############################################################################
 # Functions to detect file changes
 #
@@ -114,7 +110,6 @@ contains() {
 #	         as it can remain an older time (presume from original creating
 #			 time)
 ###############################################################################
-
 # start find changes - set MARK modificaton time to now
 sfch() {
 	mkdir -p $HOME/temp
@@ -172,5 +167,3 @@ fch() {
 
     echo "Done. File changes written to: '$log_filepath'"
 }
-
-foo(){ echo "Hello"; }
