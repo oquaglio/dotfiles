@@ -101,7 +101,7 @@ source_if_exists() {
 
     # Check if the file exists and is readable
     if [[ -r "$filename" ]]; then
-        #echo "Sourcing $filename..."
+        echo "Sourcing $filename..."
         source "$filename"
     else
         echo "Error: $filename does not exist or is not readable."
