@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# cleanup first
+# Remove aliases first
 rm -rf ~/.nanorc; rm -rf ~/.nano; rm -rf ~/.vimrc; rm -rf ~/.env; rm -rf ~/.aliases;
 
 ln -sf ~/.dotfiles/.config/starship.toml ~/.config/starship.toml
-
 ln -sf ~/.dotfiles/.nanorc ~/.nanorc
 #ln -sf ~/.dotfiles/.nano ~/.nano
 #ln -sf ~/.dotfiles/.vimrc ~/.vimrc
