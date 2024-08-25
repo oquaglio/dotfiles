@@ -23,14 +23,14 @@ if [ -f $HOME/.dotfiles/.zshrc ]; then
 fi
 ```
 
-Get latest updates from github and reload everything:
+Get latest updates from github and reload everything ("update dotfiles"):
 
 ```SH
 updot
 ```
-(<u>up</u>date _dot_files)
 
-Just reload without getting updates from github:
+
+Just reload without getting updates from github ("reload"):
 
 ```SH
 rl
