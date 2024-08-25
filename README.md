@@ -2,15 +2,29 @@
 
 I maintain this repo as *my* dotfiles.
 
-I use zsh and these presently customized thusly.
+I presently use zsh and hence have only tested for zsh.
 
-## Get the dotfiles
+I have stolen many ideas from other people's dotfiles.
+
+
+## Installation
 
 Clone:
 
 ``` SH
-git clone --depth 1 --branch master https://github.com/oquaglio/dotfiles.git /home/$USER/.dotfiles >/dev/null;
+git clone --depth 1 --branch master https://github.com/oquaglio/dotfiles.git $HOME/.dotfiles >/dev/null;
 ```
+
+Add the following to .zshrc:
+
+``` SH
+if [ -f $HOME/.dotfiles/.zshrc ]; then
+    source $HOME/.dotfiles/.zshrc
+fi
+```
+
+One day, I will get around to adding for bash.
+
 
 ## Git Setup
 
@@ -21,31 +35,15 @@ Add to ~/.gitconfig:
     path = ~/dotfiles/.gitconfig
 ```
 
-## Shell Setup
-
-Add the following to .zshrc:
-
-``` SH
-if [ -f $HOME/.dotfiles/.zshrc ]; then
-    source $HOME/.dotfiles/.zshrc
-fi
-```
-
-Add the following to .bashrc:
-
-``` SH
-if [ -f ~/.bash_env ]; then
-    source ~/.bash_env
-fi
-```
-
 ## Update dotfiles and and Reload env
 
 ```SH
 updot
 ```
 
-## Using fch Function
+## Handy Ref
+
+## Using the fch Function
 
 This function scans your disk for file changes.
 
