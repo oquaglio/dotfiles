@@ -1,4 +1,8 @@
 if [ -f $HOME/.dotfiles/.aliases ]; then
+    source $HOME/.dotfiles/dotfiles.cfg
+fi
+
+if [ -f $HOME/.dotfiles/.aliases ]; then
     source $HOME/.dotfiles/.aliases
 fi
 
