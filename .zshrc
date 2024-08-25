@@ -1,5 +1,7 @@
 if [ -f dotfiles.cfg ]; then
     source dotfiles.cfg
+else
+    echo "Error: dotfiles.cfg does not exist or cannot be sourced."
 fi
 
 for file in $(find $DOTFILES_DIR -type f -name "*.aliases"); do
