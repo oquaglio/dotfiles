@@ -24,8 +24,8 @@ for file in $(find $DOTFILES_ROOT -type f -name "*.env"); do
     source $file
 done
 
-if [ -f $DOTFILES_ROOT/.setuprc ]; then
-    source $DOTFILES_ROOT/.setuprc
+if [ -f $DOTFILES_ROOT/neovim/.setup ]; then
+    source $DOTFILES_ROOT/neovim/.setup
 fi
 
 if [ -f $DOTFILES_ROOT/.shellrc ]; then
