@@ -16,9 +16,10 @@ for file in $(find $DOTFILES_ROOT/functions -type f -name "*"); do
     source $file
 done
 
-#for file in $(find $DOTFILES_ROOT -type f -name "*.zsh"); do
-#    source $file
-#done
+# put any zsh-only compatbile stuff in .zsh files...
+for file in $(find $DOTFILES_ROOT -type f -name "*.zsh"); do
+    source $file
+done
 
 # depends on pathadd alias
 for file in $(find $DOTFILES_ROOT -type f -name "*.env"); do
