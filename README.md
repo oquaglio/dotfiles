@@ -2,7 +2,7 @@
 
 I maintain this repo as *my* dotfiles.
 
-I presently use zsh and hence have only tested for zsh.
+I presently use zsh and hence have only tested for zsh. One day, I will get around to adding for bash.
 
 I have stolen many ideas from other people's dotfiles.
 
@@ -35,8 +35,6 @@ Just reload without getting updates from github ("reload"):
 ```SH
 rl
 ```
-
-One day, I will get around to adding for bash.
 
 
 ## Git Setup
