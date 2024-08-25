@@ -23,6 +23,18 @@ if [ -f $HOME/.dotfiles/.zshrc ]; then
 fi
 ```
 
+Get latest updates from github and reload everything:
+
+```SH
+updot
+```
+
+Just reload without getting updates from github:
+
+```SH
+rl
+```
+
 One day, I will get around to adding for bash.
 
 
@@ -35,11 +47,6 @@ Add to ~/.gitconfig:
     path = ~/dotfiles/.gitconfig
 ```
 
-## Update dotfiles and and Reload env
-
-```SH
-updot
-```
 
 ## Handy Ref
 
