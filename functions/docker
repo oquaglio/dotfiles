@@ -2,4 +2,4 @@
 docker_auths() {
     cat ~/.docker/config.json | jq -r '.auths | to_entries[] | .key + ": " + (.value.auth | @base64d)'
 }
-alias da=docker_auths
+alias dauth=docker_auths
