@@ -1,4 +1,4 @@
-echo -n "Reloading ZSH env"
+echo "Reloading $(dirname "$0")/$(basename "$0")..."
 export DOTFILES_USER=oquaglio
 #export DOTFILES_ROOT=$HOME/.dotfiles
 export DOTFILES_ROOT=$(dirname "$0")/
