@@ -1,7 +1,7 @@
 export DOTFILES_USER=oquaglio
 export DOTFILES_DIR=$HOME/.dotfiles
-cd "$(dirname "$0")/.."
-DOTFILES_ROOT=$(pwd -P)
+#cd "$(dirname "$0")/.."
+#DOTFILES_ROOT=$(pwd -P)
 
 for file in $(find $DOTFILES_ROOT -type f -name "*.aliases"); do
     source $file
