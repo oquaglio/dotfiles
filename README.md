@@ -1,6 +1,7 @@
 # dotfiles
 
-My dotfiles for Linux.
+I maintain this repo as *my* dotfiles.
+I use zsh and these presently customized thusly.
 
 ## Get the dotfiles
 
