@@ -1,1 +1,4 @@
-
+# Function to display Docker auths from config.json
+docker_auths() {
+    cat ~/.docker/config.json | jq -r '.auths | to_entries[] | .key + ": " + (.value.auth | @base64d)'
+}
