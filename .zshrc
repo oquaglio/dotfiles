@@ -5,14 +5,13 @@ for file in $(find $DOTFILES_DIR -type f -name "*.aliases"); do
     source $file
 done
 
-# Recursively source all .zsh files in the dotfiles directory
-for file in $(find $HOME/.dotfiles -type f -name "*.zsh"); do
+for file in $(find $DOTFILES_DIR -type f -name "*.zsh"); do
     source $file
 done
 
-if [ -f $HOME/.dotfiles/.env ]; then
-    source $HOME/.dotfiles/.env
-fi
+for file in $(find $DOTFILES_DIR -type f -name "*.env"); do
+    source $file
+done
 
 if [ -f $HOME/.dotfiles/.setuprc ]; then
     source $HOME/.dotfiles/.setuprc
