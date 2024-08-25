@@ -1,5 +1,5 @@
 export DOTFILES_ROOT=$(dirname "$0")
-echo "Sourced: $DOTFILES_ROOT/$(basename "$0")..."
+echo "Sourced: $DOTFILES_ROOT/$(basename "$0")"
 
 source $DOTFILES_ROOT/dotfiles.cfg
 source $DOTFILES_ROOT/functions/_utils
