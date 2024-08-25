@@ -16,7 +16,7 @@ for file in $(find $DOTFILES_ROOT/functions -type f -name "*"); do
     source $file
 done
 
-# put any zsh-only compatbile stuff in .zsh files...
+# put any zsh-only compatible stuff in .zsh files...
 for file in $(find $DOTFILES_ROOT -type f -name "*.zsh"); do
     source $file
 done
