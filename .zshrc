@@ -1,5 +1,5 @@
 export DOTFILES_USER=oquaglio
-export DOTFILES_DIR=$HOME/.dotfiles
+export DOTFILES_ROOT=$HOME/.dotfiles
 #cd "$(dirname "$0")/.."
 #DOTFILES_ROOT=$(pwd -P)
 
