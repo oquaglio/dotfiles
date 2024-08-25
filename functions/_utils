@@ -113,6 +113,8 @@ source_files() {
     local search_dir="$1"  # Directory to search in
     local file_pattern="$2"  # File pattern to match
 
+    echo "source_files invoked with: $search_dir $file_pattern" 
+
     # Check if parameters are provided
     if [[ -z "$search_dir" || -z "$file_pattern" ]]; then
         echo "Error: Both directory path and file pattern must be provided."
