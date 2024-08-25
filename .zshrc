@@ -1,5 +1,5 @@
-echo "Reloading $(dirname "$0")/$(basename "$0")..."
 export DOTFILES_ROOT=$(dirname "$0")
+echo "Reloading $DOTFILES_ROOT/$(basename "$0")..."
 
 if [ -f $DOTFILES_ROOT/dotfiles.cfg ]; then
     source $DOTFILES_ROOT/dotfiles.cfg
