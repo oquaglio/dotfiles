@@ -26,9 +26,11 @@ for file in $(find $DOTFILES_ROOT -type f -name "*.zsh"); do
 done
 
 # depends on pathadd alias
-for file in $(find $DOTFILES_ROOT -type f -name "*.env"); do
-    source $file
-done
+#for file in $(find $DOTFILES_ROOT -type f -name "*.env"); do
+#    source $file
+#done
+
+source_files $DOTFILES_ROOT .env
 
 source_if_exists $DOTFILES_ROOT/neovim/.setup
 source_if_exists $DOTFILES_ROOT/.shellrc
