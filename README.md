@@ -56,16 +56,27 @@ rl
 
 This function scans your disk for file changes.
 
-Run before changes (capture current timestamp):
+If you just want to check your home dir:
+
+1. Run before changes (captures current timestamp):
+``` SH
+sfch
+```
+
+2. Do your things that result in files changes...
+
+3. Check the files that changed:
+```SH
+fch
+```
+
+If you want to check the root dir (/), you need to run with sudo:
+(But, sudo doesn't have any of our dotfiles, so first we source them manually)
+
 ``` SH
 sudo bash -c 'source /home/otto/.dotfiles/.aliases; sfch'
 ```
 
-Capture changes:
 ``` SH
 sudo bash -c 'source /home/otto/.dotfiles/.aliases; fch /'
-```
-
-``` SH
-sudo bash -c 'source /home/otto/.dotfiles/.aliases; fch /home/otto'
 ```
