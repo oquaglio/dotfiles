@@ -1,1 +1,2 @@
+# source all setup files
 source_if_exists $DOTFILES_ROOT/neovim/.setup
