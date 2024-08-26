@@ -30,10 +30,10 @@ Add to ~/.gitconfig for git setup:
     path = ~/.dotfiles/.gitconfig
 ```
 
-Any files in this dir will be sourced, so create it if you'll like to add any custom config:
+Any files in this dir will also be sourced, so make use of it if you need to add any local config:
 
 ``` SH
-mkdir ~/.dotfiles-local
+~/.dotfiles-local
 ```
 
 ## Getting Updates
