@@ -138,6 +138,15 @@ source_files() {
     #echo "All applicable files sourced based on pattern '$file_pattern'."
 }
 
+# Function to run a command only if it exists
+run_if_exists() {
+    if command -v "$1" >/dev/null 2>&1; then
+        # echo "Running $1..."
+        "$@"
+    else
+        # echo "$1 not found, doing nothing."
+    fi
+}
 
 
 ###############################################################################
