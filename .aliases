@@ -1,28 +1,26 @@
+alias up='clear; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Pull complete."; echo -n "Creating symlinks... "; chmod +x $DOTFILES_ROOT/create_symlinks.sh && $DOTFILES_ROOT/create_symlinks.sh && echo "Done.";  rl'
+
+
 # Productivity #########################################################
 alias todo='$EDITOR ~/.todo'
 ########################################################### Productivity
 
-########################################################################
-#
-# Command Aliases
-#
-########################################################################
 
-#list command
+# List Commands ########################################################
 #alias l='ls -la | grep "^d" && ls -la | grep "^-" && ls -la | grep "^l"'
 #alias l='ls --sort=time --format=long --color --almost-all --human-readable --group-directories-first --time-style="+%Y-%m-%d %H:%M:%S"'
 #alias lz='l --sort=size'
 #alias lt='l --sort=time'
 #alias l='ls -alht --color --group-directories-first' # all files, long format, human readable
 alias lr='ls -alhRt --color' # all files, long format, human readable, recursive (tree)
-
 #alias x='exa -lFagh --group-directories-first'
 alias xt='exa -lFaghT --group-directories-first --icons'
 alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
-
 #alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --sort modified --reverse --git --icons'
 alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons'
 alias lt='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons --total-size'
+########################################################## List Commands
+
 
 #recursively find files larger than x bytes, e.g. llfs +10k
 #alias f='_f(){ find . -type f -size "$1" -exec ls --color --classify --human-readable -l {} \; ; }; _f'
@@ -79,37 +77,35 @@ alias ports='netstat -tulanp'
 ## pass options to free ##
 alias meminfo='free -m -l -t -h'
 
-# Processes ###################################################################
-# Process Tree
-alias pt='ps -axjf --headers'
-
-# get top process eating memory
-alias psmem='ps auxf | sort -nr -k 4'
-alias psmem10='ps auxf | sort -nr -k 4 | head -10'
-
-# get top process eating cpu ##
-alias pscpu='ps auxf | sort -nr -k 3'
-alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 
 ## Get server cpu info ##
 alias cpi='lscpu'
-
 ## set some other defaults ##
 alias df='df -H'
 alias du='du -ch'
-
 #Confirm unsafe file operations
 alias cp='/bin/cp -i'
 alias mv='/bin/mv -i'
 alias rm='/bin/rm -i'
 
-alias kp='kill -9' #  send kill signal to process id, e.g. ks 3301 (kill cannot be intercepted; it will pulll the plug on a process)
-alias kt='kill -15' # send terminate signal to process id, e.g. kt 3301 (terminate can be intercepted, allowing process to shutdown gracefully)
-
 alias a='aws acc'
 alias sa='export AWS_PROFILE=$1'
 
-alias updot='clear; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Pull complete."; echo -n "Creating symlinks... "; chmod +x $DOTFILES_ROOT/create_symlinks.sh && $DOTFILES_ROOT/create_symlinks.sh && echo "Done.";  rl'
+
+# Processes ###################################################################
+# Process Tree
+alias pst='ps -axjf --headers'
+# get top process eating memory
+alias psm='ps auxf | sort -nr -k 4'
+alias psm10='ps auxf | sort -nr -k 4 | head -10'
+# get top process eating cpu ##
+alias psc='ps auxf | sort -nr -k 3'
+alias psc10='ps auxf | sort -nr -k 3 | head -10'
+alias psk='kill -9' #  send kill signal to process id, e.g. ks 3301 (kill cannot be intercepted; it will pulll the plug on a process)
+alias pst='kill -15' # send terminate signal to process id, e.g. kt 3301 (terminate can be intercepted, allowing process to shutdown gracefully)
+##################################################################### Processes
+
+
 
 alias clip=clip.exe
 alias explorer=explorer.exe
