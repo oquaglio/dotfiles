@@ -14,4 +14,5 @@ source_if_exists $DOTFILES_ROOT/.shellrc
 
 # source any file in local
 export DOTFILES_LOCAL_ROOT=$HOME/.dotfiles-local
+mkdir -p ~/.dotfiles-local
 source_files DOTFILES_LOCAL_ROOT *
