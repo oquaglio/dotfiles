@@ -38,13 +38,13 @@ Any files in this dir will also be sourced, so make use of it if you need to add
 
 ## Getting Updates
 
-Get latest updates from github and reload everything ("update dotfiles"):
+Get latest updates from github and reload everything ("[up]date dotfiles"):
 
 ```SH
-updot
+up
 ```
 
-Just reload without getting updates from github ("reload"):
+Re-run the shell (which will source the config) without getting updates from github ("[r]e[l]oad"):
 
 ```SH
 rl
