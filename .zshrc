@@ -3,6 +3,8 @@ echo "Sourced: $(dirname "$0")/$(basename "$0")"
 # set up important stuff before proceeeding
 source $(dirname "$0")/.init
 
+chmod +x $DOTFILES_ROOT/scripts/create_symlinks.sh && $DOTFILES_ROOT/scripts/create_symlinks.sh
+
 #source_if_exists $DOTFILES_ROOT/.paths
 #source_if_exists $DOTFILES_ROOT/.aliases
 source_files $DOTFILES_ROOT/config .setup
@@ -15,8 +17,6 @@ source_files $DOTFILES_ROOT/config/functions "*"
 
 mkdir -p $DOTFILES_LOCAL_ROOT
 source_files $DOTFILES_LOCAL_ROOT "*"
-
-chmod +x $DOTFILES_ROOT/scripts/create_symlinks.sh && $DOTFILES_ROOT/scripts/create_symlinks.sh
 
 # finally, run any extra shell commands
 source_if_exists $DOTFILES_ROOT/config/.shellrc
