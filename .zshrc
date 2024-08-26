@@ -1,13 +1,13 @@
 echo "Sourced: $DOTFILES_ROOT/$(basename "$0")"
 
 # important stuff before proceeeding
-source $DOTFILES_ROOT/functions/_utils
-source_files $DOTFILES_ROOT .env
+source $DOTFILES_ROOT/.env
+source $DOTFILES_ROOT/.functions
 
 # source dotfiles
 source_files $DOTFILES_ROOT .aliases
 source_files $DOTFILES_ROOT/functions "*"
-source_files $DOTFILES_ROOT .zsh
+#source_files $DOTFILES_ROOT .zsh
 
 # source any file in local
 mkdir -p $DOTFILES_LOCAL_ROOT
