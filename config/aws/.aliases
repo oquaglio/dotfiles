@@ -1,0 +1,2 @@
+alias a='aws acc'
+alias sa='export AWS_PROFILE=$1'

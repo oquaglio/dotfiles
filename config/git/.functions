@@ -1,4 +1,3 @@
-
 # list all files recursive by last modified and include size in bytes
 git_files_info() {
     git ls-files -z | xargs -0 -I{} sh -c 'echo "$(git log -1 --format="%ai" -- "{}") $(stat -c%s "{}") {}"' | sort -r

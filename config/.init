@@ -1,6 +1,12 @@
+# CORE ENV #######################################################################################
+
+export DOTFILES_USER=oquaglio
+export DOTFILES_ROOT=$(dirname "$0")
+export DOTFILES_LOCAL_ROOT=$HOME/.dotfiles-local
+
+
 # CORE FUNCTIONS #######################################################################################
-# Needed for basic things to work
-########################################################################################################
+
 #reload (re-source) shell config files
 reload_shell_config() {
     if [ "$(basename "$SHELL")" = "zsh" ] && [ -r ~/.zshrc ]; then
@@ -8,7 +14,7 @@ reload_shell_config() {
         #. ~/.zshrc
 	# https://github.com/ohmyzsh/ohmyzsh/wiki/FAQ#how-do-i-reload-the-zshrc-file
 	echo 'Running "exec zsh"...'
-	exec zsh 
+	exec zsh
     fi
 
     if [ "$(basename "$SHELL")" = "bash" ] && [ -r ~/.bashrc ]; then
@@ -28,7 +34,7 @@ alias rl='reload_shell_config'
 # $2 (Second Parameter): The name of the path variable to update. If this parameter is not provided, it defaults to PATH.
 # Examples:
 # pathadd /usr/local/myapp/bin
-# pathadd /usr/local/myapp/bin MY_CUSTOM_PATH
+# pathadd /usr/local/myapp/bin MYconfig_PATH
 # pathadd $HOME/.local/bin
 # pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
 pathadd() {
@@ -83,7 +89,7 @@ source_if_exists() {
     # Check if the file exists and is readable
     if [[ -r "$filename" ]]; then
         echo "Sourcing: $filename... "
-        source "$filename"	
+        source "$filename"
     else
         echo "Error: $filename does not exist or is not readable."
     fi
@@ -94,7 +100,7 @@ source_files() {
     local search_dir="$1"  # Directory to search in
     local file_pattern="$2"  # File pattern to match
 
-    #echo "source_files invoked with: $search_dir $file_pattern" 
+    #echo "source_files invoked with: $search_dir $file_pattern"
 
     # Check if parameters are provided
     if [[ -z "$search_dir" || -z "$file_pattern" ]]; then
@@ -110,7 +116,7 @@ source_files() {
     while IFS= read -r file; do
         if [[ -r "$file" ]]; then  # Check if the file is readable
             echo "Sourcing: $file... "
-            source "$file"	    
+            source "$file"
         else
             echo "Warning: '$file' is not readable and will not be sourced."
         fi
