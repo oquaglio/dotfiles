@@ -14,4 +14,4 @@ mkdir -p $DOTFILES_LOCAL_ROOT
 source_files $DOTFILES_LOCAL_ROOT "*"
 
 # finally, run any extra shell commands
-#source_if_exists $DOTFILES_ROOT/.shellrc
+source_if_exists $DOTFILES_ROOT/.shellrc
