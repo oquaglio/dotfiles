@@ -29,12 +29,13 @@ If you'd like to add an local files to source, create this dir for them:
 mkdir ~/dotfiles-local
 ```
 
+## Getting Updates
+
 Get latest updates from github and reload everything ("update dotfiles"):
 
 ```SH
 updot
 ```
-
 
 Just reload without getting updates from github ("reload"):
 
