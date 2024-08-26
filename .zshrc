@@ -1,10 +1,10 @@
 echo "Sourced: $DOTFILES_ROOT/$(basename "$0")"
 
-# need some utils before proceeeding
+# important stuff before proceeeding
 source $DOTFILES_ROOT/functions/_utils
+source_files $DOTFILES_ROOT .env
 
 # source dotfiles
-source_files $DOTFILES_ROOT .env
 source_files $DOTFILES_ROOT .aliases
 source_files $DOTFILES_ROOT/functions "*"
 source_files $DOTFILES_ROOT .zsh
