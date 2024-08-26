@@ -23,6 +23,13 @@ if [ -f $HOME/.dotfiles/.zshrc ]; then
 fi
 ```
 
+Add to ~/.gitconfig for git setup:
+
+```SH
+[include]    
+    path = ~/.dotfiles/.gitconfig
+```
+
 If you'd like to add an local files to source, create this dir for them:
 
 ``` SH
@@ -43,18 +50,7 @@ Just reload without getting updates from github ("reload"):
 rl
 ```
 
-
-## Git Setup
-
-Add to ~/.gitconfig:
-
-```SH
-[include]    
-    path = ~/.dotfiles/.gitconfig
-```
-
-
-## Handy Ref
+## How to Use
 
 ## Using the fch Function
 
