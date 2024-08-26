@@ -74,9 +74,9 @@ If you want to check the root dir (/), you need to run with sudo:
 (But, sudo doesn't have any of our dotfiles, so first we source them manually)
 
 ``` SH
-sudo bash -c 'source /home/otto/.dotfiles/.aliases; sfch'
+sudo bash -c 'source $DOTFILES_ROOT/.aliases; sfch'
 ```
 
 ``` SH
-sudo bash -c 'source /home/otto/.dotfiles/.aliases; fch /'
+sudo bash -c 'source $DOTFILES_ROOT/.aliases; fch /'
 ```
