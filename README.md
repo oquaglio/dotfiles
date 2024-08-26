@@ -33,7 +33,7 @@ Add to ~/.gitconfig for git setup:
 If you'd like to add an local files to source, create this dir for them:
 
 ``` SH
-mkdir ~/dotfiles-local
+mkdir ~/.dotfiles-local
 ```
 
 ## Getting Updates
