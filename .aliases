@@ -7,18 +7,18 @@ alias todo='$EDITOR ~/.todo'
 
 
 # List Commands ########################################################
+alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons'
+alias lt='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons --total-size'
+alias lr='ls -alhRt --color' # all files, long format, human readable, recursive (tree)
 #alias l='ls -la | grep "^d" && ls -la | grep "^-" && ls -la | grep "^l"'
 #alias l='ls --sort=time --format=long --color --almost-all --human-readable --group-directories-first --time-style="+%Y-%m-%d %H:%M:%S"'
 #alias lz='l --sort=size'
 #alias lt='l --sort=time'
 #alias l='ls -alht --color --group-directories-first' # all files, long format, human readable
-alias lr='ls -alhRt --color' # all files, long format, human readable, recursive (tree)
 #alias x='exa -lFagh --group-directories-first'
-alias xt='exa -lFaghT --group-directories-first --icons'
-alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
+#alias xt='exa -lFaghT --group-directories-first --icons'
+#alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
 #alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --sort modified --reverse --git --icons'
-alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons'
-alias lt='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons --total-size'
 ########################################################## List Commands
 
 
