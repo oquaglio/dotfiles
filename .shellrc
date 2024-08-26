@@ -1,1 +1,1 @@
-neofetch
+run_if_exists neofetch
