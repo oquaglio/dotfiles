@@ -24,8 +24,10 @@ fi
 ```
 
 If you'd like to add an local files to source, create this dir for them:
+
 ``` SH
 mkdir ~/dotfiles-local
+```
 
 Get latest updates from github and reload everything ("update dotfiles"):
 
