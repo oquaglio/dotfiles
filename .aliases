@@ -1,4 +1,4 @@
-alias up='clear; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Pull complete."; echo -n "Creating symlinks... "; chmod +x $DOTFILES_ROOT/create_symlinks.sh && $DOTFILES_ROOT/create_symlinks.sh && echo "Done."; reload_shell_config; source_if_exists $DOTFILES_ROOT/.setup'
+alias up='clear; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Pull complete."; echo -n "Creating symlinks... "; chmod +x $DOTFILES_ROOT/create_symlinks.sh && $DOTFILES_ROOT/create_symlinks.sh && echo "Done."; reload_shell_config; source_if_exists $DOTFILES_ROOT/.setup; source_if_exists $DOTFILES_ROOT/.shellrc'
 
 
 # Productivity #########################################################
