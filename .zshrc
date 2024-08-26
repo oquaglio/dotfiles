@@ -10,7 +10,6 @@ source_files $DOTFILES_ROOT .aliases
 source_files $DOTFILES_ROOT/functions "*"
 source_files $DOTFILES_ROOT .zsh
 source_files $DOTFILES_ROOT .env
-source_if_exists $DOTFILES_ROOT/neovim/.setup
 
 # source any file in local
 export DOTFILES_LOCAL_ROOT=$HOME/.dotfiles-local
