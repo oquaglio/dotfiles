@@ -50,7 +50,7 @@ Just reload without getting updates from github ("reload"):
 rl
 ```
 
-## How to Use
+## How-Tos
 
 ## Using the fch Function
 
