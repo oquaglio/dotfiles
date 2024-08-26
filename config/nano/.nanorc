@@ -25,7 +25,7 @@ set tabstospaces
 # Enable auto-indent
 set autoindent
 
-set terminalcolor
+#set terminalcolor
 
 ## The characters treated as closing brackets when justifying
 ## paragraphs.  They cannot contain blank characters.  Only closing
