@@ -1,4 +1,3 @@
-# PATHS ###################################################
 pathadd $HOME/.local/bin
 pathadd $HOME/bin
 pathadd /usr/local/man MANPTH
@@ -19,4 +18,3 @@ pathadd $HOME/go/bin
 # For Homebrew
 pathadd /home/linuxbrew/.linuxbrew/bin
 pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
-##################################################### PATHS
