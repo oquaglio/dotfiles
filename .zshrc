@@ -5,8 +5,10 @@ source $(dirname "$0")/.env
 source $DOTFILES_ROOT/.functions
 
 # source dotfiles
-source_files $DOTFILES_ROOT .aliases
+#source_files $DOTFILES_ROOT .aliases
+source_files $DOTFILES_ROOT/docker "*"
 source_files $DOTFILES_ROOT/functions "*"
+source_files $DOTFILES_ROOT/git "*"
 #source_files $DOTFILES_ROOT .zsh
 
 # source any file in local
