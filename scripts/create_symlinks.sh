@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo -n "Creating symlinks... "
+
 # Remove aliases first
 rm -rf ~/.nanorc; rm -rf ~/.nano; rm -rf ~/.vimrc; rm -rf ~/.env; rm -rf ~/.aliases;
 
@@ -18,3 +20,4 @@ ln -sf $DOTFILES_ROOT/config/nano/.nanorc ~/.nanorc
 #ln -sf $DOTFILES_ROOT/.git_aliases ~/.git_aliases
 
 
+echo "Done.";

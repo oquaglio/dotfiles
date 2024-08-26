@@ -3,8 +3,8 @@ echo "Sourced: $(dirname "$0")/$(basename "$0")"
 # set up important stuff before proceeeding
 source $(dirname "$0")/.init
 
-echo -n "Creating symlinks... "
-chmod +x $DOTFILES_ROOT/scripts/create_symlinks.sh && $DOTFILES_ROOT/scripts/create_symlinks.sh && echo "Done.";
+
+chmod +x $DOTFILES_ROOT/scripts/create_symlinks.sh && $DOTFILES_ROOT/scripts/create_symlinks.sh
 
 
 #source_if_exists $DOTFILES_ROOT/.paths
