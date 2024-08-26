@@ -1,5 +1,3 @@
-export DOTFILES_ROOT=$(dirname "$0")
-
 echo "Sourced: $DOTFILES_ROOT/$(basename "$0")"
 
 # source dotfiles
