@@ -1,7 +1,7 @@
 echo "Sourced: $(dirname "$0")/$(basename "$0")"
 
 # important stuff before proceeeding
-source $DOTFILES_ROOT/.env
+source $(dirname "$0")/.env
 source $DOTFILES_ROOT/.functions
 
 # source dotfiles
