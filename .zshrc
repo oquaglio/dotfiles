@@ -1,7 +1,7 @@
 echo "Sourced: $(dirname "$0")/$(basename "$0")"
 
 # set up important stuff before proceeeding
-source $(dirname "$0")/config/.init
+source $(dirname "$0")/.init
 
 # source dotfiles
 #source_if_exists $DOTFILES_ROOT/.paths
