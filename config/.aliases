@@ -1,4 +1,4 @@
-alias up='clear; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Pull complete."; source_files $DOTFILES_ROOT/custom .setup; reload_shell_config'
+alias up='clear; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Pull complete."; reload_shell_config'
 
 
 # Productivity #########################################################
