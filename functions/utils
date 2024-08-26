@@ -1,0 +1,21 @@
+# print environment
+# takes a param that is a string to search for
+e() {
+    # Define colors
+    GREEN="\033[0;32m"
+    YELLOW="\033[1;33m"
+    NC="\033[0m" # No Color
+
+    # Print matched environment variables with highlighting for the search term
+    printenv | grep -i --color=always "$1"
+
+    # Count matches and print the total with color
+    matches=$(printenv | grep -i -c "$1")
+    printf "${YELLOW}Matches: ${GREEN}${matches}${NC}\n"
+}
+
+#display ports
+dp() {
+	bash -c 'netstat -tulanp' | grep -i "$1";
+	printf "Matches: " && bash -c 'netstat -tulanp' | grep -i -c "$1";
+}
