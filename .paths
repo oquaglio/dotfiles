@@ -1,0 +1,22 @@
+# PATHS ###################################################
+pathadd $HOME/.local/bin
+pathadd $HOME/bin
+pathadd /usr/local/man MANPTH
+
+# OMZ
+pathadd $HOME/.oh-my-zsh ZSH
+
+# NVM
+pathadd $HOME/.nvm NVM_DIR
+
+# pyenv
+pathadd $HOME/.pyenv PYENV_ROOT
+pathadd $PYENV_ROOT/bin
+
+# Go path (for KinD)
+pathadd $HOME/go/bin
+
+# For Homebrew
+pathadd /home/linuxbrew/.linuxbrew/bin
+pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
+##################################################### PATHS
