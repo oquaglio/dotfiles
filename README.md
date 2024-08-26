@@ -9,13 +9,13 @@ I have stolen many ideas from other people's dotfiles.
 
 ## Installation
 
-Clone:
+1. Clone:
 
 ``` SH
 git clone --depth 1 --branch master https://github.com/oquaglio/dotfiles.git $HOME/.dotfiles >/dev/null;
 ```
 
-Add the following to .zshrc:
+2. Add the following to .zshrc:
 
 ``` SH
 if [ -f $HOME/.dotfiles/.zshrc ]; then
@@ -23,14 +23,16 @@ if [ -f $HOME/.dotfiles/.zshrc ]; then
 fi
 ```
 
-Add to ~/.gitconfig for git setup:
+3. Reload shell
+
+4. Add to ~/.gitconfig for git setup:
 
 ```SH
-[include]    
+[include]
     path = ~/.dotfiles/.gitconfig
 ```
 
-Any files in this dir will also be sourced, so make use of it if you need to add any local config:
+5. Add any custom files to source to this dir:
 
 ``` SH
 ~/.dotfiles-local
