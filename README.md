@@ -2,7 +2,7 @@
 
 I maintain this repo as *my* dotfiles.
 
-I presently use zsh and hence have only tested for zsh. One day, I will get around to adding for bash.
+I presently use zsh and that's all I've tested for.
 
 I have stolen many ideas from other people's dotfiles.
 
