@@ -52,7 +52,7 @@ rl
 
 ## How-Tos
 
-## Using the fch Function
+### Using the fch Function
 
 This function scans your disk for file changes.
 
@@ -79,4 +79,10 @@ sudo -E zsh -c 'source $DOTFILES_ROOT/functions/_utils; sfch'
 
 ``` SH
 sudo -E zsh -c 'source $DOTFILES_ROOT/functions/_utils; fch /'
+```
+
+## Testing
+
+```SH
+sudo -E bash -c '. $DOTFILES_ROOT/functions/_utils; set-x;  sfch'
 ```
