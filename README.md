@@ -85,4 +85,7 @@ sudo -E zsh -c 'source $DOTFILES_ROOT/functions/_utils; fch /'
 
 ```SH
 sudo -E bash -c '. $DOTFILES_ROOT/functions/_utils; set-x;  sfch'
+bash -c 'source $DOTFILES_ROOT/.zshrc'
 ```
+
+
