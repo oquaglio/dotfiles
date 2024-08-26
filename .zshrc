@@ -1,4 +1,4 @@
-echo "Sourced: $DOTFILES_ROOT/$(basename "$0")"
+echo "Sourced: $(dirname "$0")/$(basename "$0")"
 
 # important stuff before proceeeding
 source $DOTFILES_ROOT/.env
