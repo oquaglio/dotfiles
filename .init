@@ -116,7 +116,7 @@ source_files() {
     local file
     while IFS= read -r file; do
         if [[ -r "$file" ]]; then  # Check if the file is readable
-            echo "Sourcing: $file... "
+            #echo "Sourcing: $file... "
             source "$file"
         else
             echo "Warning: '$file' is not readable and will not be sourced."
