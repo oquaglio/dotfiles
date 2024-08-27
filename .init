@@ -1,9 +1,9 @@
 if [ -n "$BASH_VERSION" ]; then
-    echo "This is Bash."
+    echo "This is Bash $BASH_VERSION."
 fi
 
 if [ -n "$ZSH_VERSION" ]; then
-    echo "This is Zsh."    
+    echo "This is Zsh $ZSH_VERSION."    
 fi
 
 # CORE ENV #######################################################################################
