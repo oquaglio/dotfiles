@@ -1,5 +1,4 @@
-echo "Sourced: $(dirname "$0")/$(basename "$0")"
-
+echo ${0}
 DOTFILES_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 echo $DOTFILES_ROOT
 
