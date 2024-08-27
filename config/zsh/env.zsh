@@ -1,1 +1,1 @@
-path_add "zsh" SHELL_INFO
+pathadd "zsh" SHELL_INFO
