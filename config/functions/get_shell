@@ -8,5 +8,4 @@ get_shell () {
     else
         echo "unknown"
     fi
-    }
-fi
+}
