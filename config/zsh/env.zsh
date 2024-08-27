@@ -1,1 +1,1 @@
-pathadd "zsh" SHELL_INFO
+export SHELL_INFO="zsh" 
