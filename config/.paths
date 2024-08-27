@@ -1,6 +1,8 @@
 pathadd $HOME/.local/bin
 pathadd $HOME/bin
+pathadd $DOTFILES_ROOT/bin
 pathadd /usr/local/man MANPTH
+
 
 # OMZ
 pathadd $HOME/.oh-my-zsh ZSH
