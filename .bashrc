@@ -1,6 +1,5 @@
-echo ${0}
 DOTFILES_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-echo $DOTFILES_ROOT
+echo "Sourced: $DOTFILES_ROOT/$0"
 
 # Init some important stuff before proceeeding
 #INIT_PATH="$(dirname "$(readlink -f "$0")")/.init"
