@@ -4,14 +4,13 @@ fi
 
 if [ -n "$ZSH_VERSION" ]; then
     echo "This is Zsh."
+    export DOTFILES_ROOT=$(dirname "$0")
 fi
 
 # CORE ENV #######################################################################################
 
 export DOTFILES_USER=oquaglio
-export DOTFILES_ROOT=$(dirname "$0")
 export DOTFILES_LOCAL_ROOT=$HOME/.dotfiles-local
-
 
 # CORE FUNCTIONS #######################################################################################
 
