@@ -1,2 +1,2 @@
-run_if_exists neofetch
-run_if_exists blah
+#run_if_exists neofetch
+#run_if_exists blah
