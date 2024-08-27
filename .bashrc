@@ -1,8 +1,6 @@
 echo "Sourced: $(dirname "$0")/$(basename "$0")"
 
-# set up important stuff before proceeeding
-source $(dirname "$0")/.init
-
+# Init some important stuff before proceeeding
 INIT_PATH="$(dirname "$(readlink -f "$0")")/.init"
 if [ -f "$INIT_PATH" ]; then
     source "$INIT_PATH"
