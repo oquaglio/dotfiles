@@ -20,7 +20,7 @@ export DOTFILES_LOCAL_ROOT=$HOME/.dotfiles-local
 
 #reload (re-source) shell config files
 reload_shell_config() {
-    if [ "$(basename "$SHELL")" = "zsh" ] && [ -r ~/.zshrc ]; then
+    #if [ "$0" = "zsh" ] && [ -r ~/.zshrc ]; then
 	# echo "Reloading .zshrc..."
         . ~/.zshrc
 	# https://github.com/ohmyzsh/ohmyzsh/wiki/FAQ#how-do-i-reload-the-zshrc-file
@@ -28,8 +28,8 @@ reload_shell_config() {
 	#exec zsh
     fi
 
-    if [ "$(basename "$SHELL")" = "bash" ] && [ -r ~/.bashrc ]; then
-	echo "Reloading .bashrc..."
+    if [ "$0" = "bash" ] && [ -r ~/.bashrc ]; then
+	#echo "Reloading .bashrc..."
         . ~/.bashrc
     fi
 
