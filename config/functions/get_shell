@@ -1,12 +1,12 @@
 extract () {
     if (shopt -s dotglob) 2>/dev/null; then
-        echo "This shell is Bash."
+        echo "bash"
     elif (setopt extendedglob) 2>/dev/null; then
-        echo "This shell is Zsh."
+        echo "zsh"
     elif (set -l fish_var "FishShell") 2>/dev/null; then
-        echo "This shell is Fish."
+        echo "fish"
     else
-        echo "Unknown shell or neither command succeeded."
+        echo "unknown"
     fi
     }
 fi
