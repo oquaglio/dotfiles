@@ -14,5 +14,6 @@ else
     exit 1
 fi
 
+source_files $DOTFILES_ROOT/config .aliases
 
 
