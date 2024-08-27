@@ -7,7 +7,7 @@ e() {
     NC="\033[0m" # No Color
 
     # Print matched environment variables with highlighting for the search term
-    printenv | grep -i --color=always "$1"
+    printenv | grep -i --color=always "$1" | sort
 
     # Count matches and print the total with color
     matches=$(printenv | grep -i -c "$1")
