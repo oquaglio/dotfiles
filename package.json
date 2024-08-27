@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "@cdktf/node-pty-prebuilt-multiarch": "^0.10.1-pre.11"
-  }
-}
