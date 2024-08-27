@@ -1,4 +1,4 @@
-extract () {
+get_shell () {
     if (shopt -s dotglob) 2>/dev/null; then
         echo "bash"
     elif (setopt extendedglob) 2>/dev/null; then
