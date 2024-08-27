@@ -15,11 +15,17 @@ I have stolen many ideas from other people's dotfiles.
 git clone --depth 1 --branch master https://github.com/oquaglio/dotfiles.git $HOME/.dotfiles >/dev/null;
 ```
 
-2. Add the following to .zshrc:
+2. Add the following to .rc files:
 
 ``` SH
 if [ -f $HOME/.dotfiles/.zshrc ]; then
     source $HOME/.dotfiles/.zshrc
+fi
+```
+
+``` SH
+if [ -f $HOME/.dotfiles/.bashrc ]; then
+    source $HOME/.dotfiles/.bashrc
 fi
 ```
 
@@ -50,6 +56,14 @@ Re-run the shell (which will source the config) without getting updates from git
 
 ```SH
 rl
+```
+
+## Optional
+
+I use starship prompt. Install it with your package manager and add it to your .rc file(s):
+
+```SH
+eval "$(starship init zsh)"
 ```
 
 ## How-Tos
