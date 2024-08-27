@@ -1,1 +1,1 @@
-path_add "bash" SHELL_INFO
+pathadd "bash" SHELL_INFO
