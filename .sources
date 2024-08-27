@@ -11,6 +11,14 @@ source_files $DOTFILES_ROOT/functions "*"
 mkdir -p $DOTFILES_LOCAL_ROOT
 source_files $DOTFILES_LOCAL_ROOT "*"
 
+if [ -n "$BASH_VERSION" ]; then
+    :
+fi
+
+if [ -n "$ZSH_VERSION" ]; then
+    :
+fi
+
 # finally, run any extra shell commands
 source_if_exists $DOTFILES_ROOT/config/.shellrc
 echo "Done."
