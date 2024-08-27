@@ -1,13 +1,4 @@
-if (shopt -s dotglob) 2>/dev/null; then
-    echo "This shell is Bash."
-elif (setopt extendedglob) 2>/dev/null; then
-    echo "This shell is Zsh."
-elif (set -l fish_var "FishShell") 2>/dev/null; then
-    echo "This shell is Fish."
-else
-    echo "Unknown shell or neither command succeeded."
-fi
-
+echo "Current shell is $0"
 
 # CORE ENV #######################################################################################
 
