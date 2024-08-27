@@ -8,7 +8,6 @@ source_files $DOTFILES_ROOT/config .env
 source_files $DOTFILES_ROOT/functions "*"
 #source_files $DOTFILES_ROOT .zsh
 
-mkdir -p $DOTFILES_LOCAL_ROOT
 source_files $DOTFILES_LOCAL_ROOT "*"
 
 if [ -n "$BASH_VERSION" ]; then
