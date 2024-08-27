@@ -1,4 +1,4 @@
-echo "Sourced: ${BASH_SOURCE[0]}"
+#echo "Sourced: ${BASH_SOURCE[0]}"
 
 export DOTFILES_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
