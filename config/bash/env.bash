@@ -1,1 +1,1 @@
-pathadd "bash" SHELL_INFO
+export SHELL_INFO="bash" 
