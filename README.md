@@ -29,7 +29,7 @@ fi
 
 ```SH
 [include]
-    path = $DOTFILES_ROOT/config/git/.gitconfig
+    path = $HOME/.dotfiles/config/git/.gitconfig
 ```
 
 5. Add any custom files to source to this dir:
