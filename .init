@@ -29,11 +29,6 @@ reload_shell_config() {
 	#echo "Reloading .bashrc..."
         . ~/.bashrc
     fi
-
-    if [ -r ~/.profile ]; then
-	echo "Reloading .profile..."
-        . ~/.profile
-    fi
 }
 alias rl='reload_shell_config'
 
