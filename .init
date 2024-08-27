@@ -7,6 +7,9 @@ if [ -n "$ZSH_VERSION" ]; then
     echo "This is Zsh ($ZSH_VERSION)."    
 fi
 
+# Create Symlinks #############################################################################
+chmod +x $DOTFILES_ROOT/scripts/create_symlinks.sh && $DOTFILES_ROOT/scripts/create_symlinks.sh
+
 
 # SET CORE ENV ##################################################################################
 export DOTFILES_USER=oquaglio
