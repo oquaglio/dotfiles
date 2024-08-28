@@ -1,1 +1,1 @@
-export SHELL_INFO="zsh" 
+export DOTFILES_SHELL="zsh" 
