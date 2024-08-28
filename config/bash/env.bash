@@ -1,1 +1,1 @@
-export SHELL_INFO="bash" 
+export DOTFILES_SHELL="bash" 
