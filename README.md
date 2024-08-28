@@ -34,8 +34,14 @@ fi
 4. Add to ~/.gitconfig for git setup:
 
 ```SH
+[commit]
+    template = ~/.dotfiles/config/git/.gitmessage
+
 [include]
-    path = $HOME/.dotfiles/config/git/.gitconfig
+    path = ~/.dotfiles/config/git/.git_aliases
+
+[core]
+    excludesfile = ~/.dotfiles/config/git/.gitignore
 ```
 
 5. Add any custom files to source to this dir:
