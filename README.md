@@ -35,13 +35,13 @@ fi
 
 ```SH
 [commit]
-    template = ~/.dotfiles/config/git/.gitmessage
+    template = ~/.gitmessage
 
 [include]
-    path = ~/.dotfiles/config/git/.git_aliases
+    path = ~/.git_aliases
 
 [core]
-    excludesfile = ~/.dotfiles/config/git/.gitignore
+    excludesfile = ~/.gitignore
 ```
 
 5. Add any custom files to source to this dir:
