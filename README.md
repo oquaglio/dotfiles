@@ -29,7 +29,7 @@ if [ -f $HOME/.dotfiles/.bashrc ]; then
 fi
 ```
 
-3. Reload shell
+3. Reload shell (will also create symbolic links)
 
 4. Add to ~/.gitconfig for git setup:
 
