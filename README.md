@@ -29,7 +29,7 @@ if [ -f $HOME/.dotfiles/.bashrc ]; then
 fi
 ```
 
-3. Reload shell
+3. Reload shell (will also create symbolic links)
 
 4. Add to ~/.gitconfig for git setup:
 
@@ -51,6 +51,8 @@ fi
 ```
 
 ## Getting Updates
+
+(These are aliases that have been added as part of these dotfiles)
 
 Get latest updates from github and reload everything ("[up]date dotfiles"):
 
