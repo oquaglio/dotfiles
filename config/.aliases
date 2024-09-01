@@ -39,7 +39,7 @@ fi
 
 
 # https://taskfile.dev/
-alias t='task'
+#alias t='task'
 alias tl='task --list-all'
 
 alias tt='tree -alpugifhDFC'
