@@ -2,3 +2,4 @@
 alias mk="minikube kubectl --"
 alias k=kubectl
 alias kex="kubectl explain"
+alias kr="kubectl api-resources"
