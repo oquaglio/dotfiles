@@ -108,8 +108,6 @@ alias pst='kill -15' # send terminate signal to process id, e.g. kt 3301 (termin
 alias clip=clip.exe
 alias explorer=explorer.exe
 
-alias mk="minikube kubectl --"
-alias k=kubectl
 
 alias h='history'
 
