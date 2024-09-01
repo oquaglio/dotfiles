@@ -92,7 +92,7 @@ alias rm='/bin/rm -i'
 
 # Processes ###################################################################
 # Process Tree
-alias pst='ps -axjf --headers'
+alias pstr='ps -axjf --headers'
 # get top process eating memory
 alias psm='ps auxf | sort -nr -k 4'
 alias psm10='ps auxf | sort -nr -k 4 | head -10'
