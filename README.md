@@ -52,6 +52,8 @@ fi
 
 ## Getting Updates
 
+(These are aliases that have been added as part of these dotfiles)
+
 Get latest updates from github and reload everything ("[up]date dotfiles"):
 
 ```SH
