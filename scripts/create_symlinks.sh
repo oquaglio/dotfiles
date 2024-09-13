@@ -5,6 +5,9 @@ echo -n "Creating symlinks... "
 # Remove aliases first
 rm -rf ~/.nanorc; rm -rf ~/.nano; rm -rf ~/.vimrc; rm -rf ~/.env; rm -rf ~/.aliases;
 
+# Set up dirs
+mkdir -p ~/.config
+
 ln -sf $DOTFILES_ROOT/config/starship/starship.toml ~/.config/starship.toml
 ln -sf $DOTFILES_ROOT/config/nano/.nanorc ~/.nanorc
 
