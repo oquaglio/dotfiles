@@ -41,6 +41,8 @@ fi
 # https://taskfile.dev/
 #alias t='task'
 alias tl='task --list-all'
+# Add autocompletion for the alias
+compdef t=task
 
 alias tt='tree -alpugifhDFC'
 
