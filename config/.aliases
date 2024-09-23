@@ -39,10 +39,10 @@ fi
 
 
 # https://taskfile.dev/
-#alias t='task'
+alias ts='task'
 alias tl='task --list-all'
 # For zsh, use the _task completion function for the t alias
-compdef _task t
+compdef _task ts
 
 alias tt='tree -alpugifhDFC'
 
