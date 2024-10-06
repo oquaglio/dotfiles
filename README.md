@@ -98,11 +98,11 @@ If you want to check the root dir (/), you need to run with sudo:
 (But, sudo doesn't have any of our dotfiles, so first we source them manually)
 
 ``` SH
-sudo -E zsh -c 'source $DOTFILES_ROOT/functions/_utils; sfch'
+sudo -E zsh -c 'source $DOTFILES_ROOT/functions/file; sfch'
 ```
 
 ``` SH
-sudo -E zsh -c 'source $DOTFILES_ROOT/functions/_utils; fch /'
+sudo -E zsh -c 'source $DOTFILES_ROOT/functions/file; fch /'
 ```
 
 ## Testing
