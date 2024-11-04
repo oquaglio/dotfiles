@@ -202,6 +202,16 @@
 		fi \
 	}; f"
 
+	# Delete tag from local and remote
+	delete-tag = "!f() { \
+		if git rev-parse $1 >/dev/null 2>&1; then \
+			git tag -d $1 && echo \"Deleted local tag $1\"; \
+			git push --delete origin $1 && echo \"Deleted remote tag $1\"; \
+		else \
+			echo \"Tag '$1' does not exist.\"; \
+		fi \
+	}; f"
+
 
 
 	####################################################################
