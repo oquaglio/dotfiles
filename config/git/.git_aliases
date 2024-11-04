@@ -1,10 +1,10 @@
 [alias]
-    co = checkout
-    br = branch
-    ci = commit
-    st = status
+	co = checkout
+	br = branch
+	ci = commit
+	st = status
 
-    lf = !"git l --invert-grep --grep '#wip' --grep '#irrelevant'"	# filter out #wip and #irrelevant entries
+	lf = !"git l --invert-grep --grep '#wip' --grep '#irrelevant'"	# filter out #wip and #irrelevant entries
 	l1 = !"git l --since=1.weeks"
 	l4 = !"git l --since=4.weeks"
 
@@ -53,8 +53,8 @@
 
 	####################################################################
 	# Working Tree / Working Directory / Workspace
-    # The Working Tree is the directory tree of (source) files that you see and edit. It is the state of the files
-    # in checkout.
+	# The Working Tree is the directory tree of (source) files that you see and edit. It is the state of the files
+	# in checkout.
 	####################################################################
 
 	# View the current working tree status using the short format
@@ -186,6 +186,23 @@
 
 	# Display object details, e.g. git do 8029c07
 	do = "!f() { git cat-file -t $1 && git cat-file -p $1; }; f"
+
+
+	####################################################################
+	# Tagging
+	####################################################################
+
+	# Create and push a tag (but check if exists first)
+	push-tag = "!f() { \
+		if git rev-parse $1 >/dev/null 2>&1; then \
+			echo \"Tag '$1' already exists.\"; \
+		else \
+			git tag -a $1 -m \"${2:-}\" && \
+			git push origin $1; \
+		fi \
+	}; f"
+
+
 
 	####################################################################
 	# Settings
