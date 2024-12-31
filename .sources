@@ -15,6 +15,9 @@ if [ -n "$ZSH_VERSION" ]; then
     source_files $DOTFILES_ROOT/config "*.zsh"
 fi
 
+# Run commands compatible with all shells
+source_files $DOTFILES_ROOT/config "*.rc"
+
 #source_if_exists $DOTFILES_ROOT/.paths
 #source_if_exists $DOTFILES_ROOT/.aliases
 

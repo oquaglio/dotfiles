@@ -1,6 +1,6 @@
 # for autocompletion
 if command -v kubectl &> /dev/null; then
     source <(kubectl completion zsh)
-else
-    echo "kubectl not available: cannot enable autocompletion"
+    # Add autocompletion for the alias
+    compdef k=kubectl
 fi
