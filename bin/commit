@@ -1,28 +1,30 @@
 #!/bin/sh
 
-# This script is used to write a conventional commit message.
-# It prompts the user to choose the type of commit as specified in the
-# conventional commit spec. And then prompts for the summary and detailed
-# description of the message and uses the values provided. as the summary and
-# details of the message.
-#
-# If you want to add a simpler version of this script to your dotfiles, use:
-#
-# alias gcm='git commit -m "$(gum input)" -m "$(gum write)"'
+# This script helps to write a conventional commit message interactively.
 
-# if [ -z "$(git status -s -uno | grep -v '^ ' | awk '{print $2}')" ]; then
-#     gum confirm "Stage all?" && git add .
-# fi
-
+# Allow the user to select a commit type.
 TYPE=$(gum choose "fix" "feat" "docs" "style" "refactor" "test" "chore" "revert")
-SCOPE=$(gum input --placeholder "scope")
 
-# Since the scope is optional, wrap it in parentheses if it has a value.
-test -n "$SCOPE" && SCOPE="($SCOPE)"
+# Define common scopes (including "Other" for custom input)
+SCOPES=("core" "api" "ui" "backend" "cli" "docs" "config" "deps" "build" "ci" "test" "lint" "i18n" "auth" "db" "cache" "security" "logging" "notis" "styles" "theme" "ux" "a11y" "Other")
 
-# Pre-populate the input with the type(scope): so that the user may change it
-SUMMARY=$(gum input --value "$TYPE$SCOPE: " --placeholder "Summary of this change")
+# Allow user to select a scope
+SELECTED_SCOPE=$(printf "%s\n" "${SCOPES[@]}" | gum choose --header "🎯 Select a commit scope:")
+
+# If user chooses "Other", prompt for a custom scope
+if [ "$SELECTED_SCOPE" = "Other" ]; then
+    CUSTOM_SCOPE=$(gum input --placeholder "Enter custom scope...")
+    SELECTED_SCOPE="$CUSTOM_SCOPE"
+fi
+
+# If a scope is selected, wrap it in parentheses
+test -n "$SELECTED_SCOPE" && SELECTED_SCOPE="($SELECTED_SCOPE)"
+
+# Prompt for commit summary, pre-filled with the type and optional scope
+SUMMARY=$(gum input --value "$TYPE$SELECTED_SCOPE: " --placeholder "Summary of this change")
+
+# Prompt for commit description
 DESCRIPTION=$(gum write --placeholder "Details of this change")
 
-# Commit these changes if user confirms
+# Confirm and commit the changes
 gum confirm "Commit changes?" && git commit -m "$SUMMARY" -m "$DESCRIPTION"
