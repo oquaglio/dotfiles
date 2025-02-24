@@ -6,7 +6,7 @@
 TYPE=$(gum choose "fix" "feat" "docs" "style" "refactor" "test" "chore" "revert")
 
 # Define common scopes (including "Other" for custom input)
-SCOPES=$(gum choose "app" "pipeline" "data" "infra" "ci" "test" "core" "api" "ui" "backend" "cli" "docs" "config" "deps" "build" "lint" "i18n" "auth" "db" "cache" "security" "logging" "notis" "styles" "theme" "ux" "a11y" "other")
+SCOPES=( "app" "pipeline" "data" "infra" "ci" "test" "core" "api" "ui" "backend" "cli" "docs" "config" "deps" "build" "lint" "i18n" "auth" "db" "cache" "security" "logging" "notis" "styles" "theme" "ux" "a11y" "Other" )
 
 # Allow user to select a scope
 SELECTED_SCOPE=$(printf "%s\n" "${SCOPES[@]}" | gum choose --header "🎯 Select a commit scope:")
@@ -16,6 +16,8 @@ if [ "$SELECTED_SCOPE" = "Other" ]; then
     CUSTOM_SCOPE=$(gum input --placeholder "Enter custom scope...")
     SELECTED_SCOPE="$CUSTOM_SCOPE"
 fi
+
+echo "Selected scope: $SELECTED_SCOPE"
 
 # If a scope is selected, wrap it in parentheses
 test -n "$SELECTED_SCOPE" && SELECTED_SCOPE="($SELECTED_SCOPE)"
