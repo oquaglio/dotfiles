@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script helps to write a conventional commit message interactively.
 
