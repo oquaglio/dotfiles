@@ -3,7 +3,7 @@
 # This script helps to write a conventional commit message interactively.
 
 # Allow the user to select a commit type.
-TYPE=$(gum choose "fix" "feat" "docs" "style" "refactor" "test" "chore" "revert")
+TYPE=$(gum choose "fix" "feat" "docs" "style" "refactor" "test" "chore" "build" "perf" "ops" "revert")
 
 # Define common scopes (including "Other" for custom input)
 SCOPES=( "app" "pipeline" "data" "infra" "ci" "test" "core" "api" "ui" "backend" "cli" "docs" "config" "deps" "build" "lint" "i18n" "auth" "db" "cache" "security" "logging" "notis" "styles" "theme" "ux" "a11y" "Other" )
