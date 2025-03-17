@@ -30,3 +30,30 @@ check_aws_session() {
         return 1  # Failure exit code
     fi
 }
+
+s3cat() {
+    local temp_file=~/temp/temps3file
+
+    if [[ -z "$1" ]]; then
+        echo "Usage: s3cat s3://your-bucket/path/to/file"
+        return 1
+    fi
+
+    # Copy the S3 file locally
+    aws s3 cp "$1" "$temp_file" --quiet
+
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Failed to download file from S3."
+        return 1
+    fi
+
+    # Detect JSON and pretty-print with jq if available
+    if [[ "$1" == *.json ]] && command -v jq &> /dev/null; then
+        cat "$temp_file" | jq .
+    else
+        cat "$temp_file"
+    fi
+
+    # Remove temporary file
+    rm -f "$temp_file"
+}
