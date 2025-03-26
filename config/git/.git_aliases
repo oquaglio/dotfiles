@@ -77,6 +77,9 @@
 	com = checkout master
 	resh = reset --hard					# Reset Working Tree and Index to commit pointed at by HEAD (or specify specific commit as additional parameter)
 
+	# Hard reset to HEAD and remove all untracked files and directories (⚠️ destructive!)
+	nuke = "!git reset --hard && git clean -fd"
+
 	####################################################################
 	# Index / Staging Area
 	# The index is a single, large, binary file in <baseOfRepo>/.git/index, which lists all files in
