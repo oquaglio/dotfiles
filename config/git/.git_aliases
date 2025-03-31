@@ -78,7 +78,8 @@
 	resh = reset --hard					# Reset Working Tree and Index to commit pointed at by HEAD (or specify specific commit as additional parameter)
 
 	# Hard reset to HEAD and remove all untracked or ignored files or directories (⚠️ destructive!)	
-	nuke = !sh -c 'read -p \"⚠️  This will DELETE all uncommitted changes and untracked files. Are you sure? [y/N] \" ans && [ \"$ans\" = \"y\" ] && git reset --hard && git clean -xfd'
+	# NOTES: The additional -f (i.e. -ff) lets Git remove directories that contain a .git folder.
+	nuke = !sh -c 'read -p \"⚠️  This will DELETE all uncommitted changes and untracked files. Are you sure? [y/N] \" ans && [ \"$ans\" = \"y\" ] && git reset --hard && git clean -ffxd'
 
 	####################################################################
 	# Index / Staging Area
