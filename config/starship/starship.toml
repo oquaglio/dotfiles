@@ -7,7 +7,7 @@ command_timeout = 20000
 add_newline = true
 
 format = """
-$username@$hostname[$env_var_DISTRO_NAME] in $directory $git_branch$git_status$git_state$python$docker_context$aws$cmd_duration$time\n$shell$character
+$username@$hostname $env_var_DISTRO_NAME in $directory $git_branch$git_status$git_state$python$docker_context$aws$cmd_duration$time\n$shell$character
 """
 
 [env_var.DISTRO_NAME]
