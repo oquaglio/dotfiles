@@ -74,6 +74,18 @@ I use starship prompt. Install it with your package manager and add it to your .
 eval "$(starship init zsh)"
 ```
 
+Also add this for the prompt:
+
+```SH
+export DISTRO_NAME="$WSL_DISTRO_NAME"
+```
+
+or:
+
+```SH
+export DISTRO_NAME="My Distro"
+```
+
 ## How-Tos
 
 ### Using the fch Function
