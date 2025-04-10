@@ -14,6 +14,7 @@ alias gfe='find . -type d -empty -not -path "./.git/*" -not -path "./.metadata/*
 # [g]it [k]eep [e]mpty - add .gitkeep files to all empty dirs to make git to add to tree
 alias gke='find . -type d -empty -not -path "./.git/*" -not -path "./.metadata/*" -not -path "*/target/*" -exec touch {}/.gitkeep \;'
 
+alias nukegit='find . -name .git -type d -not -path ./.git -exec rm -rf {} +'
 
 # aliases to bin ###########################################################
 alias gw='git-wtf'
