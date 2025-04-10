@@ -7,12 +7,12 @@ command_timeout = 20000
 add_newline = true
 
 format = """
-$username on $env_var $hostname in $directory $git_branch$git_status$git_state$python$docker_context$aws$cmd_duration$time\n$shell$character
+$username on $env_var.HOST_NAME $hostname in $directory $git_branch$git_status$git_state$python$docker_context$aws$cmd_duration$time\n$shell$character
 """
 
-[env_var]
+[env_var.DISTRO_NAME]
 symbol = "🐧 "
-variable = "WSL_DISTRO_NAME"
+variable = "DISTRO_NAME"
 default = ""
 #format = " ❯ [$env_value](bold dimmed red) "
 format = "[$env_value](bold red)"
