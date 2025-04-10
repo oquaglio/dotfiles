@@ -82,7 +82,7 @@
 	nuke = !sh -c 'read -p \"⚠️  This will DELETE all uncommitted changes and untracked files. Are you sure? [y/N] \" ans && [ \"$ans\" = \"y\" ] && git reset --hard && git clean -ffxd'
 	
 	# Discard all changes in Working Tree that have 0 added and 0 deleted lines (i.e. just meta or modified date changed)
-	discard = git diff HEAD --numstat | awk '$1 == 0 && $2 == 0 {print $3}' | xargs git restore
+	discard = !git diff HEAD --numstat | awk '$1 == 0 && $2 == 0 {print $3}' | xargs git restore --staged --worktree
 
 	####################################################################
 	# Index / Staging Area
