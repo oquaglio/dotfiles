@@ -15,7 +15,7 @@ symbol = "🐧 "
 variable = "DISTRO_NAME"
 default = ""
 #format = " ❯ [$env_value](bold dimmed red) "
-format = "[$env_value(bold red)]"
+format = "$env_value(bold red)"
 
 [username]
 style_user = "green bold"
