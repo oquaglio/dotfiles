@@ -86,6 +86,12 @@ or:
 export DISTRO_NAME="My Distro"
 ```
 
+or:
+
+```
+export DISTRO_NAME=$(. /etc/os-release; echo $ID$VERSION_ID)
+```
+
 ## How-Tos
 
 ### Using the fch Function
