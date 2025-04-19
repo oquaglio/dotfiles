@@ -1,10 +1,8 @@
 # dotfiles
 
-I maintain this repo as *my* dotfiles.
+My dotfiles. I have stolen many ideas from other people's dotfiles.
 
-I presently use zsh and things seem to work well. I also tested bash, but not very carefully.
-
-I have stolen many ideas from other people's dotfiles.
+I use zsh and things seem to work well. I also tested bash, but not very carefully.
 
 
 ## Installation
