@@ -5,7 +5,16 @@
 # to the be Git command one will execute the most, hence this simple
 # enhancement does prove very useful in practice.
 #alias g='_f() { if [[ $# == 0 ]]; then git status --short --branch; else git "$@"; fi }; _f'
-alias g='_f() { if [[ $# == 0 ]]; then git diff --stat; else git "$@"; fi }; _f'
+#alias g='_f() { if [[ $# == 0 ]]; then git diff --stat; else git "$@"; fi }; _f'
+alias g='_f() {
+  if [[ $# -eq 0 ]]; then
+    git diff --stat
+    git config --list --show-origin | grep -i "user"
+  else
+    git "$@"
+  fi
+}; _f'
+
 #complete -o default -o nospace -F _git g
 
 # .gitkeep #################################################################
