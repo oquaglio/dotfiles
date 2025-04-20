@@ -1,0 +1,2 @@
+alias sortclip="xclip -o | sort | xclip -selection clipboard"
+alias dedupclip='xclip -o | awk '\''!seen[$0]++'\'' | xclip -selection clipboard'
