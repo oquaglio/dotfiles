@@ -8,8 +8,8 @@
 #alias g='_f() { if [[ $# == 0 ]]; then git diff --stat; else git "$@"; fi }; _f'
 alias g='_f() {
   if [[ $# -eq 0 ]]; then
-    git diff --stat
     git config --list --show-origin | grep -i "user"
+    git diff --stat    
   else
     git "$@"
   fi
