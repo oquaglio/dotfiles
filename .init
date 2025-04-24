@@ -55,12 +55,17 @@ pathadd() {
         local current_path
         current_path="$(eval echo "\$$path_var")"
 
-        # Remove all existing instances of the directory
-        local path_entry
+        # Initialize new_path
         local new_path=""
-        IFS=':' read -ra path_entries <<< "$current_path"
-        for path_entry in "${path_entries[@]}"; do
-            if [ "$path_entry" != "$dir_to_add" ]; then
+        local path_entry
+
+        # Save the original IFS and set it to colon
+        local OLD_IFS="$IFS"
+        IFS=':'
+
+        # Loop through each entry in the current path
+        for path_entry in $current_path; do
+            if [ "$path_entry" != "$dir_to_add" ] && [ -n "$path_entry" ]; then
                 if [ -z "$new_path" ]; then
                     new_path="$path_entry"
                 else
@@ -68,6 +73,9 @@ pathadd() {
                 fi
             fi
         done
+
+        # Restore the original IFS
+        IFS="$OLD_IFS"
 
         # Add the directory to the path variable based on the specified position
         if [ "$position" = "prepend" ]; then
