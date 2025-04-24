@@ -1,0 +1,17 @@
+# Address the naming differences of the fd utility across various Linux distributions...
+# If 'fdfind' is available but 'fd' is not, alias 'fd' to 'fdfind'
+if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then
+  alias fd='fdfind'
+fi
+# If 'fd' is available but 'fdfind' is not, alias 'fdfind' to 'fd'
+if command -v fd >/dev/null 2>&1 && ! command -v fdfind >/dev/null 2>&1; then
+  alias fdfind='fd'
+fi
+
+# Aliases ####################
+
+alias fz='fdfind --type f --hidden | fzf'
+
+# jump to a dir
+alias fzcd='cd $(fdfind --type d | fzf --preview "ls -la {}")'
+

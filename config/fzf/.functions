@@ -1,0 +1,13 @@
+# Usage: fzgrep "search_term"
+fzgrep() {
+  local search_term="$1"
+  if [ -z "$search_term" ]; then
+    echo "Usage: fzgrep <search_term>"
+    return 1
+  fi
+  grep -r --exclude-dir={.git,.svn} --color=always "$search_term" . \
+    | fzf --ansi \
+          --delimiter : \
+          --preview 'bat --style=numbers --color=always --highlight-line {2} {1}' \
+          --preview-window=right:50%
+}

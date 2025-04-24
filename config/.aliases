@@ -25,24 +25,6 @@ alias lr='ls -alhRt --color' # all files, long format, human readable, recursive
 #alias f='_f(){ find . -type f -size "$1" -exec ls --color --classify --human-readable -l {} \; ; }; _f'
 
 
-# fzf ##################################################################
-alias f='fdfind --type f --hidden | fzf'
-alias cdf='cd $(fdfind --type d | fzf --preview "ls -la {}")'
-
-# Address the naming differences of the fd utility across various Linux distributions...
-
-# If 'fdfind' is available but 'fd' is not, alias 'fd' to 'fdfind'
-if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then
-  alias fd='fdfind'
-fi
-
-# If 'fd' is available but 'fdfind' is not, alias 'fdfind' to 'fd'
-if command -v fd >/dev/null 2>&1 && ! command -v fdfind >/dev/null 2>&1; then
-  alias fdfind='fd'
-fi
-#################################################################### fzf
-
-
 # https://taskfile.dev/
 alias ts='task'
 alias tl='task --list-all'
