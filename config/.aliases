@@ -29,10 +29,15 @@ alias lr='ls -alhRt --color' # all files, long format, human readable, recursive
 alias f='fdfind --type f --hidden | fzf'
 alias cdf='cd $(fdfind --type d | fzf --preview "ls -la {}")'
 
-if [ -x /usr/bin/fdfind ] && [ ! -x /usr/bin/fd ]; then
+# Address the naming differences of the fd utility across various Linux distributions...
+
+# If 'fdfind' is available but 'fd' is not, alias 'fd' to 'fdfind'
+if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then
   alias fd='fdfind'
 fi
-if [ ! -x /usr/bin/fdfind ] && [ -x /usr/bin/fd ]; then
+
+# If 'fd' is available but 'fdfind' is not, alias 'fdfind' to 'fd'
+if command -v fd >/dev/null 2>&1 && ! command -v fdfind >/dev/null 2>&1; then
   alias fdfind='fd'
 fi
 #################################################################### fzf
