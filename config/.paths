@@ -1,8 +1,11 @@
+# For Homebrew (likes to be before bin)
+pathadd /home/linuxbrew/.linuxbrew/bin
+pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
+
 pathadd $HOME/.local/bin
 pathadd $HOME/bin
 pathadd $DOTFILES_ROOT/bin
 pathadd /usr/local/man MANPATH
-
 
 # OMZ
 pathadd $HOME/.oh-my-zsh ZSH
@@ -16,7 +19,3 @@ pathadd $PYENV_ROOT/bin
 
 # Go path (for KinD)
 pathadd $HOME/go/bin
-
-# For Homebrew
-pathadd /home/linuxbrew/.linuxbrew/bin prepend
-#pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
