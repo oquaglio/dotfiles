@@ -16,6 +16,6 @@ pathadd $PYENV_ROOT/bin
 # Go path (for KinD)
 pathadd $HOME/go/bin
 
-# For Homebrew (likes to be before bin)
-pathadd /home/linuxbrew/.linuxbrew/bin prepend
-pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
+# # For Homebrew (likes to be before bin)
+# pathadd /home/linuxbrew/.linuxbrew/bin
+# pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
