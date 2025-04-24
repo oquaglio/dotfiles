@@ -38,37 +38,37 @@ reload_shell_config() {
 }
 alias rl='reload_shell_config'
 
-# Add dir (string) to the PATH if not already in PATH AND dir exists
-# $1 (First Parameter): The directory you want to add to the path variable.
-# $2 (Second Parameter): The name of the path variable to update. If this parameter is not provided, it defaults to PATH.
-# Examples:
-# pathadd /usr/local/myapp/bin
-# pathadd /usr/local/myapp/bin MYconfig_PATH
-# pathadd $HOME/.local/bin
-# pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
+# Add a directory to a PATH-like variable if it's not already present and the directory exists.
+# Usage:
+#   pathadd /some/dir            # Appends to PATH
+#   pathadd /some/dir PATH       # Appends to PATH
+#   pathadd /some/dir PATH prepend  # Prepends to PATH
+#   pathadd /some/dir MY_PATH append # Appends to MY_PATH
 pathadd() {
-    # First parameter: directory to add
-    dir_to_add="$1"
-    # Second parameter: variable to update (default to PATH if not provided)
-    path_var="${2:-PATH}"
+    local dir_to_add="$1"
+    local path_var="${2:-PATH}"
+    local position="${3:-append}"
 
-    # Check if the first argument is a valid directory
+    # Check if the directory exists
     if [ -d "$dir_to_add" ]; then
-        # Get the current value of the specified PATH variable
-        current_path=$(eval echo \$$path_var)
+        # Retrieve the current value of the specified path variable
+        local current_path
+        current_path="$(eval echo "\$$path_var")"
 
-        # Check if the directory is already in the PATH variable
-        if [[ ":$current_path:" != *":$dir_to_add:"* ]]; then
-            # Add the directory to the PATH variable
-            new_path="${current_path:+"$current_path:"}$dir_to_add"
-            export $path_var="$new_path"
+        # Check if the directory is already in the path variable
+        case ":$current_path:" in
+            *":$dir_to_add:"*) return 0 ;;
+        esac
+
+        # Add the directory to the path variable based on the specified position
+        if [ "$position" = "prepend" ]; then
+            eval export "$path_var=\"$dir_to_add${current_path:+:}$current_path\""
         else
-            : # echo "The directory '$dir_to_add' is already in the $path_var."
+            eval export "$path_var=\"${current_path:+$current_path:}$dir_to_add\""
         fi
-    else
-        : # echo "The directory '$dir_to_add' does not exist."
     fi
 }
+
 
 
 # set env variable to dir IF dir exists
