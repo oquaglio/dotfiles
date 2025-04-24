@@ -70,6 +70,27 @@ pathadd() {
     fi
 }
 
+# Function to prepend a directory to a PATH-like variable
+prepend_path() {
+    local dir_to_add="$1"
+    local var_name="${2:-PATH}"
+
+    # Check if the directory exists
+    if [ -d "$dir_to_add" ]; then
+        # Retrieve the current value of the specified variable
+        local current_value
+        current_value="$(eval echo "\$$var_name")"
+
+        # Check if the directory is already in the variable
+        case ":$current_value:" in
+            *":$dir_to_add:"*) return 0 ;;
+        esac
+
+        # Prepend the directory
+        eval export "$var_name=\"$dir_to_add${current_value:+:}$current_value\""
+    fi
+}
+
 # set env variable to dir IF dir exists
 # $1 = env var
 # $2 = dir
