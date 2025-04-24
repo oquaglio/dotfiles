@@ -13,5 +13,5 @@ fi
 alias fz='fdfind --type f --hidden | fzf'
 
 # jump to a dir
-alias fzcd='cd $(fdfind --type d | fzf --preview "ls -la {}")'
+alias fzcd='selected=$(fdfind --type d | fzf --preview "ls -la {}") && [ -n "$selected" ] && cd "$selected"'
 
