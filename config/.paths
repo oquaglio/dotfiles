@@ -18,5 +18,5 @@ pathadd $PYENV_ROOT/bin
 pathadd $HOME/go/bin
 
 # For Homebrew
-pathadd /home/linuxbrew/.linuxbrew/bin
+pathadd /home/linuxbrew/.linuxbrew/bin prepend
 pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
