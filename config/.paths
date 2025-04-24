@@ -19,4 +19,4 @@ pathadd $HOME/go/bin
 
 # For Homebrew
 pathadd /home/linuxbrew/.linuxbrew/bin prepend
-pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
+#pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
