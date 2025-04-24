@@ -38,7 +38,7 @@ reload_shell_config() {
 }
 alias rl='reload_shell_config'
 
-# Add a directory to a PATH-like variable if it's not already present and the directory exists.
+# Add a directory to a PATH-like variable if it's not already present.
 # Usage:
 #   pathadd /some/dir            # Appends to PATH
 #   pathadd /some/dir PATH       # Appends to PATH
@@ -55,21 +55,31 @@ pathadd() {
         local current_path
         current_path="$(eval echo "\$$path_var")"
 
-        # Check if the directory is already in the path variable
-        case ":$current_path:" in
-            *":$dir_to_add:"*) return 0 ;;
-        esac
+        # Remove all existing instances of the directory
+        local path_entry
+        local new_path=""
+        IFS=':' read -ra path_entries <<< "$current_path"
+        for path_entry in "${path_entries[@]}"; do
+            if [ "$path_entry" != "$dir_to_add" ]; then
+                if [ -z "$new_path" ]; then
+                    new_path="$path_entry"
+                else
+                    new_path="$new_path:$path_entry"
+                fi
+            fi
+        done
 
         # Add the directory to the path variable based on the specified position
         if [ "$position" = "prepend" ]; then
-            eval export "$path_var=\"$dir_to_add${current_path:+:}$current_path\""
+            new_path="$dir_to_add${new_path:+:$new_path}"
         else
-            eval export "$path_var=\"${current_path:+$current_path:}$dir_to_add\""
+            new_path="${new_path:+$new_path:}$dir_to_add"
         fi
+
+        # Export the updated path variable
+        eval export "$path_var=\"$new_path\""
     fi
 }
-
-
 
 # set env variable to dir IF dir exists
 # $1 = env var
