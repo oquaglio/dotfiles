@@ -1,1 +1,7 @@
 
+if [ -f /etc/os-release ]; then
+  . /etc/os-release
+  export DISTRO_NAME="${ID}${VERSION_ID}"
+else
+  export DISTRO_NAME="unknown"
+fi
