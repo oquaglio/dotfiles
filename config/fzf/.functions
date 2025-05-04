@@ -7,6 +7,6 @@ fzgrep() {
   rg --color=always --line-number --no-heading --smart-case "$search_term" \
     | fzf --ansi \
           --delimiter : \
-          --preview 'bat --style=numbers --color=always --highlight-line {2} {1}' \
+          --preview 'bat --style=numbers --color=always --line-range {2}-5:{2}+5 {1}' \
           --preview-window=right:50%
 }
