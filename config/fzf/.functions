@@ -5,11 +5,12 @@ fzgrep() {
     return 1
   fi
 
-  local rg_flags="--color=always --line-number --no-heading"
-  [[ "$search_term" =~ [A-Z] ]] || rg_flags+=" --ignore-case"
+  # Use an array for flags
+  local rg_flags=(--color=always --line-number --no-heading)
+  [[ "$search_term" =~ [A-Z] ]] || rg_flags+=(--ignore-case)
 
   local selected
-  selected=$(rg $rg_flags "$search_term" \
+  selected=$(rg "${rg_flags[@]}" "$search_term" \
     | fzf --ansi \
           --delimiter : \
           --preview '
