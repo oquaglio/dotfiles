@@ -4,7 +4,9 @@
 if ! whence -w compdef > /dev/null; then
     # dedup fpath array (dirs Zsh searches for functions like compinit)
     typeset -U fpath
-    autoload -U compinit && compinit
+    #autoload -U compinit && compinit
+    autoload -Uz compinit
+    compinit
 fi
 
 export DOTFILES_ROOT=$(dirname "$0")
