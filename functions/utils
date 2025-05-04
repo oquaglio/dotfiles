@@ -14,27 +14,30 @@ e() {
     printf "${YELLOW}Matches: ${GREEN}${matches}${NC}\n"
 }
 
-# display ports (dp)
-# dp - Display network listening and active connections with process owner info
+# conn - Display active TCP/UDP connections with owning process and user
 #
-# This function wraps `netstat -tulanp` to show active TCP/UDP listening and
-# connection endpoints, along with the owning user (OWNER) of each process.
+# This function wraps `ss -lntup` to list all active and listening network sockets,
+# showing the associated process ID and user (OWNER) for each entry.
 #
 # Features:
-# - If a search term is provided (e.g., port, PID, process name), filters output via `grep`.
-# - If no search term is provided, shows all active connections.
-# - Parses the PID/Program column to extract the PID and map it to a username via `ps`.
-# - Adds an OWNER column to the netstat output.
-# - Saves the output to /tmp/dp_matches.log temporarily for counting.
+# - Works on modern Linux distributions (no need for deprecated `netstat`)
+# - Adds an OWNER column by extracting the PID from each `ss` line and resolving
+#   the user with `ps`
+# - Supports optional search term filtering (e.g. port, PID, process name)
+# - Writes output to a temporary file to count matches and cleanly format results
 #
 # Usage:
-#   dp               → list all network connections with owners
-#   dp ssh           → filter only lines related to "ssh"
+#   dp                → list all active TCP/UDP sockets with user info
+#   dp 8080           → filter only entries matching '8080' (case-insensitive)
 #
-# Notes:
-# - Requires `sudo` to access process information.
-# - Cleans up temporary log file after printing match count.
-dp() {
+# Requirements:
+# - `ss` (from `iproute2`) must be installed (default on most distros)
+# - `sudo` is used to ensure all processes (not just user-owned) are visible
+#
+# Example Output:
+#   Netid State   Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process           OWNER
+#
+conn() {
     local search_term="$1"
     local tmpfile="/tmp/dp_matches.log"
 
