@@ -1,0 +1,40 @@
+# setup_terminal_keys
+#
+# Ensures consistent behavior for common terminal keys (e.g. Home, End, Delete, Arrow keys)
+# in Zsh across various terminal environments, including tmux, WSL, and minimal terminals.
+#
+# How it works:
+# - Loads the zsh/terminfo module and terminfo key definitions (e.g., khome, kend, kdch1).
+# - Sends the `smkx` (start keypad transmit) capability via `echoti` to switch the terminal
+#   into application keypad mode (important for terminals like xterm, urxvt, and tmux).
+# - Uses Zsh's `bindkey` to map key sequences from the terminfo database to standard Zsh
+#   editing functions like `beginning-of-line`, `end-of-line`, `delete-char`, etc.
+#
+# Safety:
+# - Checks for the existence of each terminfo capability before attempting to use it.
+# - Gracefully skips unavailable keys (useful in restricted shells, containers, or broken terminfo).
+#
+# Usage:
+# - Call this function during shell initialization (e.g., at the bottom of your `.zshrc`)
+#   to ensure key mappings are correct regardless of the terminal or host environment.
+#
+# Example output:
+# - Pressing Home jumps to beginning of line
+# - Pressing Delete removes the character under the cursor
+# - Arrow keys navigate command history and move the cursor as expected
+setup_terminal_keys() {
+  autoload -U terminfo
+  zmodload zsh/terminfo 2>/dev/null || return
+
+  # Enable keypad application mode (important for correct key behavior)
+  (( ${+terminfo[smkx]} )) && echoti smkx
+
+  # Define key bindings safely if terminfo entries exist
+  (( ${+terminfo[khome]} ))  && bindkey "${terminfo[khome]}" beginning-of-line
+  (( ${+terminfo[kend]} ))   && bindkey "${terminfo[kend]}" end-of-line
+  (( ${+terminfo[kdch1]} ))  && bindkey "${terminfo[kdch1]}" delete-char
+  (( ${+terminfo[kcuu1]} ))  && bindkey "${terminfo[kcuu1]}" up-line-or-history
+  (( ${+terminfo[kcud1]} ))  && bindkey "${terminfo[kcud1]}" down-line-or-history
+  (( ${+terminfo[kcub1]} ))  && bindkey "${terminfo[kcub1]}" backward-char
+  (( ${+terminfo[kcuf1]} ))  && bindkey "${terminfo[kcuf1]}" forward-char
+}
