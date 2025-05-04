@@ -1,2 +1,2 @@
 # emacs or vi mode?
-bindkey -e
+bindkey -v
