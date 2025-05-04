@@ -4,9 +4,33 @@ fzgrep() {
     echo "Usage: fzgrep <search_term>"
     return 1
   fi
-  rg --color=always --line-number --no-heading --smart-case "$search_term" \
+
+  local selected
+  selected=$(rg --color=always --line-number --no-heading --smart-case "$search_term" \
     | fzf --ansi \
           --delimiter : \
-          --preview 'bat --style=numbers --color=always --line-range {2}-5:{2}+5 {1}' \
-          --preview-window=right:50%
+          --preview '
+            file=$(echo {} | cut -d: -f1)
+            line=$(echo {} | cut -d: -f2)
+            if [[ "$line" =~ ^[0-9]+$ ]]; then
+              start=$((line > 5 ? line - 5 : 1))
+              end=$((line + 5))
+              bat --style=numbers --color=always --line-range "$start":"$end" "$file"
+            else
+              echo "Invalid line number: $line"
+            fi
+          ' \
+          --preview-window=right:50% \
+          --bind 'enter:accept')
+
+  if [ -n "$selected" ]; then
+    local file line
+    file=$(echo "$selected" | cut -d: -f1)
+    line=$(echo "$selected" | cut -d: -f2)
+    if [[ "$line" =~ ^[0-9]+$ ]]; then
+      nvim +"$line" "$file"  # Change to your editor if needed
+    else
+      echo "Could not extract a valid line number from: $selected"
+    fi
+  fi
 }
