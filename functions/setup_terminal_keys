@@ -33,8 +33,8 @@ setup_terminal_keys() {
   (( ${+terminfo[khome]} ))  && bindkey "${terminfo[khome]}" beginning-of-line
   (( ${+terminfo[kend]} ))   && bindkey "${terminfo[kend]}" end-of-line
   (( ${+terminfo[kdch1]} ))  && bindkey "${terminfo[kdch1]}" delete-char
-  (( ${+terminfo[kcuu1]} ))  && bindkey "${terminfo[kcuu1]}" up-line-or-history
-  (( ${+terminfo[kcud1]} ))  && bindkey "${terminfo[kcud1]}" down-line-or-history
-  (( ${+terminfo[kcub1]} ))  && bindkey "${terminfo[kcub1]}" backward-char
-  (( ${+terminfo[kcuf1]} ))  && bindkey "${terminfo[kcuf1]}" forward-char
+  #(( ${+terminfo[kcuu1]} ))  && bindkey "${terminfo[kcuu1]}" up-line-or-history
+  #(( ${+terminfo[kcud1]} ))  && bindkey "${terminfo[kcud1]}" down-line-or-history
+  #(( ${+terminfo[kcub1]} ))  && bindkey "${terminfo[kcub1]}" backward-char
+  #(( ${+terminfo[kcuf1]} ))  && bindkey "${terminfo[kcuf1]}" forward-char
 }
