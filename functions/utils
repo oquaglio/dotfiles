@@ -34,26 +34,38 @@ e() {
 # Notes:
 # - Requires `sudo` to access process information.
 # - Cleans up temporary log file after printing match count.
-
 dp() {
     local search_term="$1"
     local tmpfile="/tmp/dp_matches.log"
 
-    echo "${search_term:+Searching for processes matching: $search_term}"
+    # Run ss to get listening + established sockets with PID info
+    local ss_output
+    ss_output=$(sudo ss -lntup 2>/dev/null)
 
-    # Run netstat and optionally filter
-    local netstat_output
-    netstat_output=$(sudo netstat -tulanp 2>/dev/null)
-
-    if [[ -n "$search_term" ]]; then
-        netstat_output=$(echo "$netstat_output" | grep -i "$search_term")
+    # Skip if no output
+    if [[ -z "$ss_output" ]]; then
+        echo "No output from ss. Are there any active connections?"
+        return 1
     fi
 
-    echo "$netstat_output" | while IFS= read -r line; do
-        if [[ "$line" =~ ^Proto ]]; then
+    # Optionally filter
+    if [[ -n "$search_term" ]]; then
+        echo "Searching for processes matching: $search_term"
+        ss_output=$(echo "$ss_output" | grep -i "$search_term")
+    else
+        echo "Listing all active connections..."
+    fi
+
+    if [[ -z "$ss_output" ]]; then
+        echo "No matching connections found."
+        return 0
+    fi
+
+    echo "$ss_output" | while IFS= read -r line; do
+        if [[ "$line" =~ ^Netid ]]; then
             echo -e "${line}\tOWNER"
-        else
-            local pid=$(echo "$line" | awk '{print $NF}' | cut -d'/' -f1)
+        elif [[ -n "$line" ]]; then
+            local pid=$(echo "$line" | grep -oP 'pid=\K[0-9]+')
             if [[ "$pid" =~ ^[0-9]+$ ]]; then
                 local owner=$(ps -o user= -p "$pid" 2>/dev/null || echo "N/A")
                 echo -e "${line}\t${owner}"
@@ -68,3 +80,4 @@ dp() {
     echo "Matches: $match_count"
     rm -f "$tmpfile"
 }
+
