@@ -36,14 +36,13 @@ e() {
 #
 # Example Output:
 #   Netid State   Recv-Q Send-Q Local Address:Port  Peer Address:Port  Process           OWNER
-#
-conn() {
+#conn() {
     local search_term="$1"
-    local tmpfile="/tmp/dp_matches.log"
+    local tmpfile="/tmp/conn_matches.log"
 
-    # Run ss to get listening + established sockets with PID info
+    # Get all TCP/UDP sockets including connected ones (no -l)
     local ss_output
-    ss_output=$(sudo ss -lntup 2>/dev/null)
+    ss_output=$(sudo ss -ntup 2>/dev/null)
 
     # Skip if no output
     if [[ -z "$ss_output" ]]; then
@@ -56,7 +55,7 @@ conn() {
         echo "Searching for processes matching: $search_term"
         ss_output=$(echo "$ss_output" | grep -i "$search_term")
     else
-        echo "Listing all active connections..."
+        echo "Listing all active and listening connections..."
     fi
 
     if [[ -z "$ss_output" ]]; then
@@ -83,4 +82,5 @@ conn() {
     echo "Matches: $match_count"
     rm -f "$tmpfile"
 }
+
 
