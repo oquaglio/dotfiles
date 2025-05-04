@@ -15,7 +15,10 @@ fzgrep() {
             if [[ "$line" =~ ^[0-9]+$ ]]; then
               start=$((line > 5 ? line - 5 : 1))
               end=$((line + 5))
-              bat --style=numbers --color=always --line-range "$start":"$end" "$file"
+              bat --style=numbers --color=always \
+                  --line-range "$start":"$end" \
+                  --highlight-line "$line" \
+                  "$file"
             else
               echo "Invalid line number: $line"
             fi
@@ -28,7 +31,7 @@ fzgrep() {
     file=$(echo "$selected" | cut -d: -f1)
     line=$(echo "$selected" | cut -d: -f2)
     if [[ "$line" =~ ^[0-9]+$ ]]; then
-      nvim +"$line" "$file"  # Change to your editor if needed
+      nvim +"$line" "$file"  # Change to your preferred editor
     else
       echo "Could not extract a valid line number from: $selected"
     fi
