@@ -1,8 +1,8 @@
 #echo "Sourced: $(dirname "$0")/$(basename "$0")"
 
-# Make sure compinit is loaded if not already
+# Make sure Zsh's autocompletion system is loaded if not already
 if ! whence -w compdef > /dev/null; then
-    # dedup fpath array
+    # dedup fpath array (dirs Zsh searches for functions like compinit)
     typeset -U fpath
     autoload -U compinit && compinit
 fi
