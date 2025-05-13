@@ -11,7 +11,9 @@ mkdir -p ~/.config
 # Create symlinks to app specific config
 ln -sf $DOTFILES_ROOT/config/starship/starship.toml ~/.config/starship.toml
 ln -sf $DOTFILES_ROOT/config/nano/.nanorc ~/.nanorc
+# TODO: fix nano config
 ln -s "$DOTFILES_ROOT/config/nano/.nano" ~/.nano
+ln -s "$DOTFILES_ROOT/config/nano/.nano" ~/.config/nano
 
 # .gitconfig doesn't support env vars, so instead link them to $HOME
 ln -sf $DOTFILES_ROOT/config/git/.gitmessage $HOME/.gitmessage
