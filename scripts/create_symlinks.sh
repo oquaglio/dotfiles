@@ -8,8 +8,10 @@ rm -rf ~/.nanorc; rm -rf ~/.nano; rm -rf ~/.vimrc; rm -rf ~/.env; rm -rf ~/.alia
 # Set up dirs
 mkdir -p ~/.config
 
+# Create symlinks to app specific config
 ln -sf $DOTFILES_ROOT/config/starship/starship.toml ~/.config/starship.toml
 ln -sf $DOTFILES_ROOT/config/nano/.nanorc ~/.nanorc
+ln -s "$DOTFILES_ROOT/config/nano/.nano" ~/.nano
 
 # .gitconfig doesn't support env vars, so instead link them to $HOME
 ln -sf $DOTFILES_ROOT/config/git/.gitmessage $HOME/.gitmessage
