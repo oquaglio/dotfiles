@@ -15,3 +15,6 @@ export DOTFILES_ROOT=$(dirname "$0")
 source $DOTFILES_ROOT/.init
 
 source $DOTFILES_ROOT/.sources
+
+# Create symlinks to app specific config
+ln -s "$DOTFILES_ROOT/config/nano/.nano" ~/.nano
