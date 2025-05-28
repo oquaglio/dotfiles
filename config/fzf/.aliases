@@ -13,6 +13,6 @@ fi
 #alias fz='fdfind --type f --hidden | fzf'
 alias fz='fdfind --type f --hidden --exclude .git | fzf --preview "bat --style=numbers --color=always {} || cat {}"'
 
-# jump to a dir
+# jump to a dir with preview of dir contents - good z substitute
 alias fzcd='selected=$(fdfind --type d --hidden --exclude .git | fzf --preview "ls -la {}") && [ -n "$selected" ] && cd "$selected"'
 alias f='fzcd'
