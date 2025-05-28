@@ -8,10 +8,11 @@ if command -v fd >/dev/null 2>&1 && ! command -v fdfind >/dev/null 2>&1; then
   alias fdfind='fd'
 fi
 
-# Aliases ####################
 
-alias fz='fdfind --type f --hidden | fzf'
+# fzf with hidden files and preview
+#alias fz='fdfind --type f --hidden | fzf'
+alias fz='fdfind --type f --hidden --exclude .git | fzf --preview "bat --style=numbers --color=always {} || cat {}"'
 
 # jump to a dir
-alias fzcd='selected=$(fdfind --type d | fzf --preview "ls -la {}") && [ -n "$selected" ] && cd "$selected"'
+alias fzcd='selected=$(fdfind --type d --hidden --exclude .git | fzf --preview "ls -la {}") && [ -n "$selected" ] && cd "$selected"'
 alias f='fzcd'
