@@ -28,7 +28,7 @@ alias lr='ls -alhRt --color' # all files, long format, human readable, recursive
 # https://taskfile.dev/
 alias ts='task'
 alias tl='task --list-all'
-# For zsh, use the _task completion function for the t alias
+# For zsh, use the _task completion function for the alias
 compdef _task ts
 
 alias tt='tree -alpugifhDFC'
