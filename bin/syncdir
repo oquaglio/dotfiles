@@ -4,6 +4,12 @@
 # - Copies files and subdirectories
 # - Overwrites existing files
 # - Deletes files in destination that don't exist in source
+#
+# -a: archive mode (preserves permissions, symlinks, timestamps, etc.)
+# --delete: removes files in destination not present in source
+#"$src_dir"/: note the trailing slash — it means “contents of dir”
+# "$dest_dir"/: required to receive those contents
+
 
 src_dir="$1"
 dest_dir="$2"
