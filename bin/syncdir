@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Syncs source directory to destination:
+# - Copies files and subdirectories
+# - Overwrites existing files
+# - Deletes files in destination that don't exist in source
+
+src_dir="$1"
+dest_dir="$2"
+
+# Validate arguments
+if [[ $# -ne 2 ]]; then
+    echo "Usage: cpdir <source_directory> <destination_directory>"
+    exit 1
+fi
+
+# Check if source directory exists
+if [[ ! -d "$src_dir" ]]; then
+    echo "Error: Source directory '$src_dir' does not exist"
+    exit 1
+fi
+
+# Create destination directory if it doesn't exist
+if [[ ! -d "$dest_dir" ]]; then
+    echo "Creating destination directory: $dest_dir"
+    mkdir -p "$dest_dir" || {
+        echo "Error: Could not create destination directory"
+        exit 1
+    }
+fi
+
+# Sync using rsync
+echo "Syncing from '$src_dir' to '$dest_dir'..."
+rsync -a --delete "$src_dir"/ "$dest_dir"/
+
+if [[ $? -eq 0 ]]; then
+    echo "Sync completed successfully"
+    exit 0
+else
+    echo "Error: rsync failed"
+    exit 1
+fi
