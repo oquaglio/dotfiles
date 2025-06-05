@@ -106,3 +106,5 @@ alias h='history'
 #
 ########################################################################
 
+# automatically changes your shell's directory to whatever directory you navigate to in ranger when you exit
+alias ranger='ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat $HOME/.rangerdir`; cd "$LASTDIR"'
