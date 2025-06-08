@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Copy all files from source to destination, overwriting existing files
+
+src_dir="$1"
+dest_dir="$2"
+
+# Validate arguments
+if [[ $# -ne 2 ]]; then
+    echo "Usage: cpdir <source_directory> <destination_directory>"
+    exit 1
+fi
+
+# Check if source directory exists
+if [[ ! -d "$src_dir" ]]; then
+    echo "Error: Source directory '$src_dir' does not exist"
+    exit 1
+fi
+
+# Create destination directory if it doesn't exist
+if [[ ! -d "$dest_dir" ]]; then
+    echo "Creating destination directory: $dest_dir"
+    mkdir -p "$dest_dir" || {
+        echo "Error: Could not create destination directory"
+        exit 1
+    }
+fi
+
+# Copy all files and subdirectories recursively, overwriting existing ones
+echo "Copying from '$src_dir' to '$dest_dir'..."
+cp -rf "$src_dir"/. "$dest_dir"/ 2>/dev/null || {
+    # Handle case where source directory is empty
+    if [[ -z "$(ls -A "$src_dir" 2>/dev/null)" ]]; then
+        echo "Source directory '$src_dir' is empty"
+        exit 0
+    else
+        echo "Error: Failed to copy files"
+        exit 1
+    fi
+}
+
+echo "Copy completed successfully"
+exit 0
