@@ -6,6 +6,8 @@ command_timeout = 20000
 # Inserts a blank line between shell prompts
 add_newline = true
 
+# TIP: put the spaces in the `format` variable for each module to control the spacing
+#       between modules, not here in the `format` variable.
 format = """
 [┌──](bold green)\
 [$username@$hostname](bold blue) \
@@ -14,7 +16,7 @@ $directory \
 $git_branch$git_status$git_state\
 [$python](bold green)\
 $docker_context\
-$aws \
+$aws\
 ${custom.env_label}\
 [$cmd_duration](bold white)\
 [$time](bold bright-black)
@@ -113,7 +115,7 @@ style = "bright-white"
 format = '[$all_status$ahead_behind]($style) '
 
 [aws]
-format = '[$symbol($profile )(\($region\))]($style)'
+format = '[$symbol($profile )(\($region\))]($style) '
 style = 'bold blue'
 #style = '(bold bright-black)'
 symbol = '☁️ '
