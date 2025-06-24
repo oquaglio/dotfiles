@@ -7,15 +7,30 @@ command_timeout = 20000
 add_newline = true
 
 format = """
-$username@$hostname/${env_var.DISTRO_NAME} in $directory $git_branch$git_status$git_state$python$docker_context$aws$cmd_duration$time\n$shell$character
+[┌──](bold green)\
+[$username@$hostname](bold blue) \
+$git_branch$git_status$git_state\
+$directory\
+[$python](bold green)\
+$docker_context\
+$aws\
+${env_var.DISTRO_NAME}\
+${custom.env_label}\
+[$cmd_duration](bold white)\
+[$time](bold bright-black)
+[└─](bold green) $shell$character
 """
+
 
 [env_var.DISTRO_NAME]
 symbol = "🐧 "
 variable = "DISTRO_NAME"
 default = ""
 #format = " ❯ [$env_value](bold dimmed red) "
-format = "[$env_value](bold red)"
+#format = "[$env_value](bold red)"
+#format = "🌐 [$env_value]($style) "
+format = "🐧 [$env_value]($style) "
+style = "bold magenta"
 
 [username]
 style_user = "green bold"
@@ -36,11 +51,12 @@ disabled = false
 read_only = ' 🔒'
 truncation_length = 3
 truncation_symbol = '…/'
-truncate_to_repo = true # truncates directory to root folder if in github repo
-style = "bold blue"
-format = "[$path]($style)$read_only"
+truncate_to_repo = true                 # truncates directory to root folder if in github repo
+style = "fg:cyan"
+format = "[  $path$read_only]($style)"
 
 
+#format = "[$path]($style)$read_only"
 # Replace the '❯' symbol in the prompt with '➜'
 [character]
 #success_symbol = '[➜](bold green)'
@@ -77,6 +93,7 @@ symbol = '🌱 '
 #truncation_length = 4
 truncation_symbol = ''
 #ignore_branches = ['master', 'main']
+format = '[$symbol$branch]($style) '
 
 [git_state]
 format = '[\($state( $progress_current of $progress_total)\)]($style) '
@@ -84,21 +101,21 @@ cherry_pick = '[🍒 PICKING](bold red)'
 
 [git_status]
 conflicted = "⚔️ "
-ahead = "⇡${count}"
-behind = "⇣${count}"
-diverged = "⇕⇡${ahead_count}⇣${behind_count}"
-#untracked = "🛤️  ×${count}"
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕⇡${ahead_count}⇣${behind_count} "
 stashed = "📦 "
-#modified = "📝 ×${count}"
-staged = "🗃️  ×${count}"
-renamed = "📛 ×${count}"
-deleted = "x"
+staged = "🗃️ ${count} "
+renamed = "📛 ${count} "
+deleted = "❌ ${count} "
+untracked = ""                                 # Hide '?' or show custom if you prefer
 style = "bright-white"
-format = "$all_status$ahead_behind "
+format = '[$all_status$ahead_behind]($style) '
 
 [aws]
-format = 'in [$symbol($profile )(\($region\) )]($style)'
+format = ' [$symbol($profile )(\($region\) )]($style)'
 style = 'bold blue'
+#style = '(bold bright-black)'
 symbol = '☁️ '
 
 # Disable the package module, hiding it from the prompt completely
@@ -134,3 +151,9 @@ disabled = false
 full_symbol = "🔋"
 charging_symbol = "🔌"
 discharging_symbol = "⚡"
+
+[custom.env_label]
+command = "echo 🌍 $ENV"
+when = "test -n \"$ENV\""
+style = "bold magenta"
+format = "[$output]($style) "
