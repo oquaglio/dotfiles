@@ -13,7 +13,7 @@ $git_branch$git_status$git_state\
 $directory \
 [$python](bold green)\
 $docker_context\
-$aws\
+$aws \
 ${env_var.DISTRO_NAME}\
 ${custom.env_label}\
 [$cmd_duration](bold white)\
