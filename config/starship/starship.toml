@@ -10,7 +10,7 @@ format = """
 [┌──](bold green)\
 [$username@$hostname](bold blue) \
 $git_branch$git_status$git_state\
-$directory\
+$directory \
 [$python](bold green)\
 $docker_context\
 $aws\
@@ -18,7 +18,7 @@ ${env_var.DISTRO_NAME}\
 ${custom.env_label}\
 [$cmd_duration](bold white)\
 [$time](bold bright-black)
-[└─](bold green) $shell$character
+[└──](bold green)$shell$character
 """
 
 
