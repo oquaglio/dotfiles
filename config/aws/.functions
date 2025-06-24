@@ -12,6 +12,14 @@ aws() {
     fi
 }
 
+awskill() {
+    unset AWS_PROFILE
+    unset AWS_REGION
+    unset ENV
+    unset AWS_CONFIG_FILE
+    unset AWS_SHARED_CREDENTIALS_FILE
+}
+
 check_aws_session() {
     # Capture the output of the AWS identity information
     aws_identity_output=$(aws sts get-caller-identity 2>&1)
