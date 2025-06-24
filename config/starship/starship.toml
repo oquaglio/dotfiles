@@ -9,12 +9,12 @@ add_newline = true
 format = """
 [┌──](bold green)\
 [$username@$hostname](bold blue) \
-$git_branch$git_status$git_state\
+${env_var.DISTRO_NAME}\
 $directory \
+$git_branch$git_status$git_state\
 [$python](bold green)\
 $docker_context\
 $aws \
-${env_var.DISTRO_NAME}\
 ${custom.env_label}\
 [$cmd_duration](bold white)\
 [$time](bold bright-black)
