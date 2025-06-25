@@ -10,29 +10,29 @@ add_newline = true
 #       between modules, not here in the `format` variable.
 format = """
 [┌──](bold green)\
-[$username@$hostname](bold blue) \
-${env_var.DISTRO_NAME}\
-$directory \
+$username@$hostname\
+${custom.distro_glyph}${env_var.DISTRO_NAME}\
+$directory\
 $git_branch$git_status$git_state\
 [$python](bold green)\
 $docker_context\
 $aws\
 ${custom.env_label}\
 [$cmd_duration](bold white)\
-[$time](bold bright-black)
+$time
 [└──](bold green)$shell$character
 """
 
-
 [env_var.DISTRO_NAME]
-symbol = "🐧 "
+#symbol = "🐧 "
 variable = "DISTRO_NAME"
 default = ""
+style = "bold magenta"
 #format = " ❯ [$env_value](bold dimmed red) "
 #format = "[$env_value](bold red)"
 #format = "🌐 [$env_value]($style) "
-format = "🐧 [$env_value]($style) "
-style = "bold magenta"
+#format = "🐧 [$env_value]($style) "
+format = "[$env_value]($style) "
 
 [username]
 style_user = "green bold"
@@ -44,18 +44,19 @@ show_always = true
 [hostname]
 ssh_only = false
 #format = 'on [$hostname](bold dimmed yellow)'
-format = '[$hostname](bold yellow)'
+style = "fg:#e3e5e5 bg:#769ff0"
+format = '[$hostname](style) '
 trim_at = "."
 disabled = false
 
 # Directories displayed
 [directory]
-read_only = ' 🔒'
+#read_only = ' 🔒'
+read_only = ''
 truncation_length = 3
 truncation_symbol = '…/'
-truncate_to_repo = true                 # truncates directory to root folder if in github repo
-style = "fg:cyan"
-format = "[  $path$read_only]($style)"
+truncate_to_repo = true                  # truncates directory to root folder if in github repo
+format = "[  $path$read_only]($style) "
 
 
 #format = "[$path]($style)$read_only"
@@ -91,15 +92,12 @@ style = "bold green"
 format = "[$output]($style) "
 
 [git_branch]
-symbol = '🌱 '
+#symbol = '🌱 '
+symbol = " "
 #truncation_length = 4
 truncation_symbol = ''
 #ignore_branches = ['master', 'main']
 format = '[$symbol$branch]($style) '
-
-[git_state]
-format = '[\($state( $progress_current of $progress_total)\)]($style) '
-cherry_pick = '[🍒 PICKING](bold red)'
 
 [git_status]
 conflicted = "⚔️ "
@@ -112,7 +110,11 @@ renamed = "📛 ${count} "
 deleted = "❌ ${count} "
 untracked = ""                                 # Hide '?' or show custom if you prefer
 style = "bright-white"
-format = '[$all_status$ahead_behind]($style) '
+format = '[$all_status$ahead_behind]($style)'
+
+[git_state]
+format = '[\($state( $progress_current of $progress_total)\)]($style)'
+cherry_pick = '[🍒 PICKING](bold red)'
 
 [aws]
 format = '[$symbol($profile )(\($region\))]($style) '
@@ -126,12 +128,14 @@ disabled = true
 
 [time]
 disabled = false
-format = "at [$time]($style) "
+#time_format = "%R"            # Hour:Minute Format
 style = "#808080"
+format = "[ $time]($style)"
 use_12hr = false
 #time_format = "%T"
 utc_time_offset = "local"
 time_range = "-"
+#](bold bright-black)
 
 [python]
 format = 'using [${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
@@ -158,4 +162,10 @@ discharging_symbol = "⚡"
 command = "echo 🌍 $ENV"
 when = "test -n \"$ENV\""
 style = "bold magenta"
+format = "[$output]($style) "
+
+[custom.distro_glyph]
+command = "echo $DISTRO_GLYPH" # Your glyph here
+when = "true"
+style = ""
 format = "[$output]($style) "
