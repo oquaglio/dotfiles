@@ -15,9 +15,11 @@ aws() {
 awskill() {
     unset AWS_PROFILE
     unset AWS_REGION
-    unset ENV
     unset AWS_CONFIG_FILE
     unset AWS_SHARED_CREDENTIALS_FILE
+    unset AWS_ACCOUNT_ID
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_SECRET_ACCESS_KEY
 }
 
 check_aws_session() {
