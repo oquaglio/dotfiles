@@ -161,7 +161,8 @@ charging_symbol = "🔌"
 discharging_symbol = "⚡"
 
 [custom.env_label]
-command = "echo 🌍 $ENV"
+#command = "echo 🌍 $ENV"
+command = "echo  $ENV"
 when = "test -n \"$ENV\""
 style = "bold magenta"
 format = "[$output]($style) "
