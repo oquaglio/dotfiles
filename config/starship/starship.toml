@@ -55,8 +55,8 @@ disabled = false
 read_only = ''
 truncation_length = 3
 truncation_symbol = '…/'
-truncate_to_repo = true                  # truncates directory to root folder if in github repo
-format = "[  $path$read_only]($style) "
+truncate_to_repo = true                 # truncates directory to root folder if in github repo
+format = "[ $path$read_only]($style) "
 
 
 #format = "[$path]($style)$read_only"
