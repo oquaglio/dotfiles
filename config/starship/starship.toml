@@ -120,7 +120,9 @@ cherry_pick = '[🍒 PICKING](bold red)'
 format = '[$symbol($profile )(\($region\))]($style) '
 style = 'bold blue'
 #style = '(bold bright-black)'
-symbol = '☁️ '
+#symbol = '☁️ '
+symbol = ' '
+
 
 # Disable the package module, hiding it from the prompt completely
 [package]
