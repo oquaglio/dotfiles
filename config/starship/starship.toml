@@ -56,7 +56,7 @@ read_only = ''
 truncation_length = 3
 truncation_symbol = '…/'
 truncate_to_repo = true  # truncates directory to root folder if in github repo
-style = "bold yellow"
+style = "purple"
 #format = "[ $path$read_only]($style) "
 format = "[ $path$read_only]($style) "
 
@@ -121,7 +121,7 @@ cherry_pick = '[🍒 PICKING](bold red)'
 
 [aws]
 format = '[$symbol($profile )(\($region\))]($style) '
-style = 'bold blue'
+style = 'yellow'
 #style = '(bold bright-black)'
 #symbol = '☁️ '
 symbol = ' '
@@ -173,5 +173,5 @@ format = "[$output]($style) "
 [custom.distro_glyph]
 command = "echo $DISTRO_GLYPH" # Your glyph here
 when = "true"
-style = ""
+style = "bold"
 format = "[$output]($style) "
