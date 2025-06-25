@@ -1,3 +1,4 @@
+# Usage: export DISTRO_GLYPH=$(get_distro_glyph "$DISTRO_NAME")
 get_distro_glyph() {
   case "$1" in
     arch) echo "" ;;        # Arch Linux
