@@ -19,6 +19,7 @@ get_distro_glyph() {
     rocky) echo "" ;;       # Rocky Linux
     nixos) echo "" ;;       # NixOS
     garuda) echo "" ;;      # Garuda
+    mxlinux) echo "" ;;     @ MX Linux
     *) echo "" ;;           # Default: Tux
   esac
 }
