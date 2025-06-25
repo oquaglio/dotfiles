@@ -1,0 +1,24 @@
+get_distro_glyph() {
+  case "$1" in
+    arch) echo "" ;;        # Arch Linux
+    ubuntu) echo "" ;;      # Ubuntu
+    debian) echo "" ;;      # Debian
+    fedora) echo "" ;;      # Fedora
+    centos) echo "" ;;      # CentOS
+    alpine) echo "" ;;      # Alpine
+    manjaro) echo "" ;;     # Manjaro
+    opensuse) echo "" ;;    # openSUSE
+    gentoo) echo "" ;;      # Gentoo
+    raspbian) echo "" ;;    # Raspbian
+    linuxmint) echo "" ;;   # Linux Mint
+    elementary) echo "" ;;  # Elementary OS
+    kali) echo "" ;;        # Kali Linux
+    pop) echo "" ;;         # Pop!_OS
+    zorin) echo "" ;;       # Zorin OS
+    redhat) echo "" ;;      # Red Hat
+    rocky) echo "" ;;       # Rocky Linux
+    nixos) echo "" ;;       # NixOS
+    garuda) echo "" ;;      # Garuda
+    *) echo "" ;;           # Default: Tux
+  esac
+}
