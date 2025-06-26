@@ -4,6 +4,10 @@ My dotfiles. I have stolen many ideas from other people's dotfiles.
 
 I use zsh and things seem to work well. I also tested bash, but not very carefully.
 
+## Example Prompt
+
+<img src="https://github.com/user-attachments/assets/0c7cedfe-b8b1-471e-850c-34bacc675863" alt="terminal screenshot" width="800" />
+
 
 ## Installation
 
