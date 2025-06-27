@@ -21,3 +21,7 @@ source $DOTFILES_ROOT/.sources
 # The dir I use for zsh plugins
 export ZSH_PLUGINS_DIR=$HOME/.zsh/plugins
 mkdir -p $ZSH_PLUGINS_DIR
+
+# TODO: Add plugin sources and config
+
+# TODO: Add other common stuff
