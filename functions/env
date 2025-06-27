@@ -9,6 +9,14 @@ set_env() {
   fi
 }
 
+playpen() {
+  set_env playpen
+}
+
+devops() {
+  set_env devops
+}
+
 dev() {
   set_env dev
 }
