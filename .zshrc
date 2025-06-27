@@ -15,3 +15,8 @@ export DOTFILES_ROOT=$(dirname "$0")
 source $DOTFILES_ROOT/.init
 
 source $DOTFILES_ROOT/.sources
+
+# Zsh specific vars
+
+# The dir I use for zsh plugins
+export ZSH_PLUGINS_DIR=$HOME/.zsh/plugins
