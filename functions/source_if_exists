@@ -1,0 +1,4 @@
+# Define a function to source a file if it exists
+source_if_exists() {
+  [ -f "$1" ] && source "$1"
+}
