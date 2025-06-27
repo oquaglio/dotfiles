@@ -1,0 +1,23 @@
+# Function: set_env
+# Sets ENV to uppercase of the given input
+set_env() {
+  if [ -n "$1" ]; then
+    export ENV="${1^^}"  # Use POSIX version below if needed
+  else
+    echo "Usage: set_env <env_name>" >&2
+    return 1
+  fi
+}
+
+dev() {
+  set_env dev
+}
+
+uat() {
+  set_env uat
+}
+
+prod() {
+  set_env prod
+}
+
