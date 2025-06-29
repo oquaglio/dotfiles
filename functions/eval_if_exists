@@ -1,5 +1,0 @@
-# Function to eval init code for a binary if it exists
-# i.e. do this: eval "$(starship init zsh)"
-eval_if_exists() {
-  command -v "$1" >/dev/null 2>&1 && eval "$("${@:1}")"
-}

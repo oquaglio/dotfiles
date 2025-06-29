@@ -4,7 +4,7 @@ if [ -n "$BASH_VERSION" ]; then
 fi
 
 if [ -n "$ZSH_VERSION" ]; then
-    echo "This is Zsh ($ZSH_VERSION)."    
+    echo "This is Zsh ($ZSH_VERSION)."
 fi
 
 
@@ -119,9 +119,13 @@ source_if_exists() {
     if [[ -r "$filename" ]]; then
         #echo "Sourcing: $filename... "
         source "$filename"
-    else
-        echo "Error: $filename does not exist or is not readable."
+    #else
+        #echo "Error: $filename does not exist or is not readable."
     fi
+}
+
+eval_if_exists() {
+  command -v "$1" >/dev/null 2>&1 && eval "$("${@}")"
 }
 
 # Function to source files from a specified root directory and pattern

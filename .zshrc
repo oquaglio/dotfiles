@@ -1,6 +1,24 @@
 #echo "Sourced: $(dirname "$0")/$(basename "$0")"
 
+# Initial setup ###############################################################
+
+export DOTFILES_ROOT=$(dirname "$0")
+
+# set up important stuff before proceeding
+source $DOTFILES_ROOT/.init
+
+# Zsh specific vars
+
+# The dir I use for zsh plugins
+export ZSH_PLUGINS_DIR=$HOME/.zsh/plugins
+mkdir -p $ZSH_PLUGINS_DIR
+
+
+# Load Zsh completions ########################################################
+
 # Make sure Zsh's autocompletion system is loaded if not already
+# compinit builds the completion system using the current contents of $fpath.
+# If you run it before sourcing plugins, any plugin-supplied completions won’t be included.
 if ! whence -w compdef > /dev/null; then
     # dedup fpath array (dirs Zsh searches for functions like compinit)
     typeset -U fpath
@@ -9,19 +27,132 @@ if ! whence -w compdef > /dev/null; then
     compinit
 fi
 
-export DOTFILES_ROOT=$(dirname "$0")
+# Source my source files ######################################################
 
-# set up important stuff before proceeding
-source $DOTFILES_ROOT/.init
-
+# Some commands and aliases may require compdef command
 source $DOTFILES_ROOT/.sources
 
-# Zsh specific vars
 
-# The dir I use for zsh plugins
-export ZSH_PLUGINS_DIR=$HOME/.zsh/plugins
-mkdir -p $ZSH_PLUGINS_DIR
+# Plugins and Common Zsh settings #############################################
 
-# TODO: Add plugin sources and config
+# Skip sourcing the below config if it has already been loaded
+# if [[ -n "$DOTFILES_ZSHRC_LOADED" ]]; then
+#   return
+# fi
+echo "Setting up Zsh plugins and common settings..."
 
-# TODO: Add other common stuff
+
+# Starship ####################################################################
+
+# The following is to handle the error I get with vi mode editing
+# avoid re‑wrapping the keymap‐select widget endlessly
+# (clears it if it’s already been bound to Starship’s functions)
+local _widget=${widgets[zle-keymap-select]#user:}
+if [[ $_widget == starship_zle-keymap-select || \
+      $_widget == starship_zle-keymap-select-wrapped ]]; then
+  zle -N zle-keymap-select ""
+fi
+
+# now (re)initialize Starship
+eval_if_exists starship init zsh
+
+
+# Zsh plugins #################################################################
+
+# Source Zsh plugins that install completions
+source_if_exists "$ZSH_PLUGINS_DIR/zsh-completions/zsh-completions.plugin.zsh"
+#fpath=("$ZSH_PLUGINS_DIR/zsh-completions" $fpath)
+
+#export ZSHZ_CMD=z
+source_if_exists "$ZSH_PLUGINS_DIR/zsh-z/zsh-z.plugin.zsh"
+# --- Manually wire up completion ---
+# autoload -U _zshz
+# compdef _zshz z
+# compdef _zshz zshz
+
+# Source other Zsh plugins that don't use autocompletions
+source_if_exists "$ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh"
+source_if_exists "$ZSH_PLUGINS_DIR/zsh-you-should-use/you-should-use.plugin.zsh"
+
+# Zsh plugin that must be sourced last
+source_if_exists "$ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh"
+
+# --- Completion Visual Enhancements ---
+zstyle ':completion:*' menu select # fancy menus for zsh-z
+zstyle ':completion:*' matcher-list \
+  'm:{a-z}={A-Za-z}' \
+  'r:|[._-]=* r:|=*'
+
+
+# Zsh Key Bindings ################################################################
+
+# pick Emacs‑style (-e) or Vi-style (-v) editing
+#bindkey -e
+
+# autoload terminfo support
+autoload -U terminfo
+zmodload zsh/terminfo
+
+# switch keypad into "application" mode
+echoti smkx
+
+# bind Home  → beginning‑of‑line
+bindkey "${terminfo[khome]}" beginning-of-line
+
+# bind End   → end‑of‑line
+bindkey "${terminfo[kend]}"   end-of-linl
+
+# bind Delete → forward‑delete-char
+bindkey "${terminfo[kdch1]}"  delete-char
+
+
+# For bash-style autocompletions (needed by: pipx) ############################
+
+# Enable bash completion in zsh if not already initialized
+if ! whence -w _bash_complete &>/dev/null; then
+  autoload -U bashcompinit
+  bashcompinit
+fi
+eval "$(register-python-argcomplete pipx)"
+
+
+# Node.js Version Manager #####################################################
+
+# Set up NVM if exists
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+
+# Nix #########################################################################
+
+# Load Nix environment if it exists
+# if [ -e /home/otto/.nix-profile/etc/profile.d/nix.sh ]; then
+#   . /home/otto/.nix-profile/etc/profile.d/nix.sh
+# fi
+source_if_exists $HOME/.nix-profile/etc/profile.d/nix.sh
+
+
+# Other plugins ###############################################################
+
+# Homebrew config
+eval_if_exists atuin init zsh
+
+# direnv hook
+eval_if_exists direnv hook zsh
+
+# A command history database. Press up arrow to use.
+eval_if_exists atuin init zsh
+
+# Pyenv
+eval_if_exists pyenv init -
+
+
+# Key bindings ##############################################################
+
+setup_terminal_keys
+
+
+# Finally #####################################################################
+
+export DOTFILES_ZSHRC_LOADED=$(( ${DOTFILES_ZSHRC_LOADED:-0} + 1 ))
+echo "DOTFILES_ZSHRC_LOADED = $DOTFILES_ZSHRC_LOADED"
