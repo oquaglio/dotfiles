@@ -89,28 +89,6 @@ zstyle ':completion:*' matcher-list \
   'r:|[._-]=* r:|=*'
 
 
-# Zsh Key Bindings ################################################################
-
-# pick Emacs‑style (-e) or Vi-style (-v) editing
-#bindkey -e
-
-# autoload terminfo support
-autoload -U terminfo
-zmodload zsh/terminfo
-
-# switch keypad into "application" mode
-echoti smkx
-
-# bind Home  → beginning‑of‑line
-bindkey "${terminfo[khome]}" beginning-of-line
-
-# bind End   → end‑of‑line
-bindkey "${terminfo[kend]}"   end-of-linl
-
-# bind Delete → forward‑delete-char
-bindkey "${terminfo[kdch1]}"  delete-char
-
-
 # For bash-style autocompletions (needed by: pipx) ############################
 
 # Enable bash completion in zsh if not already initialized
@@ -154,6 +132,8 @@ eval_if_exists pyenv init -
 
 # Key bindings ##############################################################
 
+# pick Emacs‑style (-e) or Vi-style (-v) editing
+#bindkey -e
 setup_terminal_keys
 
 
