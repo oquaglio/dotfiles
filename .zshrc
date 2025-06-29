@@ -14,18 +14,34 @@ export ZSH_PLUGINS_DIR=$HOME/.zsh/plugins
 mkdir -p $ZSH_PLUGINS_DIR
 
 
+# Source Zsh plugins (that install completions) ###############################
+
+source_if_exists "$ZSH_PLUGINS_DIR/zsh-completions/zsh-completions.plugin.zsh"
+#fpath=("$ZSH_PLUGINS_DIR/zsh-completions" $fpath)
+
+#export ZSHZ_CMD=z
+source_if_exists "$ZSH_PLUGINS_DIR/zsh-z/zsh-z.plugin.zsh"
+# --- Manually wire up completion ---
+# autoload -U _zshz
+# compdef _zshz z
+# compdef _zshz zshz
+
+
 # Load Zsh completions ########################################################
 
-# Make sure Zsh's autocompletion system is loaded if not already
-# compinit builds the completion system using the current contents of $fpath.
-# If you run it before sourcing plugins, any plugin-supplied completions won’t be included.
+# Ensure Zsh's completion system is initialized, but only if it hasn't been already.
+# `compinit` scans the directories listed in $fpath and sets up command completion.
+# This must run **after** all plugins that modify $fpath (e.g. zsh-completions),
+# otherwise their completions will not be registered.
+# `compdef` is a key function defined by compinit — we check for it to avoid reinitialization.
+
 if ! whence -w compdef > /dev/null; then
-    # dedup fpath array (dirs Zsh searches for functions like compinit)
+    # Deduplicate $fpath to avoid warnings or redundant scanning
     typeset -U fpath
-    #autoload -U compinit && compinit
     autoload -Uz compinit
     compinit
 fi
+
 
 # Source my source files ######################################################
 
@@ -58,17 +74,6 @@ eval_if_exists starship init zsh
 
 
 # Zsh plugins #################################################################
-
-# Source Zsh plugins that install completions
-source_if_exists "$ZSH_PLUGINS_DIR/zsh-completions/zsh-completions.plugin.zsh"
-#fpath=("$ZSH_PLUGINS_DIR/zsh-completions" $fpath)
-
-#export ZSHZ_CMD=z
-source_if_exists "$ZSH_PLUGINS_DIR/zsh-z/zsh-z.plugin.zsh"
-# --- Manually wire up completion ---
-# autoload -U _zshz
-# compdef _zshz z
-# compdef _zshz zshz
 
 # Source other Zsh plugins that don't use autocompletions
 source_if_exists "$ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh"
