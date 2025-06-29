@@ -96,7 +96,10 @@ if ! whence -w _bash_complete &>/dev/null; then
   autoload -U bashcompinit
   bashcompinit
 fi
-eval "$(register-python-argcomplete pipx)"
+
+if command -v register-python-argcomplete >/dev/null 2>&1; then
+  eval "$(register-python-argcomplete pipx)"
+fi
 
 
 # Node.js Version Manager #####################################################
