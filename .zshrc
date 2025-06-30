@@ -85,9 +85,10 @@ zstyle ':completion:*' matcher-list \
   'r:|[._-]=* r:|=*'
 
 
-# For bash-style autocompletions (needed by: pipx) ############################
+# Pipx ########################################################################
 
 # Enable bash completion in zsh if not already initialized
+# For bash-style autocompletions (needed by: pipx)
 if ! whence -w _bash_complete &>/dev/null; then
   autoload -U bashcompinit
   bashcompinit
