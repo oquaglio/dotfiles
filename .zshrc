@@ -21,10 +21,6 @@ source_if_exists "$ZSH_PLUGINS_DIR/zsh-completions/zsh-completions.plugin.zsh"
 
 #export ZSHZ_CMD=z
 source_if_exists "$ZSH_PLUGINS_DIR/zsh-z/zsh-z.plugin.zsh"
-# --- Manually wire up completion ---
-# autoload -U _zshz
-# compdef _zshz z
-# compdef _zshz zshz
 
 
 # Load Zsh completions ########################################################
