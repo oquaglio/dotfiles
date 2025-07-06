@@ -15,7 +15,8 @@ export DOTFILES_LOCAL_ROOT=$HOME/.dotfiles-local
 
 # Housekeeping #################################################################################
 chmod +x $DOTFILES_ROOT/scripts/create_symlinks.sh && $DOTFILES_ROOT/scripts/create_symlinks.sh
-chmod +x $DOTFILES_ROOT/bin/*
+# make sure all scripts in bin are executable
+find "$DOTFILES_ROOT/bin" -type f -exec chmod +x {} +
 mkdir -p $DOTFILES_LOCAL_ROOT
 
 
@@ -71,6 +72,7 @@ pathadd() {
 }
 
 # Function to prepend a directory to a PATH-like variable
+# Defaults to PATH if no variable name is provided.
 prepend_path() {
     local dir_to_add="$1"
     local var_name="${2:-PATH}"

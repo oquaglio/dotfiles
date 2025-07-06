@@ -1,6 +1,7 @@
 pathadd $HOME/.local/bin
 pathadd $HOME/bin
 pathadd $DOTFILES_ROOT/bin
+pathadd $DOTFILES_ROOT/bin/aws
 pathadd /usr/local/man MANPATH
 
 # OMZ
