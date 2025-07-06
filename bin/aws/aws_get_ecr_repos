@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Get all AWS regions that support ECR
+regions=$(aws ec2 describe-regions --query "Regions[].RegionName" --output text)
+
+for region in $regions; do
+  echo "🔍 Region: $region"
+  aws ecr describe-repositories \
+    --region "$region" \
+    --query "repositories[].repositoryName" \
+    --output text 2>/dev/null || echo "  (no repositories or access denied)"
+  echo
+done
