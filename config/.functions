@@ -4,7 +4,7 @@ get_distro_glyph() {
     arch) echo "" ;;        # Arch Linux
     ubuntu) echo "" ;;      # Ubuntu
     debian) echo "" ;;      # Debian
-    fedora) echo "" ;;      # Fedora
+    fedora) echo "" ;;      # Fedora
     centos) echo "" ;;      # CentOS
     alpine) echo "" ;;      # Alpine
     manjaro) echo "" ;;     # Manjaro
@@ -24,3 +24,7 @@ get_distro_glyph() {
     *) echo "" ;;           # Default: Tux
   esac
 }
+
+# alternate glyphs:
+# # Fedora
+# # Fedora
