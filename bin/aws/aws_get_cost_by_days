@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# This script retrieves AWS cost data per day for the last specified number of days.
+# Usage: ./aws-cost-by-days.sh [DAYS]
+# Example: ./aws-cost-by-days.sh 7
+
+DAYS="${1:-7}"  # Default to 7 days if no argument given
+
+START_DATE=$(date -d "$DAYS days ago" +%F)
+END_DATE=$(date +%F)
+
+aws ce get-cost-and-usage \
+  --time-period Start=$START_DATE,End=$END_DATE \
+  --granularity DAILY \
+  --metrics "UnblendedCost" \
+  --group-by Type=DIMENSION,Key=SERVICE \
+  --query "ResultsByTime[].Groups[?Metrics.UnblendedCost.Amount != \`0\`].[Keys[0], Metrics.UnblendedCost.Amount]" \
