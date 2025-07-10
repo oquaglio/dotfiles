@@ -68,16 +68,6 @@ Re-run the shell (which will source the config) without getting updates from git
 rl
 ```
 
-## Setup
-
-Set up locales, e.g. Ubuntu:
-```SH
-sudo locale-gen $LANG
-```
-```SH
-sudo update-locale LANG=$LANG
-```
-
 ## Optional
 
 I use starship prompt. Install it with your package manager and add it to your .rc file(s):
