@@ -52,6 +52,40 @@ fi
 ~/.dotfiles-local
 ```
 
+## Setup
+
+E.g. Ubuntu:
+```SH
+sudo nano /etc/locale.gen
+```
+Add: en_AU.UTF-8 UTF-8
+
+Gen locale:
+```SH
+sudo locale-gen
+```
+
+Update locale:
+```
+sudo nano /etc/default/locale
+```
+
+```
+LANG=en_AU.UTF-8
+# Optional: remove or comment out the rest
+# LANGUAGE=en_US.UTF-8
+# LC_ALL=C
+```
+
+Could also do:
+```SH
+sudo update-locale LANG=en_AU.UTF-8
+```
+Check:
+```SH
+locale
+```
+
 ## Getting Updates
 
 (These are aliases that have been added as part of these dotfiles)
