@@ -72,10 +72,10 @@ rl
 
 Set up locales, e.g. Ubuntu:
 ```SH
-sudo locale-gen en_AU.UTF-8
+sudo locale-gen $LANG
 ```
 ```SH
-sudo update-locale LANG=en_AU.UTF-8
+sudo update-locale LANG=$LANG
 ```
 
 ## Optional
