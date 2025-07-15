@@ -52,15 +52,20 @@ fi
 ~/.dotfiles-local
 ```
 
-## Setup
+## Setup Locale
 
-E.g. Ubuntu:
+### Ubuntu:
+
 ```SH
 sudo nano /etc/locale.gen
 ```
-Add: en_AU.UTF-8 UTF-8
 
-Gen locale:
+Add:
+```
+en_AU.UTF-8 UTF-8
+```
+
+Run gen locale:
 ```SH
 sudo locale-gen
 ```
