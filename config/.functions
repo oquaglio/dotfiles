@@ -43,4 +43,16 @@ paths() {
     echo
     echo "MANPATH:"
     echo "$MANPATH" | tr ':' '\n'
+    echo
+    echo "LD_LIBRARY_PATH:"
+    echo "$LD_LIBRARY_PATH" | tr ':' '\n'
+    echo
+    echo "PYTHONPATH:"
+    echo "$PYTHONPATH" | tr ':' '\n'
+    echo
+    echo "PERL5LIB:"
+    echo "$PERL5LIB" | tr ':' '\n'
+    echo
+    echo "CLASSPATH:"
+    echo "$CLASSPATH" | tr ':' '\n'
 }
