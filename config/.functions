@@ -28,3 +28,19 @@ get_distro_glyph() {
 # alternate glyphs:
 # # Fedora
 # # Fedora
+
+# Usage:
+# split_colon_var PATH
+# split_colon_var MANPATH
+split_colon_var() {
+    var_name="$1"
+    eval "echo \"\$$var_name\"" | tr ':' '\n'
+}
+
+paths() {
+    echo "PATH:"
+    echo "$PATH" | tr ':' '\n'
+    echo
+    echo "MANPATH:"
+    echo "$MANPATH" | tr ':' '\n'
+}
