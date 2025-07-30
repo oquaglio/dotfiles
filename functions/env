@@ -3,6 +3,7 @@
 set_env() {
   if [ -n "$1" ]; then
     export ENV="$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')"
+    rl
   else
     echo "Usage: set_env <env_name>" >&2
     return 1
