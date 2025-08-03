@@ -83,4 +83,60 @@ conn() {
     rm -f "$tmpfile"
 }
 
+# Function: pack
+# Description: Detects available package managers on the system and counts installed packages.
+#              Supports native distro package managers (e.g., apt, pacman, dnf) and universal/language-specific managers (e.g., flatpak, snap, pip, brew).
+#              Designed for maximum compatibility across Linux distributions using POSIX-compliant sh where possible.
+# Usage: Call the function directly (e.g., `pack`) or source this script and run `pack`.
+# Notes:
+# - Some package managers (e.g., dpkg) may require sudo for accurate counts but are avoided here for portability.
+# - Counts may include headers or system packages; results depend on the package manager's output.
+# - Add to ~/.bashrc or ~/.profile to make available in your shell.
 
+pack() {
+    printf "Detecting package managers and counting installed packages...\n"
+    printf "Note: Counts may include system/default packages.\n\n"
+
+    # Helper function to check if a command exists and count packages
+    _check_and_count() {
+        manager="$1"
+        check_cmd="$2"
+        count_cmd="$3"
+        description="$4"
+
+        # Check if the command exists
+        if command -v "$check_cmd" >/dev/null 2>&1; then
+            printf "Package Manager: %s (%s)\n" "$manager" "$description"
+            # Execute count command and suppress errors, count lines of output
+            count=$(sh -c "$count_cmd" 2>/dev/null | wc -l | tr -d '[:space:]')
+            # Handle cases where count_cmd produces no output
+            if [ -z "$count" ] || [ "$count" -eq 0 ]; then
+                count="0"
+            fi
+            printf "Installed packages: %s\n\n" "$count"
+        fi
+    }
+
+    # Native distro package managers
+    _check_and_count "dpkg/apt" "dpkg" "dpkg -l | grep '^ii'" "Debian/Ubuntu/MX Linux native"
+    _check_and_count "pacman" "pacman" "pacman -Q" "Arch/Manjaro native"
+    _check_and_count "rpm" "rpm" "rpm -qa" "RPM-based (Fedora/CentOS) native"
+    _check_and_count "dnf" "dnf" "dnf list installed | tail -n +3" "Fedora native (frontend)"
+    _check_and_count "yum" "yum" "yum list installed | tail -n +3" "CentOS/RHEL native (frontend)"
+    _check_and_count "zypper" "zypper" "zypper se -i | tail -n +5" "SUSE native"
+    _check_and_count "apk" "apk" "apk info" "Alpine native"
+
+    # Universal/cross-distro package managers
+    _check_and_count "brew" "brew" "brew list --formulae" "Homebrew (universal)"
+    _check_and_count "flatpak" "flatpak" "flatpak list --app" "Flatpak (universal)"
+    _check_and_count "snap" "snap" "snap list | tail -n +2" "Snap (universal)"
+
+    # Language-specific package managers
+    _check_and_count "pip" "pip" "pip list --format=freeze" "Python packages"
+    _check_and_count "npm" "npm" "npm list -g --depth=0 | tail -n +2" "Node.js global packages"
+    _check_and_count "cargo" "cargo" "cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9]'" "Rust crates"
+    _check_and_count "gem" "gem" "gem list --no-versions" "Ruby gems"
+
+    printf "Detection complete. If a manager is missing, it may not be installed.\n"
+    printf "Note: Counts for language managers (e.g., pip) may vary by environment.\n"
+}
