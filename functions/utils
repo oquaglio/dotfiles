@@ -195,3 +195,47 @@ kern() {
     fi
     printf "===================\n"
 }
+
+svc() {
+    printf "Service Status:\n"
+    printf "================\n"
+    # Detect init system
+    init_system="Unknown"
+    if [ -d /run/systemd/system ]; then
+        init_system="systemd"
+    elif [ -f /sbin/init ] && grep -q sysvinit /sbin/init; then
+        init_system="sysVinit"
+    elif command -v rc-service >/dev/null 2>&1; then
+        init_system="openrc"
+    fi
+    printf "Init System: %s\n" "$init_system"
+    # List services
+    case "$init_system" in
+        systemd)
+            count=$(systemctl list-units --type=service --state=running | grep -c '\.service')
+            printf "Running Services: %s\n" "$count"
+            systemctl list-units --type=service --state=running | grep '\.service' | awk '{print $1, $3}'
+            ;;
+        sysVinit)
+            count=$(ls /etc/init.d/ | wc -l)
+            printf "Service Scripts: %s\n" "$count"
+            for svc in /etc/init.d/*; do
+                svc_name=$(basename "$svc")
+                if /etc/init.d/"$svc_name" status >/dev/null 2>&1; then
+                    printf "%s running\n" "$svc_name"
+                fi
+            done
+            ;;
+        openrc)
+            count=$(rc-service -l | wc -l)
+            printf "Running Services: %s\n" "$count"
+            rc-service -l | while read -r svc; do
+                rc-service "$svc" status | grep -q running && printf "%s running\n" "$svc"
+            done
+            ;;
+        *)
+            printf "No supported init system detected.\n"
+            ;;
+    esac
+    printf "================\n"
+}
