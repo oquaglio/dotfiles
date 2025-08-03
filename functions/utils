@@ -239,3 +239,38 @@ svc() {
     esac
     printf "================\n"
 }
+
+sys() {
+    printf "System Information:\n"
+    printf "===================\n"
+    # Distro
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        printf "Distro: %s %s\n" "$NAME" "$VERSION"
+    else
+        printf "Distro: Unknown (no /etc/os-release)\n"
+    fi
+    # Kernel
+    printf "Kernel: %s\n" "$(uname -r)"
+    # CPU
+    if command -v lscpu >/dev/null 2>&1; then
+        cpu=$(lscpu | grep '^Model name' | cut -d: -f2- | tr -s ' ')
+        cores=$(lscpu | grep '^CPU(s):' | cut -d: -f2 | tr -d ' ')
+        printf "CPU: %s (%s cores)\n" "$cpu" "$cores"
+    else
+        printf "CPU: %s\n" "$(grep '^model name' /proc/cpuinfo | head -n 1 | cut -d: -f2- | tr -s ' ')"
+    fi
+    # Memory
+    if command -v free >/dev/null 2>&1; then
+        mem=$(free -h | grep Mem: | awk '{print $2 " total, " $3 " used, " $4 " free"}')
+        printf "Memory: %s\n" "$mem"
+    fi
+    # Disk
+    if command -v df >/dev/null 2>&1; then
+        disk=$(df -h / | tail -n 1 | awk '{print $2 " total, " $3 " used, " $4 " free"}')
+        printf "Disk (/): %s\n" "$disk"
+    fi
+    # Uptime
+    printf "Uptime: %s\n" "$(uptime -p 2>/dev/null || uptime | cut -d, -f1)"
+    printf "===================\n"
+}
