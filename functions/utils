@@ -83,19 +83,25 @@ conn() {
     rm -f "$tmpfile"
 }
 
+#!/bin/sh
+
 # Function: pack
 # Description: Detects available package managers on the system and counts installed packages.
-#              Supports native distro package managers (e.g., apt, pacman, dnf) and universal/language-specific managers (e.g., flatpak, snap, pip, brew).
-#              Designed for maximum compatibility across Linux distributions using POSIX-compliant sh where possible.
+#              Supports native distro package managers (e.g., apt, pacman, dnf), universal managers (e.g., flatpak, snap, brew),
+#              and language-specific managers (e.g., pip, npm, cargo, gem).
+#              Designed for maximum compatibility across Linux distributions using POSIX-compliant sh.
+#              Uses sudo where necessary for accurate package counts.
 # Usage: Call the function directly (e.g., `pack`) or source this script and run `pack`.
 # Notes:
-# - Some package managers (e.g., dpkg) may require sudo for accurate counts but are avoided here for portability.
-# - Counts may include headers or system packages; results depend on the package manager's output.
-# - Add to ~/.bashrc or ~/.profile to make available in your shell.
+# - Requires sudo for some package managers (e.g., dpkg, apt, rpm) for accurate counts.
+# - Counts may include system/default packages or headers; results depend on the package manager's output.
+# - Add to ~/.profile or ~/.bashrc to make available in your shell.
+# - Run with `pack` after sourcing or as a standalone script.
 
 pack() {
     printf "Detecting package managers and counting installed packages...\n"
-    printf "Note: Counts may include system/default packages.\n\n"
+    printf "Note: Some commands may prompt for sudo password for accurate counts.\n"
+    printf "      Counts may include system/default packages.\n\n"
 
     # Helper function to check if a command exists and count packages
     _check_and_count() {
@@ -117,13 +123,13 @@ pack() {
         fi
     }
 
-    # Native distro package managers
-    _check_and_count "dpkg/apt" "dpkg" "dpkg -l | grep '^ii'" "Debian/Ubuntu/MX Linux native"
+    # Native distro package managers (sudo used where needed for accuracy)
+    _check_and_count "dpkg/apt" "dpkg" "sudo dpkg -l | grep '^ii'" "Debian/Ubuntu/MX Linux native"
     _check_and_count "pacman" "pacman" "pacman -Q" "Arch/Manjaro native"
-    _check_and_count "rpm" "rpm" "rpm -qa" "RPM-based (Fedora/CentOS) native"
-    _check_and_count "dnf" "dnf" "dnf list installed | tail -n +3" "Fedora native (frontend)"
-    _check_and_count "yum" "yum" "yum list installed | tail -n +3" "CentOS/RHEL native (frontend)"
-    _check_and_count "zypper" "zypper" "zypper se -i | tail -n +5" "SUSE native"
+    _check_and_count "rpm" "rpm" "sudo rpm -qa" "RPM-based (Fedora/CentOS) native"
+    _check_and_count "dnf" "dnf" "sudo dnf list installed | tail -n +3" "Fedora native (frontend)"
+    _check_and_count "yum" "yum" "sudo yum list installed | tail -n +3" "CentOS/RHEL native (frontend)"
+    _check_and_count "zypper" "zypper" "sudo zypper se -i | tail -n +5" "SUSE native"
     _check_and_count "apk" "apk" "apk info" "Alpine native"
 
     # Universal/cross-distro package managers
