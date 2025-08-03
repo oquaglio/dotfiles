@@ -170,3 +170,28 @@ pack() {
     printf "Detection complete. If a manager is missing, it may not be installed.\n"
     printf "Note: Counts for language managers (e.g., pip) may vary by environment.\n"
 }
+
+kern() {
+    printf "Kernel Information:\n"
+    printf "===================\n"
+    # Kernel details
+    printf "Kernel Version: %s\n" "$(uname -r)"
+    printf "Architecture: %s\n" "$(uname -m)"
+    # Loaded modules
+    if command -v lsmod >/dev/null 2>&1; then
+        module_count=$(lsmod | tail -n +2 | wc -l)
+        printf "Loaded Modules: %s\n" "$module_count"
+        # Highlight key modules (e.g., network, GPU)
+        printf "Key Modules:\n"
+        lsmod | grep -E 'wifi|iwlwifi|ath9k|nvidia|amdgpu' | awk '{print $1}'
+    else
+        printf "Loaded Modules: lsmod not available\n"
+    fi
+    # Available kernels (distro-specific)
+    if [ -d /boot ]; then
+        kernels=$(ls /boot/vmlinuz* 2>/dev/null | wc -l)
+        printf "Available Kernels: %s\n" "$kernels"
+        ls /boot/vmlinuz* 2>/dev/null | sed 's|.*/vmlinuz-||'
+    fi
+    printf "===================\n"
+}
