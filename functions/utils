@@ -83,65 +83,89 @@ conn() {
     rm -f "$tmpfile"
 }
 
-#!/bin/sh
-
 # Function: pack
-# Description: Detects available package managers on the system and counts installed packages.
-#              Supports native distro package managers (e.g., apt, pacman, dnf), universal managers (e.g., flatpak, snap, brew),
-#              and language-specific managers (e.g., pip, npm, cargo, gem).
-#              Designed for maximum compatibility across Linux distributions using POSIX-compliant sh.
-#              Uses sudo where necessary for accurate package counts.
-# Usage: Call the function directly (e.g., `pack`) or source this script and run `pack`.
+# Description: Detects available package managers, counts installed packages, and reports additional details (version, architecture, last update).
+#              Supports native (e.g., apt, pacman), universal (e.g., flatpak, snap, brew), and language-specific (e.g., pip, npm) managers.
+#              Uses sudo where needed for accurate counts. Designed for compatibility across Linux distros.
+# Usage: Call `pack` after sourcing or run as a script. Example: `. pack.sh && pack`
 # Notes:
-# - Requires sudo for some package managers (e.g., dpkg, apt, rpm) for accurate counts.
-# - Counts may include system/default packages or headers; results depend on the package manager's output.
-# - Add to ~/.profile or ~/.bashrc to make available in your shell.
-# - Run with `pack` after sourcing or as a standalone script.
+# - Requires sudo for some managers (e.g., dpkg, rpm, dnf).
+# - Add to ~/.profile or ~/.bashrc for shell availability.
+# - Enhanced with version info, accurate counts, and summary table.
 
 pack() {
     printf "Detecting package managers and counting installed packages...\n"
+    printf "System Architecture: %s\n" "$(uname -m)"
     printf "Note: Some commands may prompt for sudo password for accurate counts.\n"
     printf "      Counts may include system/default packages.\n\n"
 
-    # Helper function to check if a command exists and count packages
+    # Helper function to check and count packages
     _check_and_count() {
         manager="$1"
         check_cmd="$2"
         count_cmd="$3"
-        description="$4"
+        version_cmd="$4"
+        description="$5"
+        cache_file="$6" # Optional cache file for last update time (native managers)
 
-        # Check if the command exists
         if command -v "$check_cmd" >/dev/null 2>&1; then
             printf "Package Manager: %s (%s)\n" "$manager" "$description"
-            # Execute count command and suppress errors, count lines of output
+            # Get version
+            version=$(sh -c "$version_cmd" 2>/dev/null | head -n 1)
+            [ -z "$version" ] && version="Unknown"
+            printf "Version: %s\n" "$version"
+            # Count packages
             count=$(sh -c "$count_cmd" 2>/dev/null | wc -l | tr -d '[:space:]')
-            # Handle cases where count_cmd produces no output
-            if [ -z "$count" ] || [ "$count" -eq 0 ]; then
-                count="0"
+            [ -z "$count" ] || [ "$count" -eq 0 ] && count="0"
+            printf "Installed packages: %s\n" "$count"
+            # Last update time for native managers
+            if [ -n "$cache_file" ] && [ -e "$cache_file" ]; then
+                last_update=$(stat -c %y "$cache_file" 2>/dev/null | cut -d ' ' -f 1,2)
+                [ -n "$last_update" ] && printf "Last cache update: %s\n" "$last_update"
             fi
-            printf "Installed packages: %s\n\n" "$count"
+            printf "\n"
+            # Store for summary table
+            _summary="$manager:$description:$count:$version"
+            _summary_list="$_summary_list$_summary\n"
         fi
     }
 
-    # Native distro package managers (sudo used where needed for accuracy)
-    _check_and_count "dpkg/apt" "dpkg" "sudo dpkg -l | grep '^ii'" "Debian/Ubuntu/MX Linux native"
-    _check_and_count "pacman" "pacman" "pacman -Q" "Arch/Manjaro native"
-    _check_and_count "rpm" "rpm" "sudo rpm -qa" "RPM-based (Fedora/CentOS) native"
-    _check_and_count "dnf" "dnf" "sudo dnf list installed | tail -n +3" "Fedora native (frontend)"
-    _check_and_count "yum" "yum" "sudo yum list installed | tail -n +3" "CentOS/RHEL native (frontend)"
-    _check_and_count "zypper" "zypper" "sudo zypper se -i | tail -n +5" "SUSE native"
-    _check_and_count "apk" "apk" "apk info" "Alpine native"
+    # Initialize summary list
+    _summary_list=""
+
+    # Native distro package managers
+    _check_and_count "dpkg/apt" "dpkg" "sudo dpkg-query -f '\${Package}\n' -W" "apt --version" "Debian/Ubuntu/MX Linux native" "/var/lib/apt/lists"
+    _check_and_count "pacman" "pacman" "pacman -Q" "pacman --version | head -n 1" "Arch/Manjaro native" "/var/lib/pacman"
+    _check_and_count "rpm" "rpm" "sudo rpm -qa" "rpm --version" "RPM-based (Fedora/CentOS) native" "/var/lib/rpm"
+    _check_and_count "dnf" "dnf" "sudo dnf list installed | tail -n +3" "dnf --version | head -n 1" "Fedora native (frontend)" "/var/cache/dnf"
+    _check_and_count "yum" "yum" "sudo yum list installed | tail -n +3" "yum --version | head -n 1" "CentOS/RHEL native (frontend)" "/var/cache/yum"
+    _check_and_count "zypper" "zypper" "sudo zypper se -i | tail -n +5" "zypper --version" "SUSE native" "/var/cache/zypp"
+    _check_and_count "apk" "apk" "apk info" "apk --version" "Alpine native" "/var/cache/apk"
+    _check_and_count "portage" "emerge" "ls /var/db/pkg/*/* | wc -l" "emerge --version" "Gentoo native" "/var/db/pkg"
+    _check_and_count "nix" "nix-env" "nix-env -q" "nix-env --version" "Nix package manager" "/nix/var/nix/profiles"
 
     # Universal/cross-distro package managers
-    _check_and_count "brew" "brew" "brew list --formulae" "Homebrew (universal)"
-    _check_and_count "flatpak" "flatpak" "flatpak list --app" "Flatpak (universal)"
-    _check_and_count "snap" "snap" "snap list | tail -n +2" "Snap (universal)"
+    _check_and_count "brew" "brew" "brew list --formulae" "brew --version | head -n 1" "Homebrew (universal)" ""
+    _check_and_count "flatpak" "flatpak" "flatpak list --app" "flatpak --version" "Flatpak (universal)" ""
+    _check_and_count "snap" "snap" "snap list | tail -n +2" "snap --version" "Snap (universal)" ""
 
     # Language-specific package managers
-    _check_and_count "pip" "pip" "pip list --format=freeze" "Python packages"
-    _check_and_count "npm" "npm" "npm list -g --depth=0 | tail -n +2" "Node.js global packages"
-    _check_and_count "cargo" "cargo" "cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9]'" "Rust crates"
-    _check_and_count "gem" "gem" "gem list --no-versions" "Ruby gems"
+    _check_and_count "pip" "pip" "pip list --format=freeze | grep -v '^\\-e'" "pip --version" "Python packages" ""
+    _check_and_count "npm" "npm" "npm list -g --depth=0 | tail -n +2" "npm --version" "Node.js global packages" ""
+    _check_and_count "cargo" "cargo" "cargo install --list | grep -E '^[a-z0-9_-]+ v[0-9]'" "cargo --version" "Rust crates" ""
+    _check_and_count "gem" "gem" "gem list --no-versions" "gem --version" "Ruby gems" ""
+
+    # Print summary table
+    if [ -n "$_summary_list" ]; then
+        printf "Summary Table:\n"
+        printf "+---------------------+------------------------------+-----------------+---------------+\n"
+        printf "| %-19s | %-28s | %-15s | %-13s |\n" "Manager" "Description" "Packages" "Version"
+        printf "+---------------------+------------------------------+-----------------+---------------+\n"
+        printf "%s" "$_summary_list" | while IFS=: read -r manager desc count ver; do
+            [ -n "$manager" ] && printf "| %-19s | %-28s | %-15s | %-13s |\n" "$manager" "$desc" "$count" "$ver"
+        done
+        printf "+---------------------+------------------------------+-----------------+---------------+\n"
+    fi
 
     printf "Detection complete. If a manager is missing, it may not be installed.\n"
     printf "Note: Counts for language managers (e.g., pip) may vary by environment.\n"
