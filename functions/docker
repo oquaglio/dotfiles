@@ -2,14 +2,14 @@
 # Usage: start_container <container_name_pattern>
 # Outputs "Started <container_name>" for each stopped container started; otherwise, outputs nothing.
 start_container() {
-  container_name="$1"
-  containers=$(docker ps -a --filter "name=$container_name" --format '{{.Names}}' | grep "$container_name")
-  if [ -n "$containers" ]; then
-    for name in $containers; do
-      status=$(docker inspect --format '{{.State.Status}}' "$name")
-      if [ "$status" = "exited" ]; then
-        docker start "$name" > /dev/null
-        echo "Started $name"
+  _container_name="$1"
+  _containers=$(docker ps -a --filter "name=$_container_name" --format '{{.Names}}' | grep "$_container_name")
+  if [ -n "$_containers" ]; then
+    echo "$_containers" | while read -r _name; do
+      _status=$(docker inspect --format '{{.State.Status}}' "$_name")
+      if [ "$_status" = "exited" ]; then
+        docker start "$_name" > /dev/null
+        echo "Started $_name"
       fi
     done
   fi
