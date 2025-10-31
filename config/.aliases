@@ -110,4 +110,4 @@ alias h='history'
 alias ranger='ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat $HOME/.rangerdir`; cd "$LASTDIR"'
 # taskwarrior
 alias tw='/home/linuxbrew/.linuxbrew/bin/task'
-alias twf='function _twf() { if [ -z "$1" ]; then echo "Usage: twf <searchstring>"; return 1; fi; tw "(description.has:$1 or annotation.has:$1 or project.has:$1)"; }; _twf'
+alias twf='function _twf() { if [ -z "$1" ]; then echo "Usage: twf <searchstring>"; return 1; fi; tw "($1 or project.has:$1)"; }; _twf'
