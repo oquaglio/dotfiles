@@ -1,0 +1,11 @@
+portainer-status() {
+  local code
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "$PORTAINER_URL" 2>/dev/null)
+  if [[ "$code" == "200" || "$code" == "302" || "$code" == "401" ]]; then  # 401 = login page, which is good
+    echo "🟢 Portainer is UP (${code}) → ${PORTAINER_URL}"
+  elif [[ -n "$code" ]]; then
+    echo "🟡 Portainer responding but code=${code} → ${PORTAINER_URL}"
+  else
+    echo "🔴 Portainer DOWN or not reachable → ${PORTAINER_URL}"
+  fi
+}
