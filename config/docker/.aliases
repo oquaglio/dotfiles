@@ -1,10 +1,21 @@
 # When invoked without arguments will do a ps, otherwise it will
 # just pass on the given arguments to the docker command.
+
+# List all containers or run command
 alias d='_f() { if [[ $# == 0 ]]; then docker ps -a; else docker "$@"; fi }; _f'
-alias dr='_f() { if [[ $# == 0 ]]; then d ps; else docker "$@"; fi }; _f'
-alias di='d images'
-alias dl='d logs'
-alias dn='d network ls'
+# list (r)unning containers or run command
+# alias dr='_f() { if [[ $# == 0 ]]; then d ps; else docker "$@"; fi }; _f'
+
+# List running containers
+alias dr='d ps'
 alias dc='d container ps'
+
+# List all containers
 alias da='d container ps -a'
 
+# List all images
+alias di='d images'
+
+alias dl='d logs'
+
+alias dn='d network ls'
