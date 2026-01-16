@@ -1,8 +1,24 @@
+# Put all the PATH= paths here so the order can be controlled.
+
 pathadd $HOME/.local/bin
 pathadd $HOME/bin
 pathadd $DOTFILES_ROOT/bin
 pathadd $DOTFILES_ROOT/bin/aws
 pathadd /usr/local/man MANPATH
+
+# For Homebrew (likes to be before bin)
+prepend_path /home/linuxbrew/.linuxbrew/bin
+prepend_path /home/linuxbrew/.linuxbrew/sbin
+pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
+
+# Go path (for KinD)
+pathadd $HOME/go/bin
+
+# pyenv
+pathadd $PYENV_ROOT/bin
+
+
+# Other paths (could move to config subdirs)
 
 # OMZ
 pathadd $HOME/.oh-my-zsh ZSH
@@ -12,12 +28,3 @@ pathadd $HOME/.nvm NVM_DIR
 
 # pyenv
 pathadd $HOME/.pyenv PYENV_ROOT
-pathadd $PYENV_ROOT/bin
-
-# Go path (for KinD)
-pathadd $HOME/go/bin
-
-# # For Homebrew (likes to be before bin)
-prepend_path /home/linuxbrew/.linuxbrew/bin
-prepend_path /home/linuxbrew/.linuxbrew/sbin
-pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
