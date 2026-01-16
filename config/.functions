@@ -37,6 +37,7 @@ split_colon_var() {
     eval "echo \"\$$var_name\"" | tr ':' '\n'
 }
 
+# Print the PATH and MANPATH in line-by-line format
 paths() {
     for var in PATH MANPATH LD_LIBRARY_PATH PYTHONPATH PERL5LIB CLASSPATH; do
         if eval "[ -n \"\$$var\" ]"; then
