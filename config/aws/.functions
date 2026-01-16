@@ -6,8 +6,8 @@ aws() {
         #command aws sts get-caller-identity --query "Account" --output text
         command aws sts get-caller-identity | jq -r ".Account"
         command aws configure get region
-        command env | grep "^AWS_" | sort
         check_aws_session
+        command env | grep "^AWS_" | sort        
     else
         command aws "$@"
     fi
