@@ -1,2 +1,4 @@
 alias a='aws acc'
 alias sa='export AWS_PROFILE=$1'
+
+alias chaws='check_aws_session'
