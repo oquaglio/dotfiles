@@ -93,7 +93,7 @@ prepend_path() {
     fi
 }
 
-# set env variable to dir IF dir exists
+# Export an ENV VAR for a dir IF dir exists
 # $1 = env var
 # $2 = dir
 setenv() {

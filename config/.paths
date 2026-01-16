@@ -1,3 +1,6 @@
+# PATH needs to be appended in order in some cases, so probably best to put them
+# all in this one file.
+
 # Put all the PATH= paths here so the order can be controlled.
 
 pathadd $HOME/.local/bin
@@ -14,10 +17,6 @@ pathadd /home/linuxbrew/.linuxbrew/share/man MANPATH
 # Go path (for KinD)
 pathadd $HOME/go/bin
 
-# pyenv
-pathadd $PYENV_ROOT/bin
-
-
 # Other paths (could move to config subdirs)
 
 # OMZ
@@ -27,4 +26,9 @@ pathadd $HOME/.oh-my-zsh ZSH
 pathadd $HOME/.nvm NVM_DIR
 
 # pyenv
-pathadd $HOME/.pyenv PYENV_ROOT
+pathadd $PYENV_ROOT
+pathadd $PYENV_ROOT/bin
+
+# dotent
+pathadd $DOTNET_ROOT
+pathadd $DOTNET_ROOT/tools

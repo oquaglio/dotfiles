@@ -127,7 +127,7 @@ eval_if_exists direnv hook zsh
 eval_if_exists atuin init zsh
 
 # Pyenv
-eval_if_exists pyenv init -
+#eval_if_exists pyenv init -
 
 
 # Key bindings ##############################################################
