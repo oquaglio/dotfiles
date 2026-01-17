@@ -1,0 +1,160 @@
+# Usage: install_package <package-name>
+# Example:
+#   install_package zsh
+#   install_package neovim
+#   install_package ripgrep
+
+install_package() {
+    local pkg="$1"
+    if [[ -z "$pkg" ]]; then
+        echo "Error: No package name provided" >&2
+        return 1
+    fi
+
+    local PM=""
+    local INSTALL_CMD=""
+    local UPDATE_CMD=""
+    local QUERY_CMD=""
+    local SEARCH_CMD=""
+    local UPGRADE_FLAG=""
+
+    # ────────────────────────────────────────────────
+    # 1. Detect package manager
+    # ────────────────────────────────────────────────
+    if command -v apt-get >/dev/null 2>&1; then
+        PM="apt"
+        UPDATE_CMD="sudo apt-get update -qq"
+        INSTALL_CMD="sudo apt-get install -y"
+        QUERY_CMD="dpkg -s"
+        SEARCH_CMD="apt-cache policy"
+    elif command -v dnf >/dev/null 2>&1; then
+        PM="dnf"
+        UPDATE_CMD="sudo dnf makecache -q"
+        INSTALL_CMD="sudo dnf install -y"
+        QUERY_CMD="rpm -q"
+        SEARCH_CMD="dnf list available"
+    elif command -v yum >/dev/null 2>&1 && ! command -v dnf >/dev/null 2>&1; then
+        PM="yum"
+        UPDATE_CMD="sudo yum makecache -q"
+        INSTALL_CMD="sudo yum install -y"
+        QUERY_CMD="rpm -q"
+        SEARCH_CMD="yum list available"
+    elif command -v pacman >/dev/null 2>&1; then
+        PM="pacman"
+        UPDATE_CMD="sudo pacman -Syy --noconfirm"
+        INSTALL_CMD="sudo pacman -S --noconfirm"
+        QUERY_CMD="pacman -Q"
+        SEARCH_CMD="pacman -Ss"
+    elif command -v zypper >/dev/null 2>&1; then
+        PM="zypper"
+        UPDATE_CMD="sudo zypper --quiet refresh"
+        INSTALL_CMD="sudo zypper --non-interactive install"
+        QUERY_CMD="rpm -q"
+        SEARCH_CMD="zypper search -x"
+    elif command -v apk >/dev/null 2>&1; then
+        PM="apk"
+        UPDATE_CMD="sudo apk update"
+        INSTALL_CMD="sudo apk add"
+        QUERY_CMD="apk info -e"
+        SEARCH_CMD="apk search"
+    else
+        echo "Error: Could not detect a supported package manager (apt/dnf/yum/pacman/zypper/apk)" >&2
+        return 1
+    fi
+
+    echo "Detected package manager: $PM"
+
+    # ────────────────────────────────────────────────
+    # 2. Check if package is available in repositories
+    # ────────────────────────────────────────────────
+    local available=false
+
+    case "$PM" in
+        apt)
+            $SEARCH_CMD "$pkg" 2>/dev/null | grep -q -E "(Candidate:.*[0-9]|Installed:.*[0-9])"
+            [[ $? -eq 0 ]] && available=true
+            ;;
+        dnf|yum)
+            $SEARCH_CMD "$pkg" 2>/dev/null | grep -q -i "$pkg\."
+            [[ $? -eq 0 ]] && available=true
+            ;;
+        pacman)
+            pacman -Ss "^${pkg}$" >/dev/null 2>&1 && available=true
+            ;;
+        zypper)
+            $SEARCH_CMD "$pkg" 2>/dev/null | grep -q "$pkg"
+            [[ $? -eq 0 ]] && available=true
+            ;;
+        apk)
+            apk search "^${pkg}$" >/dev/null 2>&1 && available=true
+            ;;
+    esac
+
+    if ! $available; then
+        echo "Package '$pkg' not found in repositories" >&2
+        return 1
+    fi
+
+    # ────────────────────────────────────────────────
+    # 3. Check if already installed
+    # ────────────────────────────────────────────────
+    local is_installed=false
+
+    case "$PM" in
+        apt)
+            $QUERY_CMD "$pkg" >/dev/null 2>&1 && is_installed=true
+            ;;
+        dnf|yum|zypper)
+            $QUERY_CMD "$pkg" >/dev/null 2>&1 && is_installed=true
+            ;;
+        pacman)
+            $QUERY_CMD "$pkg" >/dev/null 2>&1 && is_installed=true
+            ;;
+        apk)
+            $QUERY_CMD "$pkg" >/dev/null 2>&1 && is_installed=true
+            ;;
+    esac
+
+    # ────────────────────────────────────────────────
+    # 4. Act accordingly
+    # ────────────────────────────────────────────────
+    if $is_installed; then
+        echo "Package '$pkg' is already installed → checking for upgrade..."
+        case "$PM" in
+            apt)
+                sudo apt-get install --only-upgrade -y "$pkg"
+                ;;
+            dnf)
+                sudo dnf upgrade -y "$pkg"
+                ;;
+            yum)
+                sudo yum update -y "$pkg"
+                ;;
+            pacman)
+                sudo pacman -Syu --noconfirm "$pkg"
+                ;;
+            zypper)
+                sudo zypper update -y "$pkg"
+                ;;
+            apk)
+                sudo apk upgrade "$pkg"
+                ;;
+        esac
+    else
+        echo "Installing '$pkg'..."
+        # For apt we usually want to update cache first
+        if [[ "$PM" == "apt" ]]; then
+            $UPDATE_CMD
+        fi
+        $INSTALL_CMD "$pkg"
+    fi
+
+    # Final status
+    if command -v "$pkg" >/dev/null 2>&1 || $QUERY_CMD "$pkg" >/dev/null 2>&1; then
+        echo "Success: '$pkg' is now installed / up to date"
+        return 0
+    else
+        echo "Warning: Installation verification failed for '$pkg'" >&2
+        return 1
+    fi
+}

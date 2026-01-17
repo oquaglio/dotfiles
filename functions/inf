@@ -1,0 +1,75 @@
+# Quick info function: current path, user, host, time, git status
+# Works in both bash and zsh
+inf() {
+    local reset='\033[0m'
+    local bold='\033[1m'
+    local dim='\033[2m'
+    local cyan='\033[36m'
+    local green='\033[32m'
+    local yellow='\033[33m'
+    local red='\033[31m'
+    local blue='\033[34m'
+
+    # ────────────────────────────────────────────────
+    # Basic info
+    # ────────────────────────────────────────────────
+    echo -e "${bold}${cyan}→ Shell info${reset}  $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    echo -e "  ${dim}User${reset}     : ${green}${USER:-$(whoami)}${reset}@${bold}${HOSTNAME:-$(hostname -s)}${reset}"
+    echo -e "  ${dim}Path${reset}      : ${blue}$(pwd)${reset}"
+
+    # ────────────────────────────────────────────────
+    # Git information (only if inside a git repo)
+    # ────────────────────────────────────────────────
+    if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        local branch
+        branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
+
+        echo -e "  ${dim}Git${reset}       : ${yellow}${branch}${reset}"
+
+        # Check for changes
+        local changes=""
+        local status=$(git status --porcelain --untracked-files=no 2>/dev/null)
+
+        if [[ -n "$status" ]]; then
+            local staged=$(git diff --cached --name-only | wc -l | tr -d ' ')
+            local modified=$(git diff --name-only | wc -l | tr -d ' ')
+            local untracked=$(git ls-files --others --exclude-standard | wc -l | tr -d ' ')
+
+            [[ $staged -gt 0 ]]    && changes+="${green}+${staged} staged${reset} "
+            [[ $modified -gt 0 ]]  && changes+="${yellow}~${modified} modified${reset} "
+            [[ $untracked -gt 0 ]] && changes+="${red}?${untracked} untracked${reset} "
+
+            if [[ -n "$changes" ]]; then
+                echo -e "               ${dim}→${reset} $changes"
+            else
+                echo -e "               ${dim}→${reset} ${green}clean${reset}"
+            fi
+        else
+            echo -e "               ${dim}→${reset} ${green}clean${reset}"
+        fi
+
+        # Show if we're ahead/behind remote (only if remote exists)
+        local upstream
+        upstream=$(git rev-parse --abbrev-ref @{u} 2>/dev/null)
+        if [[ -n "$upstream" ]]; then
+            local ahead behind
+            ahead=$(git rev-list --count HEAD ^@{u} 2>/dev/null || echo 0)
+            behind=$(git rev-list --count @{u} ^HEAD 2>/dev/null || echo 0)
+
+            if [[ $ahead -gt 0 || $behind -gt 0 ]]; then
+                local sync=""
+                [[ $ahead -gt 0 ]]  && sync+="${green}↑${ahead}${reset}"
+                [[ $behind -gt 0 ]] && sync+="${red}↓${behind}${reset}"
+                [[ -n "$sync" ]] && echo -e "               ${dim}→${reset} $sync remote"
+            fi
+        fi
+    fi
+
+    # Optional: show active container/toolbox if you're using one
+    if [[ -n "${TOOLBOX_PATH:-}" || -n "${CONTAINER_ID:-}" || -n "${Distrobox:-}" ]]; then
+        local container_name="${TOOLBOX_NAME:-${Distrobox:-${CONTAINER_ID:0:12}}}"
+        [[ -n "$container_name" ]] && echo -e "  ${dim}Container${reset} : ${magenta}${container_name}${reset}"
+    fi
+
+    echo
+}
