@@ -18,6 +18,7 @@ awskill() {
     unset AWS_PROFILE
     unset AWS_DEFAULT_PROFILE
     unset AWS_REGION
+    unset AWS_DEFAULT_REGION
     unset AWS_CONFIG_FILE
     unset AWS_SHARED_CREDENTIALS_FILE
     unset AWS_ACCESS_KEY_ID
