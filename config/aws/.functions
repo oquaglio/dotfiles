@@ -14,13 +14,21 @@ aws() {
 }
 
 awskill() {
+    # Clean environment variables
     unset AWS_PROFILE
+    unset AWS_DEFAULT_PROFILE
     unset AWS_REGION
     unset AWS_CONFIG_FILE
     unset AWS_SHARED_CREDENTIALS_FILE
-    unset AWS_ACCOUNT_ID
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+    unset AWS_ACCOUNT_ID   # if you use this custom var
+
+    # Actually terminate the SSO session (most important part)
+    aws sso logout 2>/dev/null || true   # ignore if no session exists
+
+    echo "AWS SSO session terminated and environment variables cleared."
 }
 
 check_aws_session() {
