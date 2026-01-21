@@ -24,6 +24,7 @@ awskill() {
     unset AWS_SECRET_ACCESS_KEY
     unset AWS_SESSION_TOKEN
     unset AWS_ACCOUNT_ID   # if you use this custom var
+    unset AWS_CREDENTIAL_EXPIRATION
 
     # Actually terminate the SSO session (most important part)
     aws sso logout 2>/dev/null || true   # ignore if no session exists
