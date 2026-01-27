@@ -117,9 +117,11 @@ eval "$(starship init zsh)"
 
 Also add this for the prompt:
 
+For WSL distros:
 ```SH
 export DISTRO_NAME="$WSL_DISTRO_NAME"
 ```
+Note: WSL_DISTRO_NAME is automatically set by the WSL runtime
 
 or:
 
