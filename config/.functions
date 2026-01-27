@@ -1,6 +1,11 @@
 # Usage: export DISTRO_GLYPH=$(get_distro_glyph "$DISTRO_NAME")
 get_distro_glyph() {
-  case "$1" in
+  local distro
+  # Convert to lowercase and remove anything after the base name:
+  #   - everything from the first digit onward
+  #   - common separators: -, ., _, space
+  distro=$(echo "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[-_.[:space:]]*[0-9].*//')
+  case "$distro" in
     arch) echo "" ;;        # Arch Linux
     ubuntu) echo "" ;;      # Ubuntu
     debian) echo "" ;;      # Debian
