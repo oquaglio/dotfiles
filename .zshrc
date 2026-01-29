@@ -73,7 +73,7 @@ eval_if_exists starship init zsh
 
 # Source other Zsh plugins that don't use autocompletions
 source_if_exists "$ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh"
-source_if_exists "$ZSH_PLUGINS_DIR/zsh-you-should-use/you-should-use.plugin.zsh"
+#source_if_exists "$ZSH_PLUGINS_DIR/zsh-you-should-use/you-should-use.plugin.zsh"
 
 # Zsh plugin that must be sourced last
 source_if_exists "$ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh"
