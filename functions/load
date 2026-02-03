@@ -26,6 +26,8 @@ load() {
     echo "5-min load:       $load5   (${p5}%)"
     echo "15-min load:      $load15   (${p15}%)"
 
+    free -h | awk '/Mem:/ {printf "Memory used:     %s / %s (%.0f%%)\n", $3, $2, $3/$2*100}'
+
     if [[ $p1 =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
         if (( $(awk "BEGIN {print ($p1 > 90)}") )); then
             echo "→ High load – possible contention"
