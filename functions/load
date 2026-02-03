@@ -13,8 +13,9 @@ load() {
         p15=$(echo "scale=1; $load15 / $cpus * 100" | bc 2>/dev/null || echo "?")
     fi
 
-    # Simple color for 1-min %
-    local color="\033[0;32m"  # default green
+    # Color for 1-min %
+    local color="\033[0;32m"  # green
+    local nc="\033[0m"
     if [[ $p1 =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
         if (( $(echo "$p1 > 90" | bc -l 2>/dev/null || echo 0) )); then
             color="\033[0;31m"  # red
@@ -22,7 +23,6 @@ load() {
             color="\033[0;33m"  # yellow
         fi
     fi
-    local nc="\033[0m"
 
     echo "Uptime & loads:"
     uptime
@@ -31,4 +31,17 @@ load() {
     echo -e "1-min load:       $load1   (${color}${p1}%${nc})"
     echo "5-min load:       $load5   (${p5}%)"
     echo "15-min load:      $load15   (${p15}%)"
+
+    # Tiny interpretation
+    if [[ $p1 =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        if (( $(echo "$p1 > 90" | bc -l) )); then
+            echo "→ High load – possible contention"
+        elif (( $(echo "$p1 > 70" | bc -l) )); then
+            echo "→ Getting busy"
+        elif (( $(echo "$p1 > 30" | bc -l) )); then
+            echo "→ Moderate – comfortable"
+        else
+            echo "→ Low load – plenty of headroom"
+        fi
+    fi
 }
