@@ -1,74 +1,29 @@
-# Quick load average saturation % (1-min load / logical CPUs * 100)
 load() {
-    # Colors
-    local RED='\033[0;31m'
-    local YELLOW='\033[0;33m'
-    local GREEN='\033[0;32m'
-    local BOLD='\033[1m'
-    local NC='\033[0m' # No Color
-
-    # Gather data
-    local uptime_line=$(uptime 2>/dev/null || echo "uptime command failed")
-    local load_raw=$(cut -d' ' -f1-3 /proc/loadavg 2>/dev/null || echo "0.00 0.00 0.00")
-    local loads=(${load_raw// / })
-    local cpus=$(nproc 2>/dev/null || grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo 1)
-
-    if [ "$cpus" -eq 0 ]; then
-        echo -e "${RED}Error: Could not determine number of CPUs${NC}"
-        return 1
-    fi
-
-    # Calculate percentages (using bc if available)
+    local loads=($(cut -d' ' -f1-3 /proc/loadavg))
+    local cpus=$(nproc)
     local p1 p5 p15
-    if command -v bc >/dev/null 2>&1; then
-        p1=$(echo "scale=1; ${loads[0]} / $cpus * 100" | bc 2>/dev/null || echo "?")
-        p5=$(echo "scale=1; ${loads[1]} / $cpus * 100" | bc 2>/dev/null || echo "?")
-        p15=$(echo "scale=1; ${loads[2]} / $cpus * 100" | bc 2>/dev/null || echo "?")
+
+    # Use bc safely - scale=1 for readability
+    p1=$(echo "scale=1; ${loads[0]} / $cpus * 100" | bc)
+    p5=$(echo "scale=1; ${loads[1]} / $cpus * 100" | bc)
+    p15=$(echo "scale=1; ${loads[2]} / $cpus * 100" | bc)
+
+    # Colors for 1-min saturation
+    local color=""
+    if (( $(echo "$p1 > 90" | bc -l) )); then
+        color="\033[0;31m"  # red
+    elif (( $(echo "$p1 > 70" | bc -l) )); then
+        color="\033[0;33m"  # yellow
     else
-        p1="?"; p5="?"; p15="?"
-        echo -e "${YELLOW}Note: install bc (sudo dnf install bc) for percentage values${NC}"
+        color="\033[0;32m"  # green
     fi
+    local nc="\033[0m"
 
-    # Color based on 1-min saturation
-    local color
-    local latest_pct=${p1:-0}
-    if [[ "$latest_pct" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-        if (( $(echo "$latest_pct > 90" | bc -l 2>/dev/null) )); then
-            color="$RED"
-        elif (( $(echo "$latest_pct > 70" | bc -l 2>/dev/null) )); then
-            color="$YELLOW"
-        else
-            color="$GREEN"
-        fi
-    else
-        color="$NC"
-    fi
-
-    # Output
-    echo -e "┌──────────────────────────────────────────────────────"
-    echo -e "│ ${BOLD}Uptime & Load:${NC}"
-    echo -e "│   $uptime_line"
-    echo -e "│"
-    echo -e "│ ${BOLD}Logical CPUs / threads:${NC}  $cpus"
-    echo -e "│"
-    echo -e "│ ${BOLD}Load averages:${NC}"
-    echo -e "│   1 min:  ${BOLD}${loads[0]}${NC}   (${color}${p1}%${NC})"
-    echo -e "│   5 min:  ${loads[1]}   (${p5}%)"
-    echo -e "│  15 min:  ${loads[2]}   (${p15}%)"
-    echo -e "└──────────────────────────────────────────────────────"
-
-    # Interpretation
-    if [[ "$latest_pct" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-        if (( $(echo "$latest_pct > 90" | bc -l) )); then
-            echo -e " → ${RED}High saturation – expect delays / queuing${NC}"
-        elif (( $(echo "$latest_pct > 70" | bc -l) )); then
-            echo -e " → ${YELLOW}Getting busy – monitor I/O and CPU${NC}"
-        elif (( $(echo "$latest_pct > 30" | bc -l) )); then
-            echo -e " → ${GREEN}Moderate load – comfortable${NC}"
-        else
-            echo -e " → ${GREEN}Plenty of headroom${NC}"
-        fi
-    fi
-
+    echo "Uptime & loads:"
+    uptime
     echo ""
+    echo "Logical CPUs:     $cpus"
+    echo "1-min load:       ${loads[0]}   (${color}${p1}%${nc})"
+    echo "5-min load:       ${loads[1]}   (${p5}%)"
+    echo "15-min load:      ${loads[2]}   (${p15}%)"
 }
