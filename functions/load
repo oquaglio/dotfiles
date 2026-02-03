@@ -1,21 +1,26 @@
 load() {
-    local loads=($(cut -d' ' -f1-3 /proc/loadavg))
-    local cpus=$(nproc)
-    local p1 p5 p15
+    # Get loads safely
+    local load1 load5 load15
+    read load1 load5 load15 _ < /proc/loadavg
 
-    # Use bc safely - scale=1 for readability
-    p1=$(echo "scale=1; ${loads[0]} / $cpus * 100" | bc)
-    p5=$(echo "scale=1; ${loads[1]} / $cpus * 100" | bc)
-    p15=$(echo "scale=1; ${loads[2]} / $cpus * 100" | bc)
+    local cpus=$(nproc || echo 1)
 
-    # Colors for 1-min saturation
-    local color=""
-    if (( $(echo "$p1 > 90" | bc -l) )); then
-        color="\033[0;31m"  # red
-    elif (( $(echo "$p1 > 70" | bc -l) )); then
-        color="\033[0;33m"  # yellow
-    else
-        color="\033[0;32m"  # green
+    local p1="?" p5="?" p15="?"
+
+    if command -v bc &>/dev/null; then
+        p1=$(echo "scale=1; $load1 / $cpus * 100" | bc 2>/dev/null || echo "?")
+        p5=$(echo "scale=1; $load5 / $cpus * 100" | bc 2>/dev/null || echo "?")
+        p15=$(echo "scale=1; $load15 / $cpus * 100" | bc 2>/dev/null || echo "?")
+    fi
+
+    # Simple color for 1-min %
+    local color="\033[0;32m"  # default green
+    if [[ $p1 =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        if (( $(echo "$p1 > 90" | bc -l 2>/dev/null || echo 0) )); then
+            color="\033[0;31m"  # red
+        elif (( $(echo "$p1 > 70" | bc -l 2>/dev/null || echo 0) )); then
+            color="\033[0;33m"  # yellow
+        fi
     fi
     local nc="\033[0m"
 
@@ -23,7 +28,7 @@ load() {
     uptime
     echo ""
     echo "Logical CPUs:     $cpus"
-    echo "1-min load:       ${loads[0]}   (${color}${p1}%${nc})"
-    echo "5-min load:       ${loads[1]}   (${p5}%)"
-    echo "15-min load:      ${loads[2]}   (${p15}%)"
+    echo -e "1-min load:       $load1   (${color}${p1}%${nc})"
+    echo "5-min load:       $load5   (${p5}%)"
+    echo "15-min load:      $load15   (${p15}%)"
 }
