@@ -24,9 +24,7 @@ load() {
     echo "Logical CPUs:     $cpus"
     echo -e "1-min load:       $load1   (${color}${p1}%${nc})"
     echo "5-min load:       $load5   (${p5}%)"
-    echo "15-min load:      $load15   (${p15}%)"
-
-    free -h | awk '/Mem:/ {printf "Memory used:     %s / %s (%.0f%%)\n", $3, $2, $3/$2*100}'
+    echo "15-min load:      $load15   (${p15}%)"    
 
     if [[ $p1 =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
         if (( $(awk "BEGIN {print ($p1 > 90)}") )); then
@@ -39,4 +37,6 @@ load() {
             echo "→ Low load – plenty of headroom"
         fi
     fi
+
+    free -h | awk '/Mem:/ {printf "Memory used:     %s / %s (%.0f%%)\n", $3, $2, $3/$2*100}'
 }
