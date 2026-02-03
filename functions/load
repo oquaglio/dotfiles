@@ -1,28 +1,21 @@
 load() {
-    # Get loads safely
-    local load1 load5 load15
     read load1 load5 load15 _ < /proc/loadavg
 
     local cpus=$(nproc || echo 1)
 
-    echo "Debug: cpus = $cpus"
-    echo "Debug: loads = $load1 $load5 $load15"
-
     local p1 p5 p15
-    p1=$(echo "scale=1; $load1 / $cpus * 100" | bc 2>/dev/null || echo "?")
-    p5=$(echo "scale=1; $load5 / $cpus * 100" | bc 2>/dev/null || echo "?")
-    p15=$(echo "scale=1; $load15 / $cpus * 100" | bc 2>/dev/null || echo "?")
+    p1=$(bc <<< "scale=1; $load1 / $cpus * 100" 2>/dev/null || echo "?")
+    p5=$(bc <<< "scale=1; $load5 / $cpus * 100" 2>/dev/null || echo "?")
+    p15=$(bc <<< "scale=1; $load15 / $cpus * 100" 2>/dev/null || echo "?")
 
-    echo "Debug: p1 expression was: scale=1; $load1 / $cpus * 100 → $p1"    
-
-    # Color for 1-min %
-    local color="\033[0;32m"  # green
+    # Color logic (unchanged)
+    local color="\033[0;32m"
     local nc="\033[0m"
     if [[ $p1 =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-        if (( $(echo "$p1 > 90" | bc -l 2>/dev/null || echo 0) )); then
-            color="\033[0;31m"  # red
-        elif (( $(echo "$p1 > 70" | bc -l 2>/dev/null || echo 0) )); then
-            color="\033[0;33m"  # yellow
+        if (( $(bc -l <<< "$p1 > 90" 2>/dev/null || echo 0) )); then
+            color="\033[0;31m"
+        elif (( $(bc -l <<< "$p1 > 70" 2>/dev/null || echo 0) )); then
+            color="\033[0;33m"
         fi
     fi
 
@@ -34,13 +27,13 @@ load() {
     echo "5-min load:       $load5   (${p5}%)"
     echo "15-min load:      $load15   (${p15}%)"
 
-    # Tiny interpretation
+    # Interpretation (unchanged)
     if [[ $p1 =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-        if (( $(echo "$p1 > 90" | bc -l) )); then
+        if (( $(bc -l <<< "$p1 > 90") )); then
             echo "→ High load – possible contention"
-        elif (( $(echo "$p1 > 70" | bc -l) )); then
+        elif (( $(bc -l <<< "$p1 > 70") )); then
             echo "→ Getting busy"
-        elif (( $(echo "$p1 > 30" | bc -l) )); then
+        elif (( $(bc -l <<< "$p1 > 30") )); then
             echo "→ Moderate – comfortable"
         else
             echo "→ Low load – plenty of headroom"
