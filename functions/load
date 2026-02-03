@@ -1,0 +1,28 @@
+# Quick load average saturation % (1-min load / logical CPUs * 100)
+load() {
+    local load1 cpus percent
+
+    load1=$(cut -d' ' -f1 /proc/loadavg 2>/dev/null || echo "0.00")
+    cpus=$(nproc 2>/dev/null || grep -c '^processor' /proc/cpuinfo 2>/dev/null || echo 1)
+
+    if [ "$cpus" -eq 0 ]; then
+        echo "Error: Could not determine number of CPUs"
+        return 1
+    fi
+
+    percent=$(echo "scale=2; $load1 / $cpus * 100" | bc -l 2>/dev/null)
+
+    # Fancy output
+    printf "1-min load avg: \033[1m%s\033[0m\n" "$load1"
+    printf "Logical CPUs:   \033[1m%s\033[0m\n" "$cpus"
+    printf "Saturation:     \033[1;33m%s%%\033[0m  (%.2f / %d)\n" "$percent" "$load1" "$cpus"
+
+    # Optional: simple color hint
+    if (($(echo "$percent > 90" | bc -l))); then
+        echo "→ High saturation – possible contention"
+    elif (($(echo "$percent > 70" | bc -l))); then
+        echo "→ Getting busy"
+    else
+        echo "→ Plenty of headroom"
+    fi
+}
