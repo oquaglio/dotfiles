@@ -5,13 +5,15 @@ load() {
 
     local cpus=$(nproc || echo 1)
 
-    local p1="?" p5="?" p15="?"
+    echo "Debug: cpus = $cpus"
+    echo "Debug: loads = $load1 $load5 $load15"
 
-    if command -v bc &>/dev/null; then
-        p1=$(echo "scale=1; $load1 / $cpus * 100" | bc 2>/dev/null || echo "?")
-        p5=$(echo "scale=1; $load5 / $cpus * 100" | bc 2>/dev/null || echo "?")
-        p15=$(echo "scale=1; $load15 / $cpus * 100" | bc 2>/dev/null || echo "?")
-    fi
+    local p1 p5 p15
+    p1=$(echo "scale=1; $load1 / $cpus * 100" | bc 2>/dev/null || echo "?")
+    p5=$(echo "scale=1; $load5 / $cpus * 100" | bc 2>/dev/null || echo "?")
+    p15=$(echo "scale=1; $load15 / $cpus * 100" | bc 2>/dev/null || echo "?")
+
+    echo "Debug: p1 expression was: scale=1; $load1 / $cpus * 100 → $p1"    
 
     # Color for 1-min %
     local color="\033[0;32m"  # green
