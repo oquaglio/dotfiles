@@ -1,4 +1,4 @@
-load() {
+load2() {
     local load1=$(cut -d' ' -f1 /proc/loadavg)
     local cpus=$(nproc)
     local percent=$(echo "scale=2; $load1 / $cpus * 100" | bc)
