@@ -30,5 +30,5 @@ pathadd $PYENV_ROOT
 pathadd $PYENV_ROOT/bin
 
 # dotent
-pathadd $DOTNET_ROOT
-pathadd $DOTNET_ROOT/tools
+prepend_path $DOTNET_ROOT
+prepend_path $DOTNET_ROOT/tools
