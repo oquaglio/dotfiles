@@ -117,14 +117,13 @@ source_if_exists $HOME/.nix-profile/etc/profile.d/nix.sh
 
 # Other plugins ###############################################################
 
-# Homebrew config
+# A command history database. Press up arrow to use.
 eval_if_exists atuin init zsh
 
 # direnv hook
 eval_if_exists direnv hook zsh
 
-# A command history database. Press up arrow to use.
-eval_if_exists atuin init zsh
+
 
 # Pyenv
 #eval_if_exists pyenv init -
