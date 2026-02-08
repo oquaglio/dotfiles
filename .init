@@ -147,8 +147,8 @@ source_files() {
     if [[ -n "$ZSH_VERSION" ]]; then
         # Zsh-native globbing avoids forking find+sort subprocesses.
         # ${~var} enables glob expansion on the variable's value.
-        # Qualifiers: N=nullglob, .=regular files only, on=order by name
-        for file in $search_dir/**/${~file_pattern}(N.on); do
+        # Qualifiers: N=nullglob, D=dotfiles, .=regular files only, on=order by name
+        for file in $search_dir/**/${~file_pattern}(ND.on); do
             source "$file"
         done
     else
