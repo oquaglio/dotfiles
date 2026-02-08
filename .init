@@ -14,10 +14,18 @@ export DOTFILES_LOCAL_ROOT=$HOME/.dotfiles-local
 
 
 # Housekeeping #################################################################################
-chmod +x $DOTFILES_ROOT/scripts/create_symlinks.sh && $DOTFILES_ROOT/scripts/create_symlinks.sh
-# make sure all scripts in bin are executable
-find "$DOTFILES_ROOT/bin" -type f -exec chmod +x {} +
 mkdir -p $DOTFILES_LOCAL_ROOT
+
+# Only run symlinks/chmod when the repo has changed (or first run)
+_dotfiles_stamp="$HOME/.cache/dotfiles_head"
+_dotfiles_head=$(git -C "$DOTFILES_ROOT" rev-parse HEAD 2>/dev/null)
+if [[ "$_dotfiles_head" != "$(cat "$_dotfiles_stamp" 2>/dev/null)" ]]; then
+    chmod +x "$DOTFILES_ROOT/scripts/create_symlinks.sh" && "$DOTFILES_ROOT/scripts/create_symlinks.sh"
+    find "$DOTFILES_ROOT/bin" -type f -exec chmod +x {} +
+    mkdir -p "$HOME/.cache"
+    echo "$_dotfiles_head" > "$_dotfiles_stamp"
+fi
+unset _dotfiles_stamp _dotfiles_head
 
 
 # DEFINE CORE FUNCTIONS #########################################################################
