@@ -35,7 +35,7 @@ if ! whence -w compdef > /dev/null; then
     # Deduplicate $fpath to avoid warnings or redundant scanning
     typeset -U fpath
     autoload -Uz compinit
-    compinit
+    compinit -C
 fi
 
 
