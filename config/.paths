@@ -29,6 +29,6 @@ pathadd $HOME/.nvm NVM_DIR
 pathadd $PYENV_ROOT
 pathadd $PYENV_ROOT/bin
 
-# dotent
+# dotnet
 prepend_path $DOTNET_ROOT
 prepend_path $DOTNET_ROOT/tools
