@@ -9,20 +9,7 @@ alias todo='$EDITOR ~/.todo'
 alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons'
 alias lt='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --git --icons --total-size'
 alias lr='ls -alhRt --color' # all files, long format, human readable, recursive (tree)
-#alias l='ls -la | grep "^d" && ls -la | grep "^-" && ls -la | grep "^l"'
-#alias l='ls --sort=time --format=long --color --almost-all --human-readable --group-directories-first --time-style="+%Y-%m-%d %H:%M:%S"'
-#alias lz='l --sort=size'
-#alias lt='l --sort=time'
-#alias l='ls -alht --color --group-directories-first' # all files, long format, human readable
-#alias x='exa -lFagh --group-directories-first'
-#alias xt='exa -lFaghT --group-directories-first --icons'
-#alias x='exa -F --header --all --long --time-style=long-iso --group-directories-first --git --icons'
-#alias l='eza -F -g --header --all --long --time-style=long-iso --group-directories-first --sort modified --reverse --git --icons'
 ########################################################## List Commands
-
-
-#recursively find files larger than x bytes, e.g. llfs +10k
-#alias f='_f(){ find . -type f -size "$1" -exec ls --color --classify --human-readable -l {} \; ; }; _f'
 
 
 # https://taskfile.dev/
@@ -36,10 +23,10 @@ alias tt='tree -alpugifhDFC'
 #easy nav
 alias -- -='cd -'   # toggle between current and last dir (-)
 alias ..='cd ..'
-alias ..2='..; ..'
-alias ..3='..2; ..'
-alias ..4='..3; ..'
-alias ..5='..4; ..'
+alias ..2='cd ../..'
+alias ..3='cd ../../..'
+alias ..4='cd ../../../..'
+alias ..5='cd ../../../../..'
 
 ## Colorize the grep command output for ease of use (good for log files)##
 alias grep='grep --color=auto'
@@ -98,9 +85,6 @@ alias clip=clip.exe
 alias explorer=explorer.exe
 
 
-alias h='history'
-
-
 alias ipkg='install_package'
 
 ########################################################################
@@ -111,8 +95,8 @@ alias ipkg='install_package'
 
 # automatically changes your shell's directory to whatever directory you navigate to in ranger when you exit
 alias ranger='ranger --choosedir=$HOME/.rangerdir; LASTDIR=`cat $HOME/.rangerdir`; cd "$LASTDIR"'
-# taskwarrior
-alias tw='/home/linuxbrew/.linuxbrew/bin/task'
+# taskwarrior (uses command to bypass the taskfile 'task' alias)
+alias tw='command task'
 alias twf='function _twf() { if [ -z "$1" ]; then echo "Usage: twf <searchstring>"; return 1; fi; tw "($1 or project.has:$1)"; }; _twf'
-alias pp='/home/linuxbrew/.linuxbrew/bin/task'
+alias pp='command task'
 alias pf='function _taskwarrior_find() { if [ -z "$1" ]; then echo "Usage: twf <searchstring>"; return 1; fi; tw "($1 or project.has:$1)"; }; _taskwarrior_find'

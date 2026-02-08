@@ -24,9 +24,6 @@ fi
 # Run commands compatible with all shells
 source_files $DOTFILES_ROOT/config "*.rc"
 
-#source_if_exists $DOTFILES_ROOT/.paths
-#source_if_exists $DOTFILES_ROOT/.aliases
-
 source_files $DOTFILES_ROOT/config "*.functions"
 source_files $DOTFILES_ROOT/functions "*"
 source_files $DOTFILES_ROOT/config "*.aliases"
