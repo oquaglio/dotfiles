@@ -1,5 +1,10 @@
 echo -n "Sourcing files... "
-start_time=$(date +%s)  # Record start time
+if [[ -n "$ZSH_VERSION" ]]; then
+    zmodload zsh/datetime  # provides $EPOCHREALTIME (float seconds)
+    start_time=$EPOCHREALTIME
+else
+    start_time=$(date +%s%N)
+fi
 
 # Set paths and env first
 source_files $DOTFILES_ROOT/config "*.env"
@@ -30,6 +35,12 @@ source_files $DOTFILES_LOCAL_ROOT "*"
 
 # finally, run any extra shell commands
 source_if_exists $DOTFILES_ROOT/config/.shellrc
-end_time=$(date +%s)    # Record end time
-elapsed=$(( end_time - start_time ))
-echo "Done. Took $elapsed second(s)."
+if [[ -n "$ZSH_VERSION" ]]; then
+    elapsed_ms=$(( (EPOCHREALTIME - start_time) * 1000 ))
+    printf "Done. Took %.0fms.\n" "$elapsed_ms"
+else
+    end_time=$(date +%s%N)
+    elapsed_ms=$(( (end_time - start_time) / 1000000 ))
+    echo "Done. Took ${elapsed_ms}ms."
+fi
+unset start_time elapsed_ms
