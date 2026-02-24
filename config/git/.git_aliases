@@ -7,8 +7,12 @@
 	lf = !"git l --invert-grep --grep '#wip' --grep '#irrelevant'"	# filter out #wip and #irrelevant entries
 	l1 = !"git l --since=1.weeks"
 	l4 = !"git l --since=4.weeks"
-	
-	l = !"git lg1-specific -${1:-50}"
+
+	# git l          # shows last 50 commits (default)
+	# git l 5        # shows last 5 commits
+	# git l 20       # shows last 20 commits
+	# git l 100      # shows last 100 commits
+	l = !f() { git lg1-specific -${1:-50}; }; f
 	lg1 = !"git lg1-specific"
 	lg2 = !"git lg2-specific"
 	lg3 = !"git lg3-specific"
