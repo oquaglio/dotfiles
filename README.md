@@ -1,8 +1,6 @@
 # dotfiles
 
-My dotfiles. I have stolen many ideas from other people's dotfiles.
-
-I use zsh and things seem to work well. I also tested bash, but not very carefully.
+My dotfiles. I use zsh and things seem to work well. I also tested bash, but not very carefully.
 
 ## Example Prompt
 
