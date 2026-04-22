@@ -31,7 +31,8 @@ awskill() {
     # deletes tokens in ~
     # aws sso logout 2>/dev/null || true   # ignore if no session exists
 
-    echo "AWS SSO session terminated and environment variables cleared."
+    # echo "AWS SSO session terminated and environment variables cleared."
+    echo "AWS environment variables cleared."
 }
 
 check_aws_session() {
