@@ -5,7 +5,11 @@ aws() {
     if [[ $# -eq 0 || $@ == "acc" ]]; then
         local identity
         identity=$(command aws sts get-caller-identity 2>&1) || { echo "Error: $identity"; return 1; }
-        echo "Account : $(echo "$identity" | jq -r '.Account')"
+        local account_id alias alias_str
+        account_id=$(echo "$identity" | jq -r '.Account')
+        alias=$(command aws iam list-account-aliases 2>/dev/null | jq -r '.AccountAliases[0] // empty')
+        alias_str="${account_id}${alias:+ ($alias)}"
+        echo "Account : $alias_str"
         echo "Arn     : $(echo "$identity" | jq -r '.Arn')"
         echo "UserId  : $(echo "$identity" | jq -r '.UserId')"
         echo "Region  : $(command aws configure get region 2>/dev/null || echo 'not set')"
