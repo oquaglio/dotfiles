@@ -2,12 +2,17 @@
 # 'command' prevents recursion by bypassing any function or alias with 'aws'
 # E.g. run 'aws acc'
 aws() {
-    if [[ $@ == "acc" ]]; then
-        #command aws sts get-caller-identity --query "Account" --output text
-        command aws sts get-caller-identity | jq -r ".Account"
-        command aws configure get region
-        check_aws_session
-        command env | grep "^AWS_" | sort
+    if [[ $# -eq 0 || $@ == "acc" ]]; then
+        local identity
+        identity=$(command aws sts get-caller-identity 2>&1) || { echo "Error: $identity"; return 1; }
+        echo "Account : $(echo "$identity" | jq -r '.Account')"
+        echo "Arn     : $(echo "$identity" | jq -r '.Arn')"
+        echo "UserId  : $(echo "$identity" | jq -r '.UserId')"
+        echo "Region  : $(command aws configure get region 2>/dev/null || echo 'not set')"
+        echo "Profile : ${AWS_PROFILE:-${AWS_DEFAULT_PROFILE:-default}}"
+        local aws_vars
+        aws_vars=$(env | grep "^AWS_" | sort)
+        [[ -n "$aws_vars" ]] && echo "---" && echo "$aws_vars"
     else
         command aws "$@"
     fi
