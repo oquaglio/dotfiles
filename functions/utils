@@ -124,9 +124,9 @@ pack() {
                 [ -n "$last_update" ] && printf "Last cache update: %s\n" "$last_update"
             fi
             printf "\n"
-            # Store for summary table
-            _summary="$manager:$description:$count:$version"
-            _summary_list="$_summary_list$_summary\n"
+            # Store for summary table (real newline — `\n` here is literal
+            # and would defeat the `read` loop below).
+            _summary_list+="$manager:$description:$count:$version"$'\n'
         fi
     }
 
