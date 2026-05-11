@@ -23,7 +23,7 @@ if [[ "$_dotfiles_head" != "$(cat "$_dotfiles_stamp" 2>/dev/null)" ]]; then
     chmod +x "$DOTFILES_ROOT/scripts/create_symlinks.sh" && "$DOTFILES_ROOT/scripts/create_symlinks.sh"
     find "$DOTFILES_ROOT/bin" -type f -exec chmod +x {} +
     mkdir -p "$HOME/.cache"
-    echo "$_dotfiles_head" > "$_dotfiles_stamp"
+    echo "$_dotfiles_head" >| "$_dotfiles_stamp"
 fi
 unset _dotfiles_stamp _dotfiles_head
 
