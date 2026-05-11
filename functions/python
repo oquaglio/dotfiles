@@ -1,0 +1,148 @@
+# Python virtual-environment discovery and cleanup.
+#
+# Commands:
+#   venvs [root]              list every venv under <root> (default $HOME), sorted by size desc
+#   venvs_clean [-y] [root]   interactively delete venvs; -y / --yes skips prompts
+#
+# Detection: pyvenv.cfg, bin/activate, or Scripts/activate(.bat). Confirmed
+# by a python interpreter at bin/python or Scripts/python.exe. Broken-symlink
+# pythons are kept in the list — they're prime cleanup candidates.
+#
+# Classification covers: venv, virtualenv, uv, poetry, pdm, hatch, pipenv,
+# pyenv-virtualenv, virtualenvwrapper, pipx, conda/mamba. Tagged (broken)
+# when the python symlink is dangling.
+#
+# Cleanup safety: conda envs are skipped — `conda env remove -n <name>` is
+# the right tool, since deleting the dir leaves conda's index inconsistent.
+#
+# Walk prunes node_modules and .git for speed; keeps .cache (poetry parks
+# its venvs there).
+
+# Internal: emit one venv-root path per line from <root>.
+_venvs_find() {
+    local root="${1:-$HOME}"
+    find "$root" \
+        -type d \( -name node_modules -o -name .git \) -prune -o \
+        -type f \( \
+            -name pyvenv.cfg -o \
+            -path '*/bin/activate' -o \
+            -path '*/Scripts/activate' -o \
+            -path '*/Scripts/activate.bat' \
+        \) -print 2>/dev/null \
+    | awk '{
+        sub(/\/[^\/]+$/, "");          # strip the matched filename
+        sub(/\/(bin|Scripts)$/, "");   # if we matched an activate, strip bin/Scripts too
+        print
+    }' \
+    | sort -u
+}
+
+# Internal: classify a venv directory. Echoes a short tag.
+_venvs_classify() {
+    local dir="$1"
+    local type="venv"
+
+    if [ -d "$dir/conda-meta" ]; then
+        echo "conda"
+        return
+    fi
+
+    # Path-based tags (strongest signal).
+    case "$dir" in
+        */pipx/venvs/*)              type="pipx" ;;
+        */.virtualenvs/*)            type="virtualenvwrapper" ;;
+        */pyenv/versions/*/envs/*)   type="pyenv-virtualenv" ;;
+        */.cache/pypoetry/virtualenvs/*) type="poetry" ;;
+    esac
+
+    # Content-based refinement.
+    if [ -f "$dir/pyvenv.cfg" ]; then
+        if grep -q '^uv =' "$dir/pyvenv.cfg" 2>/dev/null; then
+            type="uv"
+        elif grep -q '^home =.*pyenv/versions' "$dir/pyvenv.cfg" 2>/dev/null; then
+            type="pyenv"
+        fi
+    fi
+
+    # Project-local hints (parent directory).
+    local parent
+    parent=$(dirname "$dir")
+    if [ -f "$parent/poetry.lock" ]; then
+        type="poetry"
+    elif [ -f "$parent/pdm.lock" ]; then
+        type="pdm"
+    elif [ -f "$parent/Pipfile" ]; then
+        type="pipenv"
+    elif grep -q '\[tool\.uv\]' "$parent/pyproject.toml" 2>/dev/null; then
+        type="uv"
+    elif grep -q '\[tool\.hatch' "$parent/pyproject.toml" 2>/dev/null; then
+        type="hatch"
+    fi
+
+    # Mark broken (dangling python symlink) — prime cleanup candidates.
+    if [ -L "$dir/bin/python" ] && [ ! -e "$dir/bin/python" ]; then
+        type="$type (broken)"
+    fi
+
+    echo "$type"
+}
+
+# Internal: is this directory actually a venv? (has a python interpreter)
+_venvs_is_venv() {
+    local dir="$1"
+    [ -x "$dir/bin/python" ] || \
+    [ -f "$dir/bin/python" ] || \
+    [ -f "$dir/Scripts/python.exe" ] || \
+    # Broken symlink still counts (caller may want to clean it).
+    { [ -L "$dir/bin/python" ] && return 0; }
+}
+
+venvs() {
+    local root="${1:-$HOME}"
+    echo "Scanning $root for Python virtual environments (this may take a minute)..."
+    _venvs_find "$root" | while IFS= read -r dir; do
+        _venvs_is_venv "$dir" || continue
+        local size type
+        size=$(du -sh "$dir" 2>/dev/null | cut -f1)
+        type=$(_venvs_classify "$dir")
+        printf '%-8s  %-22s  %s\n' "$size" "$type" "$dir"
+    done | sort -hr
+}
+
+venvs_clean() {
+    local assume_yes=0
+    case "$1" in
+        -y|--yes) assume_yes=1; shift ;;
+    esac
+    local root="${1:-$HOME}"
+
+    _venvs_find "$root" | while IFS= read -r dir; do
+        _venvs_is_venv "$dir" || continue
+        local size type
+        size=$(du -sh "$dir" 2>/dev/null | cut -f1)
+        type=$(_venvs_classify "$dir")
+
+        # Refuse to delete conda envs — let conda own its tree.
+        case "$type" in
+            conda)
+                printf 'skip   %-8s  %-22s  %s\n' "$size" "$type" "$dir"
+                continue
+                ;;
+        esac
+
+        if [ "$assume_yes" -eq 1 ]; then
+            if rm -rf -- "$dir"; then
+                printf 'removed  %-8s  %-22s  %s\n' "$size" "$type" "$dir"
+            else
+                printf 'FAILED   %-8s  %-22s  %s\n' "$size" "$type" "$dir"
+            fi
+        else
+            printf 'Delete  %-8s  %-22s  %s ? [y/N] ' "$size" "$type" "$dir"
+            read -r reply
+            case "$reply" in
+                [yY]*) rm -rf -- "$dir" && echo '  → removed' ;;
+                *)     echo '  → kept' ;;
+            esac
+        fi
+    done
+}
