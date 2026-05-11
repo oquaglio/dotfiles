@@ -2,7 +2,8 @@
 
 # Initial setup ###############################################################
 
-export DOTFILES_ROOT=$(dirname "$0")
+# Zsh-only idiom for getting the absolute directory of the current script
+export DOTFILES_ROOT=${${(%):-%x}:A:h}
 
 # set up important stuff before proceeding
 source $DOTFILES_ROOT/.init
