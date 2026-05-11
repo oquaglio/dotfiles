@@ -2,11 +2,22 @@
 
 echo -n "Creating symlinks... "
 
-# Remove aliases first
-rm -rf ~/.nanorc; rm -rf ~/.nano; rm -rf ~/.vimrc; rm -rf ~/.env; rm -rf ~/.aliases;
-
 # Set up dirs
 mkdir -p ~/.config
+
+# Remove only existing symlinks at the targets we manage, so we never clobber
+# a real file the user may have put there (e.g. a hand-written ~/.env).
+_unlink_if_symlink() {
+    for target in "$@"; do
+        if [ -L "$target" ]; then
+            rm -f "$target"
+        fi
+    done
+}
+_unlink_if_symlink ~/.nanorc ~/.nano ~/.config/nano \
+                   ~/.config/starship.toml \
+                   ~/.gitmessage ~/.gitignore ~/.git_aliases
+unset -f _unlink_if_symlink
 
 # Create symlinks to app specific config
 ln -sf $DOTFILES_ROOT/config/starship/starship.toml ~/.config/starship.toml

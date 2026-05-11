@@ -36,7 +36,18 @@ if ! whence -w compdef > /dev/null; then
     # Deduplicate $fpath to avoid warnings or redundant scanning
     typeset -U fpath
     autoload -Uz compinit
-    compinit -C
+
+    # Cache compdump and only run the full security check (slow) once a day.
+    # Fast path: -C reuses the dump without rescanning fpath or checking perms.
+    _zcompdump="$HOME/.cache/zcompdump-${ZSH_VERSION}"
+    mkdir -p "$HOME/.cache"
+    # zsh glob qualifier mh-24 = modified less than 24 hours ago
+    if [[ -n $_zcompdump(#qN.mh-24) ]]; then
+        compinit -C -d "$_zcompdump"
+    else
+        compinit -d "$_zcompdump"
+    fi
+    unset _zcompdump
 fi
 
 

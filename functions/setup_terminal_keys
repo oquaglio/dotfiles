@@ -23,6 +23,9 @@
 # - Pressing Delete removes the character under the cursor
 # - Arrow keys navigate command history and move the cursor as expected
 setup_terminal_keys() {
+  # Zsh-only: bindkey/zmodload/terminfo are not available in bash.
+  [ -n "$ZSH_VERSION" ] || return 0
+
   autoload -U terminfo
   zmodload zsh/terminfo 2>/dev/null || return
 
