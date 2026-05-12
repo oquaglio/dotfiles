@@ -14,3 +14,137 @@ start_container() {
     done
   fi
 }
+
+# Docker disk-usage discovery and cleanup.
+#
+# Commands:
+#   docker_du               full disk-usage report: summary + per-category tables, stale items flagged
+#   docker_clean            interactive prune: per category, with confirmation
+#   docker_clean -y         non-interactive (runs `docker system prune -a --volumes` equivalent)
+#
+# Flags used:
+#   image       'unused'   = no container (running or stopped) references it
+#               'dangling' = no tag (<none>:<none>); always safe to remove
+#   container   'reclaim'  = anything in state != running
+#   volume      'dangling' = LINKS=0 (no container has it mounted)
+#
+# Volume sizes come from `docker system df -v` parsing (the only path that
+# doesn't require sudo on /var/lib/docker/volumes).
+
+_docker_check() {
+    if ! command -v docker >/dev/null 2>&1; then
+        echo "docker not installed" >&2
+        return 1
+    fi
+    if ! command docker info >/dev/null 2>&1; then
+        echo "docker daemon not reachable" >&2
+        return 1
+    fi
+}
+
+docker_du() {
+    _docker_check || return 1
+
+    printf '=== SUMMARY ===\n'
+    command docker system df
+
+    printf '\n=== IMAGES (largest first) ===\n'
+    local used
+    used=$(command docker ps -a --no-trunc --format '{{.ImageID}}' 2>/dev/null | sort -u)
+    {
+        printf 'SIZE\tSTATUS\tID\tREPOSITORY:TAG\tAGE\n'
+        command docker images --no-trunc \
+            --format '{{.Size}}	{{.ID}}	{{.Repository}}:{{.Tag}}	{{.CreatedSince}}' \
+            2>/dev/null \
+        | while IFS=$'\t' read -r size id repo age; do
+            local status="used"
+            case "$repo" in
+                '<none>:<none>') status="dangling" ;;
+                *)
+                    if ! printf '%s\n' "$used" | command grep -qFx -- "$id"; then
+                        status="unused"
+                    fi
+                    ;;
+            esac
+            local short=${id#sha256:}
+            short=${short:0:12}
+            printf '%s\t%s\t%s\t%s\t%s\n' "$size" "$status" "$short" "$repo" "$age"
+        done | sort -hr
+    } | column -t -s $'\t'
+
+    printf '\n=== CONTAINERS (write-layer size; non-running are reclaimable) ===\n'
+    {
+        printf 'SIZE\tSTATE\tNAME\tIMAGE\tSTATUS\n'
+        command docker ps -a --size \
+            --format '{{.Size}}	{{.State}}	{{.Names}}	{{.Image}}	{{.Status}}' \
+            2>/dev/null \
+        | sed 's/ (virtual [^)]*)//g' \
+        | sort -hr
+    } | column -t -s $'\t'
+
+    printf '\n=== VOLUMES (dangling = no container mounts it) ===\n'
+    {
+        printf 'SIZE\tSTATUS\tLINKS\tNAME\n'
+        command docker system df -v 2>/dev/null \
+        | awk '
+            /^Local Volumes space usage:/ { in_vols=1; next }
+            in_vols && NF==0 { in_vols=0 }
+            in_vols && /^VOLUME NAME/ { next }
+            in_vols { print $3 "\t" ($2=="0"?"dangling":"used") "\t" $2 "\t" $1 }
+        ' \
+        | sort -hr
+    } | column -t -s $'\t'
+
+    printf '\n=== BUILD CACHE ===\n'
+    command docker builder du 2>/dev/null \
+        | awk 'NR<=20'   # top 20 entries; output is already largest-first
+}
+
+docker_clean() {
+    _docker_check || return 1
+
+    local assume_yes=0
+    case "$1" in
+        -y|--yes) assume_yes=1 ;;
+    esac
+
+    if [ "$assume_yes" -eq 1 ]; then
+        echo "Running: docker system prune -a --volumes -f"
+        command docker system prune -a --volumes -f
+        echo
+        command docker system df
+        return
+    fi
+
+    command docker system df
+    echo
+
+    local reply
+    _confirm_and_run() {
+        local prompt="$1"; shift
+        printf '%s [y/N] ' "$prompt"
+        read -r reply
+        case "$reply" in
+            [yY]*)
+                printf '  → %s\n' "$*"
+                "$@"
+                echo
+                ;;
+            *)
+                echo '  → skipped'
+                ;;
+        esac
+    }
+
+    _confirm_and_run 'Remove stopped containers?'                 command docker container prune -f
+    _confirm_and_run 'Remove dangling images (no tag)?'           command docker image prune -f
+    _confirm_and_run 'Remove ALL unused images (not just dangling)?' command docker image prune -a -f
+    _confirm_and_run 'Remove unused volumes? (DATA LOSS RISK)'    command docker volume prune -f
+    _confirm_and_run 'Remove unused networks?'                    command docker network prune -f
+    _confirm_and_run 'Prune build cache?'                         command docker builder prune -f
+
+    unset -f _confirm_and_run
+
+    echo "New usage:"
+    command docker system df
+}
