@@ -17,11 +17,15 @@
 #
 # Walk prunes node_modules and .git for speed; keeps .cache (poetry parks
 # its venvs there).
+#
+# Note: every du/find/grep below uses `command` to bypass user aliases —
+# e.g. `alias du='du -ch'` would otherwise inject a total line and break
+# size parsing.
 
 # Internal: emit one venv-root path per line from <root>.
 _venvs_find() {
     local root="${1:-$HOME}"
-    find "$root" \
+    command find "$root" \
         -type d \( -name node_modules -o -name .git \) -prune -o \
         -type f \( \
             -name pyvenv.cfg -o \
@@ -40,7 +44,7 @@ _venvs_find() {
 # Internal: classify a venv directory. Echoes a short tag.
 _venvs_classify() {
     local dir="$1"
-    local type="venv"
+    local kind="venv"
 
     if [ -d "$dir/conda-meta" ]; then
         echo "conda"
@@ -49,18 +53,18 @@ _venvs_classify() {
 
     # Path-based tags (strongest signal).
     case "$dir" in
-        */pipx/venvs/*)              type="pipx" ;;
-        */.virtualenvs/*)            type="virtualenvwrapper" ;;
-        */pyenv/versions/*/envs/*)   type="pyenv-virtualenv" ;;
-        */.cache/pypoetry/virtualenvs/*) type="poetry" ;;
+        */pipx/venvs/*)              kind="pipx" ;;
+        */.virtualenvs/*)            kind="virtualenvwrapper" ;;
+        */pyenv/versions/*/envs/*)   kind="pyenv-virtualenv" ;;
+        */.cache/pypoetry/virtualenvs/*) kind="poetry" ;;
     esac
 
     # Content-based refinement.
     if [ -f "$dir/pyvenv.cfg" ]; then
-        if grep -q '^uv =' "$dir/pyvenv.cfg" 2>/dev/null; then
-            type="uv"
-        elif grep -q '^home =.*pyenv/versions' "$dir/pyvenv.cfg" 2>/dev/null; then
-            type="pyenv"
+        if command grep -q '^uv =' "$dir/pyvenv.cfg" 2>/dev/null; then
+            kind="uv"
+        elif command grep -q '^home =.*pyenv/versions' "$dir/pyvenv.cfg" 2>/dev/null; then
+            kind="pyenv"
         fi
     fi
 
@@ -68,23 +72,23 @@ _venvs_classify() {
     local parent
     parent=$(dirname "$dir")
     if [ -f "$parent/poetry.lock" ]; then
-        type="poetry"
+        kind="poetry"
     elif [ -f "$parent/pdm.lock" ]; then
-        type="pdm"
+        kind="pdm"
     elif [ -f "$parent/Pipfile" ]; then
-        type="pipenv"
-    elif grep -q '\[tool\.uv\]' "$parent/pyproject.toml" 2>/dev/null; then
-        type="uv"
-    elif grep -q '\[tool\.hatch' "$parent/pyproject.toml" 2>/dev/null; then
-        type="hatch"
+        kind="pipenv"
+    elif command grep -q '\[tool\.uv\]' "$parent/pyproject.toml" 2>/dev/null; then
+        kind="uv"
+    elif command grep -q '\[tool\.hatch' "$parent/pyproject.toml" 2>/dev/null; then
+        kind="hatch"
     fi
 
     # Mark broken (dangling python symlink) — prime cleanup candidates.
     if [ -L "$dir/bin/python" ] && [ ! -e "$dir/bin/python" ]; then
-        type="$type (broken)"
+        kind="$kind (broken)"
     fi
 
-    echo "$type"
+    echo "$kind"
 }
 
 # Internal: is this directory actually a venv? (has a python interpreter)
@@ -93,20 +97,62 @@ _venvs_is_venv() {
     [ -x "$dir/bin/python" ] || \
     [ -f "$dir/bin/python" ] || \
     [ -f "$dir/Scripts/python.exe" ] || \
-    # Broken symlink still counts (caller may want to clean it).
     { [ -L "$dir/bin/python" ] && return 0; }
+}
+
+# Internal: size of a directory in bytes (single line, alias-safe).
+_venvs_bytes() {
+    command du -sb "$1" 2>/dev/null | head -n1 | awk '{print $1}'
+}
+
+# Internal: human-friendly size; uses numfmt if available.
+_venvs_human() {
+    if command -v numfmt >/dev/null 2>&1; then
+        numfmt --to=iec --suffix=B --padding=6 "$1"
+    else
+        # Fallback: fixed-width passthrough.
+        printf '%6sB' "$1"
+    fi
 }
 
 venvs() {
     local root="${1:-$HOME}"
     echo "Scanning $root for Python virtual environments (this may take a minute)..."
+
+    local tmp
+    tmp=$(mktemp) || { echo "mktemp failed" >&2; return 1; }
+
     _venvs_find "$root" | while IFS= read -r dir; do
         _venvs_is_venv "$dir" || continue
-        local size type
-        size=$(du -sh "$dir" 2>/dev/null | cut -f1)
-        type=$(_venvs_classify "$dir")
-        printf '%-8s  %-22s  %s\n' "$size" "$type" "$dir"
-    done | sort -hr
+        local bytes kind human
+        bytes=$(_venvs_bytes "$dir")
+        [ -z "$bytes" ] && continue
+        kind=$(_venvs_classify "$dir")
+        human=$(_venvs_human "$bytes")
+        # Tab-separated: bytes (for sorting), human size, kind, path.
+        printf '%s\t%s\t%s\t%s\n' "$bytes" "$human" "$kind" "$dir" >> "$tmp"
+    done
+
+    if [ ! -s "$tmp" ]; then
+        echo "No virtual environments found."
+        rm -f "$tmp"
+        return 0
+    fi
+
+    # Render: header + numeric-sorted rows, drop the byte column, align columns.
+    {
+        printf 'SIZE\tTYPE\tPATH\n'
+        sort -t$'\t' -k1,1nr "$tmp" | cut -f2-
+    } | column -t -s $'\t'
+
+    # Footer: count and total.
+    local count total total_h
+    count=$(awk 'END{print NR}' "$tmp")
+    total=$(awk -F'\t' '{s+=$1} END{print s+0}' "$tmp")
+    total_h=$(_venvs_human "$total")
+    printf '\n%d venvs, %s total\n' "$count" "$total_h"
+
+    rm -f "$tmp"
 }
 
 venvs_clean() {
@@ -118,26 +164,27 @@ venvs_clean() {
 
     _venvs_find "$root" | while IFS= read -r dir; do
         _venvs_is_venv "$dir" || continue
-        local size type
-        size=$(du -sh "$dir" 2>/dev/null | cut -f1)
-        type=$(_venvs_classify "$dir")
+        local bytes kind human
+        bytes=$(_venvs_bytes "$dir")
+        kind=$(_venvs_classify "$dir")
+        human=$(_venvs_human "${bytes:-0}")
 
         # Refuse to delete conda envs — let conda own its tree.
-        case "$type" in
+        case "$kind" in
             conda)
-                printf 'skip   %-8s  %-22s  %s\n' "$size" "$type" "$dir"
+                printf 'skip     %s  %-20s  %s\n' "$human" "$kind" "$dir"
                 continue
                 ;;
         esac
 
         if [ "$assume_yes" -eq 1 ]; then
             if rm -rf -- "$dir"; then
-                printf 'removed  %-8s  %-22s  %s\n' "$size" "$type" "$dir"
+                printf 'removed  %s  %-20s  %s\n' "$human" "$kind" "$dir"
             else
-                printf 'FAILED   %-8s  %-22s  %s\n' "$size" "$type" "$dir"
+                printf 'FAILED   %s  %-20s  %s\n' "$human" "$kind" "$dir"
             fi
         else
-            printf 'Delete  %-8s  %-22s  %s ? [y/N] ' "$size" "$type" "$dir"
+            printf 'Delete  %s  %-20s  %s ? [y/N] ' "$human" "$kind" "$dir"
             read -r reply
             case "$reply" in
                 [yY]*) rm -rf -- "$dir" && echo '  → removed' ;;
