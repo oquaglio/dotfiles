@@ -31,20 +31,27 @@ unset _dotfiles_stamp _dotfiles_head
 # DEFINE CORE FUNCTIONS #########################################################################
 
 # install_plugins — clone any missing zsh plugins into $ZSH_PLUGINS_DIR.
-# Idempotent. Called automatically from `rl` so a new machine self-bootstraps
-# on first reload. Run manually to force a re-check (also: `install_plugins -f`
-# to skip the session-cache).
+# Called automatically from `rl` so a new machine self-bootstraps on first
+# reload.
 #
-# Performance: once all four plugins are confirmed present, DOTFILES_PLUGINS_OK
-# is exported so subsequent calls in the same shell skip the loop entirely.
+# Flags:
+#   (none)         clone missing plugins only (no network when all present)
+#   -f / --force   skip the session-cache and re-check
+#   -u / --update  also `git fetch && reset --hard` on existing plugins
+#
+# Performance: once all four plugins are confirmed present and no work was
+# needed, DOTFILES_PLUGINS_OK is exported so subsequent calls in the same
+# shell skip the loop entirely. -f / -u always rerun.
 install_plugins() {
-    if [ "$1" = "-f" ] || [ "$1" = "--force" ]; then
-        unset DOTFILES_PLUGINS_OK
-    fi
+    local mode=check
+    case "$1" in
+        -f|--force)  unset DOTFILES_PLUGINS_OK ;;
+        -u|--update) mode=update; unset DOTFILES_PLUGINS_OK ;;
+    esac
     [ "${DOTFILES_PLUGINS_OK:-0}" = 1 ] && return 0
 
     local d="${ZSH_PLUGINS_DIR:-$HOME/.zsh/plugins}"
-    local repo name
+    local repo name changed=0 before after
     for repo in \
         zsh-users/zsh-completions \
         agkozak/zsh-z \
@@ -57,8 +64,34 @@ install_plugins() {
             echo "Installing $repo..."
             git clone --depth 1 "https://github.com/$repo" "$d/$name" \
                 || { echo "  → clone failed (check network / git auth)" >&2; return 1; }
+            changed=1
+        elif [ "$mode" = update ]; then
+            echo "Updating $repo..."
+            before=$(git -C "$d/$name" rev-parse HEAD 2>/dev/null)
+            if git -C "$d/$name" fetch --depth=1 --quiet origin 2>/dev/null \
+                && git -C "$d/$name" reset --hard --quiet FETCH_HEAD 2>/dev/null
+            then
+                after=$(git -C "$d/$name" rev-parse HEAD 2>/dev/null)
+                if [ "$before" != "$after" ]; then
+                    echo "  → updated ${before:0:7} → ${after:0:7}"
+                    changed=1
+                else
+                    echo "  → already up to date"
+                fi
+            else
+                echo "  → update failed (check network)" >&2
+            fi
         fi
     done
+
+    # If anything was newly cloned OR updated, the cached zsh compdump is now
+    # stale — it predates the changed plugins' completion files, and
+    # `compinit -C` would keep using the stale cache for up to 24h. Drop the
+    # dump so the next shell rebuilds it and picks up the latest _* files.
+    if [ "$changed" = 1 ]; then
+        rm -f "$HOME/.cache/zcompdump-"* 2>/dev/null
+        echo "Cleared zsh completion cache; next shell will rebuild it."
+    fi
 
     export DOTFILES_PLUGINS_OK=1
 }
