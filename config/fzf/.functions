@@ -14,12 +14,20 @@
 # so this file's `fzcd()` function definition doesn't collide with it.
 unalias fzcd 2>/dev/null
 
-# Internal: locate fd or fdfind.
+# Internal: locate the real fd / fdfind binary.
+#
+# `command -v fd` succeeds when `fd` is an *alias* (which it is on Ubuntu,
+# where .aliases sets `alias fd='fdfind'`). The follow-up `command fd "$@"`
+# then bypasses the alias and looks for a binary named `fd`, which doesn't
+# exist — failing silently with no output. fzf then opens with zero entries.
+# Filter to absolute paths so we only match real binaries.
 _fzf_fd() {
-    if command -v fd >/dev/null 2>&1; then command fd "$@"
-    elif command -v fdfind >/dev/null 2>&1; then command fdfind "$@"
-    else return 127
-    fi
+    local bin
+    bin=$(command -v fd 2>/dev/null)
+    case "$bin" in /*) "$bin" "$@"; return ;; esac
+    bin=$(command -v fdfind 2>/dev/null)
+    case "$bin" in /*) "$bin" "$@"; return ;; esac
+    return 127
 }
 
 # fzcd — fuzzy directory picker with eza tree preview, then cd.
