@@ -30,8 +30,42 @@ unset _dotfiles_stamp _dotfiles_head
 
 # DEFINE CORE FUNCTIONS #########################################################################
 
-#reload (re-source) shell config files
+# install_plugins — clone any missing zsh plugins into $ZSH_PLUGINS_DIR.
+# Idempotent. Called automatically from `rl` so a new machine self-bootstraps
+# on first reload. Run manually to force a re-check (also: `install_plugins -f`
+# to skip the session-cache).
+#
+# Performance: once all four plugins are confirmed present, DOTFILES_PLUGINS_OK
+# is exported so subsequent calls in the same shell skip the loop entirely.
+install_plugins() {
+    if [ "$1" = "-f" ] || [ "$1" = "--force" ]; then
+        unset DOTFILES_PLUGINS_OK
+    fi
+    [ "${DOTFILES_PLUGINS_OK:-0}" = 1 ] && return 0
+
+    local d="${ZSH_PLUGINS_DIR:-$HOME/.zsh/plugins}"
+    local repo name
+    for repo in \
+        zsh-users/zsh-completions \
+        agkozak/zsh-z \
+        zsh-users/zsh-autosuggestions \
+        zsh-users/zsh-syntax-highlighting
+    do
+        name="${repo##*/}"
+        if [ ! -d "$d/$name" ]; then
+            mkdir -p "$d"
+            echo "Installing $repo..."
+            git clone --depth 1 "https://github.com/$repo" "$d/$name" \
+                || { echo "  → clone failed (check network / git auth)" >&2; return 1; }
+        fi
+    done
+
+    export DOTFILES_PLUGINS_OK=1
+}
+
+# reload (re-source) shell config files; ensures plugins are present first.
 reload_shell_config() {
+    install_plugins
     if [ -n "$ZSH_VERSION" ] && [ -r ~/.zshrc ]; then
 	# echo "Reloading .zshrc..."
         . ~/.zshrc
