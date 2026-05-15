@@ -1,0 +1,23 @@
+# fzf — shell-agnostic environment.
+# Per-shell bindings (Ctrl-R / Ctrl-T / Alt-C) live in fzf.zsh and fzf.bash.
+
+# Use ripgrep for file listing if available — faster and respects .gitignore.
+if command -v rg >/dev/null 2>&1; then
+    export FZF_DEFAULT_COMMAND='rg --files --hidden --follow --glob=!.git'
+    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+
+# Use fd (or fdfind on Debian/Ubuntu) for the Alt-C directory picker.
+if command -v fdfind >/dev/null 2>&1; then
+    export FZF_ALT_C_COMMAND='fdfind --type d --hidden --exclude .git'
+elif command -v fd >/dev/null 2>&1; then
+    export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
+fi
+
+export FZF_DEFAULT_OPTS='
+    --height=40%
+    --layout=reverse
+    --border
+    --preview-window=right:60%
+    --bind=ctrl-/:toggle-preview
+'

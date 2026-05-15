@@ -1,0 +1,46 @@
+# Pre-commit hooks for this dotfiles repo.
+#
+# Setup (one-time):
+#   pip install pre-commit          # or `brew install pre-commit`
+#   pre-commit install              # installs the .git/hooks/pre-commit shim
+#
+# Run on every commit automatically, or manually:
+#   pre-commit run --all-files
+#
+# Scope: shellcheck on bash-compatible files only. Zsh-specific files
+# (`.zshrc`, `config/zsh/*.zsh`, `functions/setup_terminal_keys`) and the
+# third-party `bin/git-wtf` are excluded — shellcheck can't parse zsh.
+# A separate `zsh -n` hook catches zsh syntax errors.
+
+repos:
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        name: shellcheck (bash)
+        files: |
+          (?x)^(
+              bin/[^/]+
+            | bin/aws/[^/]+
+            | scripts/.*\.sh
+            | functions/[^/]+
+            | \.bashrc
+          )$
+        exclude: |
+          (?x)^(
+              bin/git-wtf
+            | functions/setup_terminal_keys
+          )$
+        args:
+          - --shell=bash
+          - --severity=error
+          - --exclude=SC1091  # source-file-not-found: this repo has many dynamic sources
+
+  - repo: local
+    hooks:
+      - id: zsh-syntax
+        name: zsh -n (syntax check)
+        entry: zsh -n
+        language: system
+        files: \.zsh$|^(\.zshrc|config/zsh/.*\.zsh)$
+        require_serial: false

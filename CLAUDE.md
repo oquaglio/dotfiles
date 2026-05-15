@@ -50,6 +50,18 @@ Most code targets both zsh and bash. Watch for:
 - `rl` — re-source rc files without pulling.
 - `ipkg <pkg>` — distro-agnostic install via `functions/install_package` (apt/dnf/yum/pacman/zypper/apk).
 - `sfch` / `fch <path>` — mark-and-diff filesystem snapshot (see README for the sudo invocation pattern).
+- `venvs` / `venvs_clean` — Python venv disk audit + cleanup (`functions/python`).
+- `docker_du` / `docker_clean` — Docker disk audit + cleanup (`functions/docker`).
+- `gitstale` / `gitprune` — list / interactively delete stale local branches (`functions/git`).
+
+## Linting
+
+`.pre-commit-config.yaml` runs shellcheck on bash-compatible files and `zsh -n`
+on zsh files. Install once with `pip install pre-commit && pre-commit install`,
+then it runs on every commit. To lint everything now: `pre-commit run --all-files`.
+
+zsh-specific files (`.zshrc`, `config/zsh/*.zsh`, `functions/setup_terminal_keys`)
+are excluded from shellcheck because it can't parse zsh syntax.
 
 ## Conventions
 
