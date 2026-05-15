@@ -58,5 +58,4 @@ fzrg() {
     else
       echo "Could not extract a valid line number from: $selected"
     fi
-  fi
 }
