@@ -116,3 +116,45 @@ gitprune() {
         esac
     done
 }
+
+# Fzf-powered git selectors.
+#
+#   fbr            checkout a local branch (preview: recent commits on it)
+#   gco            checkout any ref: local branches + remote branches + tags
+#   fadd           multi-select staging via TAB; preview shows diff per file
+
+fbr() {
+    local branch
+    branch=$(command git --no-pager branch --color=never \
+        | grep -v '^\*' \
+        | sed 's/^ *//' \
+        | fzf --preview 'git log --oneline --color=always --decorate -20 {} 2>/dev/null') \
+        || return
+    [ -n "$branch" ] && command git checkout "$branch"
+}
+
+gco() {
+    local target
+    target=$( {
+        command git --no-pager branch --all --color=never \
+            | grep -v 'HEAD' \
+            | sed 's|^[* ]*||;s|^remotes/||'
+        command git --no-pager tag --color=never
+    } | sort -u \
+      | fzf --header='git checkout' \
+            --preview 'git log --oneline --color=always --decorate -20 {} 2>/dev/null') \
+      || return
+    [ -n "$target" ] && command git checkout "$target"
+}
+
+fadd() {
+    local files
+    files=$(command git -c color.status=always status -s \
+        | fzf -m --ansi --nth=2.. \
+              --preview 'f=$(echo {} | awk "{print \$NF}"); git diff --color=always -- "$f" | head -200' \
+        | awk '{print $NF}')
+    if [ -n "$files" ]; then
+        echo "$files" | xargs -r command git add
+        command git status -s
+    fi
+}

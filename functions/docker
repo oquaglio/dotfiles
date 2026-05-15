@@ -148,3 +148,30 @@ docker_clean() {
     echo "New usage:"
     command docker system df
 }
+
+# Fzf-powered selectors.
+#
+#   dexec [cmd]    pick a running container, exec into it (default cmd: sh)
+#   dlog           pick any container (running or stopped), follow logs
+
+dexec() {
+    _docker_check || return 1
+    local cid
+    cid=$(command docker ps --format '{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}' \
+        | column -t -s $'\t' \
+        | fzf --header='exec into container (Ctrl-/ toggles preview)' \
+              --preview 'docker inspect {1} | head -80' \
+        | awk '{print $1}')
+    [ -n "$cid" ] && command docker exec -it "$cid" "${@:-sh}"
+}
+
+dlog() {
+    _docker_check || return 1
+    local pick
+    pick=$(command docker ps -a --format '{{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Image}}' \
+        | column -t -s $'\t' \
+        | fzf --header='docker logs -f' \
+              --preview 'docker logs --tail=40 {1} 2>&1') \
+        || return
+    [ -n "$pick" ] && command docker logs -f --tail=200 "$(awk '{print $1}' <<<"$pick")"
+}

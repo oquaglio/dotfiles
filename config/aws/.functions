@@ -106,3 +106,26 @@ set_aws_vars() {
     #export TF_VAR_aws_access_key=$AWS_ACCESS_KEY_ID
     #export TF_VAR_aws_secret_key=$AWS_SECRET_ACCESS_KEY
 }
+
+# awsprofile — fzf-pick AWS_PROFILE from ~/.aws/config; verify with sts.
+# Companion to the existing `sa` alias and `awskill` reset function.
+awsprofile() {
+    local cfg="$HOME/.aws/config"
+    if [ ! -f "$cfg" ]; then
+        echo "No $cfg — run: aws configure (or aws configure sso)" >&2
+        return 1
+    fi
+    local profile
+    profile=$(awk '
+        /^\[profile / { gsub(/[][]/,""); print $2 }
+        /^\[default\]/ { print "default" }
+    ' "$cfg" \
+        | sort -u \
+        | fzf --header='select AWS_PROFILE') \
+        || return
+    [ -z "$profile" ] && return
+    export AWS_PROFILE="$profile"
+    echo "AWS_PROFILE=$profile"
+    command aws sts get-caller-identity --output table 2>/dev/null \
+        || echo "(not authenticated — try: aws sso login)" >&2
+}

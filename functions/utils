@@ -274,3 +274,19 @@ sys() {
     printf "Uptime: %s\n" "$(uptime -p 2>/dev/null || uptime | cut -d, -f1)"
     printf "===================\n"
 }
+
+# fkill — fzf-pick processes (TAB to multi-select), send signal (default 9).
+# Usage: fkill          (KILL the picked processes)
+#        fkill 15       (TERM instead — graceful)
+fkill() {
+    local sig="${1:-9}"
+    local pids
+    pids=$(command ps -ef \
+        | sed 1d \
+        | fzf -m --header="[TAB to multi-select, Enter to send SIG${sig}]" \
+              --preview-window=hidden \
+        | awk '{print $2}')
+    if [ -n "$pids" ]; then
+        echo "$pids" | xargs -r kill "-$sig"
+    fi
+}

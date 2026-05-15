@@ -1,15 +1,18 @@
-# Fzf-powered selectors. All print useful state to stdout on cancel.
+# Generic fzf-powered selectors (no specific domain).
 #
 #   fzcd            cd into a fuzzy-picked directory (alias: f)
-#   fzrg <term>     ripgrep → fzf → $EDITOR at line (alias: fr)
-#   fkill [signal]  pick processes (multi-select), send signal (default 9)
-#   fbr             checkout a branch (preview: git log of that branch)
-#   gco             checkout any ref (branch / tag), one combined picker
-#   fadd            git-add files with multi-select, preview diff
-#   dexec [cmd]     docker exec -it into a running container (default: sh)
-#   dlog            docker logs -f on any container (running or stopped)
-#   kpod [-e]       kubectl logs on a pod; -e for exec instead
-#   awsprofile      pick AWS_PROFILE from ~/.aws/config, verify with sts
+#   fzrg <term>     ripgrep → fzf → $EDITOR at line
+#
+# Domain-specific fzf tools live with their domain:
+#   functions/docker     dexec, dlog
+#   functions/git        fbr, gco, fadd
+#   functions/utils      fkill
+#   config/aws/.functions    awsprofile
+#   config/k8s/.functions    kpod
+
+# Defensive: drop the old `alias fzcd=...` from previous shell sessions
+# so this file's `fzcd()` function definition doesn't collide with it.
+unalias fzcd 2>/dev/null
 
 # Internal: locate fd or fdfind.
 _fzf_fd() {

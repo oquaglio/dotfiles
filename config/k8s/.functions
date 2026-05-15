@@ -1,0 +1,24 @@
+# Kubectl helper functions.
+#
+#   kpod [-e]     fzf-pick a pod across all namespaces; tail its logs.
+#                 Pass -e to `kubectl exec -it` into the pod instead.
+
+kpod() {
+    local mode=logs
+    [ "$1" = "-e" ] && mode=exec
+    local pick ns name
+    pick=$(command kubectl get pods --all-namespaces \
+            -o custom-columns='NS:.metadata.namespace,NAME:.metadata.name,STATUS:.status.phase,AGE:.metadata.creationTimestamp' \
+            --no-headers 2>/dev/null \
+        | column -t \
+        | fzf --header="kubectl ${mode} — Ctrl-/ toggles preview" \
+              --preview 'kubectl -n {1} describe pod {2} | head -60') \
+        || return
+    [ -z "$pick" ] && return
+    ns=$(awk '{print $1}' <<<"$pick")
+    name=$(awk '{print $2}' <<<"$pick")
+    case "$mode" in
+        exec) command kubectl -n "$ns" exec -it "$name" -- sh ;;
+        logs) command kubectl -n "$ns" logs -f --tail=200 "$name" ;;
+    esac
+}
