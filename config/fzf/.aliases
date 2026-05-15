@@ -1,18 +1,15 @@
-# Address the naming differences of the fd utility across various Linux distributions...
-# If 'fdfind' is available but 'fd' is not, alias 'fd' to 'fdfind'
+# Reconcile fd / fdfind across distros (Debian renamed `fd` to `fdfind`
+# to avoid conflict with another tool).
 if command -v fdfind >/dev/null 2>&1 && ! command -v fd >/dev/null 2>&1; then
-  alias fd='fdfind'
+    alias fd='fdfind'
 fi
-# If 'fd' is available but 'fdfind' is not, alias 'fdfind' to 'fd'
 if command -v fd >/dev/null 2>&1 && ! command -v fdfind >/dev/null 2>&1; then
-  alias fdfind='fd'
+    alias fdfind='fd'
 fi
 
+# fz — fuzzy-pick a file with bat preview; prints the path to stdout.
+# Compose with anything: `vim "$(fz)"`, `cat $(fz)`, `cp "$(fz)" backup/`.
+alias fz='fzf --preview "bat --style=numbers --color=always --line-range :500 {} 2>/dev/null || cat {}"'
 
-# fzf with hidden files and preview
-#alias fz='fdfind --type f --hidden | fzf'
-alias fz='fdfind --type f --hidden --exclude .git | fzf --preview "bat --style=numbers --color=always {} || cat {}"'
-
-# jump to a dir with preview of dir contents - good z substitute
-alias fzcd='selected=$(fdfind --type d --hidden --exclude .git | fzf --preview "ls -la {}") && [ -n "$selected" ] && cd "$selected"'
+# f — fuzzy cd. Implemented as a function (fzcd) in .functions.
 alias f='fzcd'

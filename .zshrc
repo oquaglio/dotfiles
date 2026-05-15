@@ -138,8 +138,8 @@ source_if_exists $HOME/.nix-profile/etc/profile.d/nix.sh
 
 # Other plugins ###############################################################
 
-# A command history database. Press up arrow to use.
-eval_if_exists atuin init zsh
+# atuin (command history) is now loaded via config/zsh/atuin.zsh so it can
+# sequence correctly with fzf bindings — both go through .sources.
 
 # direnv hook
 eval_if_exists direnv hook zsh

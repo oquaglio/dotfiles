@@ -1,3 +1,34 @@
+# Fzf-powered selectors. All print useful state to stdout on cancel.
+#
+#   fzcd            cd into a fuzzy-picked directory (alias: f)
+#   fzrg <term>     ripgrep → fzf → $EDITOR at line (alias: fr)
+#   fkill [signal]  pick processes (multi-select), send signal (default 9)
+#   fbr             checkout a branch (preview: git log of that branch)
+#   gco             checkout any ref (branch / tag), one combined picker
+#   fadd            git-add files with multi-select, preview diff
+#   dexec [cmd]     docker exec -it into a running container (default: sh)
+#   dlog            docker logs -f on any container (running or stopped)
+#   kpod [-e]       kubectl logs on a pod; -e for exec instead
+#   awsprofile      pick AWS_PROFILE from ~/.aws/config, verify with sts
+
+# Internal: locate fd or fdfind.
+_fzf_fd() {
+    if command -v fd >/dev/null 2>&1; then command fd "$@"
+    elif command -v fdfind >/dev/null 2>&1; then command fdfind "$@"
+    else return 127
+    fi
+}
+
+# fzcd — fuzzy directory picker with eza tree preview, then cd.
+fzcd() {
+    local target
+    target=$(_fzf_fd --type d --hidden --exclude .git . 2>/dev/null \
+        | fzf --preview 'eza --tree --level=2 --color=always --icons {} 2>/dev/null || ls -la {}') \
+        || return
+    [ -n "$target" ] && cd -- "$target"
+}
+
+# fzrg — ripgrep + fzf with line-context preview, then open in $EDITOR.
 fzrg() {
   local search_term="$1"
   if [ -z "$search_term" ]; then
@@ -5,37 +36,25 @@ fzrg() {
     return 1
   fi
 
-  # Use an array for flags
   local rg_flags=(--color=always --line-number --no-heading)
+    # Smart-case: case-insensitive when the term has no uppercase.
   [[ "$search_term" =~ [A-Z] ]] || rg_flags+=(--ignore-case)
 
   local selected
-  selected=$(rg "${rg_flags[@]}" "$search_term" \
-    | fzf --ansi \
-          --delimiter : \
-          --preview '
-            file=$(echo {} | cut -d: -f1)
-            line=$(echo {} | cut -d: -f2)
-            if [[ "$line" =~ ^[0-9]+$ ]]; then
-              start=$((line > 5 ? line - 5 : 1))
-              end=$((line + 5))
-              bat --style=numbers --color=always \
-                  --line-range "$start":"$end" \
-                  --highlight-line "$line" \
-                  "$file"
-            else
-              echo "Invalid line number: $line"
-            fi
-          ' \
-          --preview-window=right:50% \
-          --bind 'enter:accept')
+    selected=$(command rg "${rg_flags[@]}" "$search_term" 2>/dev/null \
+        | fzf --ansi --delimiter=: \
+              --preview 'l={2}; bat --style=numbers --color=always \
+                  --highlight-line "$l" \
+                  --line-range "$((l-5>0?l-5:1)):$((l+15))" {1} 2>/dev/null' \
+              --preview-window='right:55%:wrap')
 
-  if [ -n "$selected" ]; then
+    [ -z "$selected" ] && return 0
+
     local file line
-    file=$(echo "$selected" | cut -d: -f1)
-    line=$(echo "$selected" | cut -d: -f2)
+    file=$(awk -F: '{print $1; exit}' <<<"$selected")
+    line=$(awk -F: '{print $2; exit}' <<<"$selected")
     if [[ "$line" =~ ^[0-9]+$ ]]; then
-      nvim +"$line" "$file"
+        "${EDITOR:-nvim}" +"$line" "$file"
     else
       echo "Could not extract a valid line number from: $selected"
     fi
