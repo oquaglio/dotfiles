@@ -58,7 +58,6 @@ alias meminfo='free -m -l -t -h'
 alias cpi='lscpu'
 ## set some other defaults ##
 alias df='df -H'
-alias du='du -ch'
 #Confirm unsafe file operations
 alias cp='/bin/cp -i'
 alias mv='/bin/mv -i'
