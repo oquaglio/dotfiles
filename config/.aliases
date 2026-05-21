@@ -36,7 +36,6 @@ alias fgrep='fgrep --color=auto'
 # handy short cuts #
 alias s=sudo
 alias c='clear'
-alias h='history'
 alias j='jobs -l'
 alias n='nano'
 alias sn='sudo nano'
