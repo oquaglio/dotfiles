@@ -48,7 +48,7 @@ alias now='date +"%T"'
 alias nowtime=now
 alias nowdate='date +"%d-%m-%Y"'
 
-alias ports='netstat -tulanp'
+alias ports='ss -tulanp'
 
 ## pass options to free ##
 alias meminfo='free -m -l -t -h'
