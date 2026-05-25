@@ -75,8 +75,12 @@ install_package() {
             [[ $? -eq 0 ]] && available=true
             ;;
         dnf|yum)
-            $SEARCH_CMD "$pkg" 2>/dev/null | grep -q -i "$pkg\."
-            [[ $? -eq 0 ]] && available=true
+            # `dnf repoquery` is the script-friendly query: it tolerates broken
+            # sibling repos and works across dnf4/dnf5. The previous check used
+            # `dnf list available`, which fails wholesale if any enabled repo
+            # can't fetch metadata (e.g. EOL/pgdg/NVIDIA repos returning 404).
+            # `</dev/null` prevents interactive GPG-key import prompts.
+            $PM repoquery --quiet "$pkg" </dev/null 2>/dev/null | grep -q . && available=true
             ;;
         pacman)
             pacman -Ss "^${pkg}$" >/dev/null 2>&1 && available=true
