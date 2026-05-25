@@ -119,6 +119,11 @@ alias rl='reload_shell_config'
 #   * only stashes if there are actual local changes (avoids empty-stash noise)
 #   * uses --ff-only so a divergent local branch never silently merges
 #   * only reloads on a successful pull (otherwise you reload broken state)
+#
+# Defensive: drop the old `alias up=...` from any pre-existing shell session
+# so this function definition doesn't collide with it (zsh refuses to define
+# a function with the same name as an existing alias).
+unalias up 2>/dev/null
 up() {
     clear
     local repo="${DOTFILES_ROOT:?DOTFILES_ROOT not set}"
