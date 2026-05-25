@@ -1,0 +1,167 @@
+# install_deps — declarative dependency manager for the dotfiles.
+#
+# Registry of external CLI tools the dotfiles use lives inside this function.
+# Edit the `registry` heredoc below to add or remove deps.
+#
+# Usage:
+#   install_deps                # check (fast): list missing deps
+#   install_deps -i|--install   # install missing deps via the system package manager
+#   install_deps -u|--update    # install missing AND upgrade existing
+#   install_deps -h|--help
+#
+# The check mode runs from `rl` (reload_shell_config) so missing deps surface
+# on every reload without slowing things down — it only does `command -v` calls.
+
+install_deps() {
+    local mode=check
+    case "${1:-}" in
+        ""|--check)    mode=check ;;
+        -i|--install)  mode=install ;;
+        -u|--update)   mode=update ;;
+        -h|--help)
+            cat <<'EOF'
+install_deps [--check | -i/--install | -u/--update]
+
+Modes:
+  (default) check     Report missing deps. Fast, no sudo.
+  -i --install        Install missing deps via the system package manager.
+  -u --update         Install missing AND upgrade existing.
+
+Registry is inside the function body — edit functions/install_deps to add tools.
+EOF
+            return 0 ;;
+        *) printf 'install_deps: unknown arg: %s\n' "$1" >&2; return 2 ;;
+    esac
+
+    # Detect package manager (only needed for install/update or to pick pkg name)
+    local pm=""
+    if   command -v apt-get >/dev/null 2>&1; then pm=apt
+    elif command -v dnf     >/dev/null 2>&1; then pm=dnf
+    elif command -v yum     >/dev/null 2>&1; then pm=yum
+    elif command -v pacman  >/dev/null 2>&1; then pm=pacman
+    elif command -v zypper  >/dev/null 2>&1; then pm=zypper
+    elif command -v apk     >/dev/null 2>&1; then pm=apk
+    fi
+
+    # ── Registry ──────────────────────────────────────────────────────────
+    # Columns, `|`-separated (whitespace trimmed):
+    #   bin       binary to probe via `command -v`
+    #   apt       apt package name (empty = no apt package)
+    #   dnf       dnf/yum package name (empty = no dnf package)
+    #   alt_bin   alternate binary name on some distros (Debian: fdfind, batcat)
+    #   note      manual install hint (used when no package available)
+    # Pipes in the note column are fine — it's the last field.
+    local registry='
+        zoxide   | zoxide        | zoxide        |        |
+        fzf      | fzf           | fzf           |        |
+        rg       | ripgrep       | ripgrep       |        |
+        bat      | bat           | bat           | batcat |
+        fd       | fd-find       | fd-find       | fdfind |
+        eza      | eza           | eza           |        |
+        nvim     | neovim        | neovim        |        |
+        direnv   | direnv        | direnv        |        |
+        jq       | jq            | jq            |        |
+        tree     | tree          | tree          |        |
+        xclip    | xclip         | xclip         |        |
+        curl     | curl          | curl          |        |
+        column   | bsdmainutils  | util-linux    |        |
+        gum      | gum           | gum           |        | install Charm apt/dnf repo first: https://github.com/charmbracelet/gum
+        starship |               |               |        | curl -sS https://starship.rs/install.sh | sh
+        atuin    |               |               |        | curl --proto "=https" --tlsv1.2 -LsSf https://setup.atuin.sh | sh
+    '
+
+    local -a missing_installable=() missing_manual=() present=()
+    local bin apt_pkg dnf_pkg alt_bin note pkg
+
+    while IFS='|' read -r bin apt_pkg dnf_pkg alt_bin note; do
+        bin="${bin//[[:space:]]/}"
+        [[ -z "$bin" ]] && continue
+        apt_pkg="${apt_pkg//[[:space:]]/}"
+        dnf_pkg="${dnf_pkg//[[:space:]]/}"
+        alt_bin="${alt_bin//[[:space:]]/}"
+        note="${note#"${note%%[![:space:]]*}"}"; note="${note%"${note##*[![:space:]]}"}"
+
+        if command -v "$bin" >/dev/null 2>&1 \
+           || { [[ -n "$alt_bin" ]] && command -v "$alt_bin" >/dev/null 2>&1; }; then
+            present+=("$bin")
+            continue
+        fi
+
+        case "$pm" in
+            apt)        pkg="$apt_pkg" ;;
+            dnf|yum)    pkg="$dnf_pkg" ;;
+            pacman|zypper|apk) pkg="$dnf_pkg" ;;  # best-effort fallback
+            *)          pkg="$apt_pkg" ;;
+        esac
+
+        if [[ -n "$pkg" ]]; then
+            missing_installable+=("$bin|$pkg")
+        else
+            missing_manual+=("$bin|${note:-no install hint}")
+        fi
+    done <<< "$registry"
+
+    # ── Check mode: report only ──────────────────────────────────────────
+    if [[ "$mode" = check ]]; then
+        if [[ ${#missing_installable[@]} -eq 0 && ${#missing_manual[@]} -eq 0 ]]; then
+            return 0
+        fi
+        printf '\033[33mdotfiles deps missing:\033[0m\n' >&2
+        local item
+        for item in "${missing_installable[@]}"; do
+            printf '  - %-10s (pkg: %s)\n' "${item%%|*}" "${item##*|}" >&2
+        done
+        for item in "${missing_manual[@]}"; do
+            printf '  - %-10s %s\n' "${item%%|*}" "${item##*|}" >&2
+        done
+        printf '\033[2mfix: install_deps -i  (or -u to also upgrade existing)\033[0m\n' >&2
+        return 1
+    fi
+
+    # ── Install / update modes ───────────────────────────────────────────
+    if ! command -v install_package >/dev/null 2>&1; then
+        echo "install_deps: install_package function not loaded — source the dotfiles first" >&2
+        return 1
+    fi
+
+    local rc=0 item
+
+    for item in "${missing_installable[@]}"; do
+        bin="${item%%|*}"; pkg="${item##*|}"
+        echo "→ Installing $bin (pkg: $pkg)..."
+        install_package "$pkg" || rc=$?
+    done
+
+    if [[ ${#missing_manual[@]} -gt 0 ]]; then
+        echo
+        echo "Manual install required:"
+        for item in "${missing_manual[@]}"; do
+            printf '  %-10s %s\n' "${item%%|*}" "${item##*|}"
+        done
+    fi
+
+    if [[ "$mode" = update ]]; then
+        echo
+        echo "Upgrading existing deps..."
+        local upgraded=0
+        while IFS='|' read -r bin apt_pkg dnf_pkg alt_bin note; do
+            bin="${bin//[[:space:]]/}"
+            [[ -z "$bin" ]] && continue
+            apt_pkg="${apt_pkg//[[:space:]]/}"
+            dnf_pkg="${dnf_pkg//[[:space:]]/}"
+            case "$pm" in
+                apt)     pkg="$apt_pkg" ;;
+                dnf|yum) pkg="$dnf_pkg" ;;
+                *)       pkg="$apt_pkg" ;;
+            esac
+            [[ -z "$pkg" ]] && continue
+            command -v "$bin" >/dev/null 2>&1 || continue
+            echo "↻ $bin → $pkg"
+            install_package "$pkg" || rc=$?
+            upgraded=$((upgraded + 1))
+        done <<< "$registry"
+        [[ "$upgraded" -eq 0 ]] && echo "  (nothing to upgrade)"
+    fi
+
+    return "$rc"
+}

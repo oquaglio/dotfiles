@@ -110,6 +110,10 @@ reload_shell_config() {
 	#echo "Reloading .bashrc..."
         . ~/.bashrc
     fi
+
+    # Fast check (no sudo): warn if any external CLI deps are missing.
+    # Run `install_deps -i` to install, `-u` to also upgrade existing.
+    command -v install_deps >/dev/null 2>&1 && install_deps
 }
 alias rl='reload_shell_config'
 
