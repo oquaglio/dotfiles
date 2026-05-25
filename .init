@@ -114,6 +114,31 @@ reload_shell_config() {
 }
 alias rl='reload_shell_config'
 
+# up — pull dotfiles updates and reload the shell.
+# Replaces the old `up` alias which swallowed `git pull` errors. This version:
+#   * only stashes if there are actual local changes (avoids empty-stash noise)
+#   * uses --ff-only so a divergent local branch never silently merges
+#   * only reloads on a successful pull (otherwise you reload broken state)
+up() {
+    clear
+    local repo="${DOTFILES_ROOT:?DOTFILES_ROOT not set}"
+
+    if [ -n "$(git -C "$repo" status --porcelain 2>/dev/null)" ]; then
+        if git -C "$repo" stash push --include-untracked -q -m "dotfiles-up auto-stash"; then
+            echo "Stashed local changes (recover with: git -C \"$repo\" stash pop)."
+        fi
+    fi
+
+    echo "Pulling $repo..."
+    if git -C "$repo" pull --ff-only; then
+        echo "Pull complete."
+        reload_shell_config
+    else
+        echo "Pull failed — not reloading." >&2
+        return 1
+    fi
+}
+
 # Add a directory to a PATH-like variable if it's not already present.
 # $1 (First Parameter): The directory you want to add to the path variable.
 # $2 (Second Parameter): The name of the path variable to update. If this parameter is not provided, it defaults to PATH.

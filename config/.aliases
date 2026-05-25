@@ -1,5 +1,3 @@
-alias up='clear; git -C "$DOTFILES_ROOT" stash push --include-untracked -q -m "dotfiles-up: auto-stash before pull" 2>/dev/null && echo "Stashed local changes."; echo "Pulling $DOTFILES_ROOT... "; git -C $DOTFILES_ROOT pull > /dev/null && echo "Pull complete."; reload_shell_config'
-
 # Productivity #########################################################
 alias todo='$EDITOR ~/.todo'
 ########################################################### Productivity
