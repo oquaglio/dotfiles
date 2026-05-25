@@ -54,7 +54,6 @@ install_plugins() {
     local repo name changed=0 before after
     for repo in \
         zsh-users/zsh-completions \
-        agkozak/zsh-z \
         zsh-users/zsh-autosuggestions \
         zsh-users/zsh-syntax-highlighting
     do

@@ -20,8 +20,6 @@ mkdir -p $ZSH_PLUGINS_DIR
 source_if_exists "$ZSH_PLUGINS_DIR/zsh-completions/zsh-completions.plugin.zsh"
 #fpath=("$ZSH_PLUGINS_DIR/zsh-completions" $fpath)
 
-#export ZSHZ_CMD=z
-source_if_exists "$ZSH_PLUGINS_DIR/zsh-z/zsh-z.plugin.zsh"
 
 
 # Load Zsh completions ########################################################
@@ -91,7 +89,7 @@ source_if_exists "$ZSH_PLUGINS_DIR/zsh-autosuggestions/zsh-autosuggestions.plugi
 source_if_exists "$ZSH_PLUGINS_DIR/zsh-syntax-highlighting/zsh-syntax-highlighting.plugin.zsh"
 
 # --- Completion Visual Enhancements ---
-zstyle ':completion:*' menu select # fancy menus for zsh-z
+zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list \
   'm:{a-z}={A-Za-z}' \
   'r:|[._-]=* r:|=*'
