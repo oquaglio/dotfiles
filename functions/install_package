@@ -3,6 +3,13 @@
 #   install_package zsh
 #   install_package neovim
 #   install_package ripgrep
+#
+# Implementation note: command tables are kept as *arrays* (not space-separated
+# strings) so they expand correctly under both bash and zsh. zsh does not do
+# word-splitting on bare $var expansions by default, so `$INSTALL_CMD "$pkg"`
+# with INSTALL_CMD="sudo dnf install -y" would try to exec the literal string
+# "sudo dnf install -y" as a single command name. Arrays expanded with
+# "${arr[@]}" sidestep that entirely.
 
 install_package() {
     local pkg="$1"
@@ -12,51 +19,47 @@ install_package() {
     fi
 
     local PM=""
-    local INSTALL_CMD=""
-    local UPDATE_CMD=""
-    local QUERY_CMD=""
-    local SEARCH_CMD=""
-    local UPGRADE_FLAG=""
+    local INSTALL_CMD=() UPDATE_CMD=() QUERY_CMD=() UPGRADE_CMD=()
 
     # ────────────────────────────────────────────────
     # 1. Detect package manager
     # ────────────────────────────────────────────────
     if command -v apt-get >/dev/null 2>&1; then
         PM="apt"
-        UPDATE_CMD="sudo apt-get update -qq"
-        INSTALL_CMD="sudo apt-get install -y"
-        QUERY_CMD="dpkg -s"
-        SEARCH_CMD="apt-cache policy"
+        UPDATE_CMD=(sudo apt-get update -qq)
+        INSTALL_CMD=(sudo apt-get install -y)
+        UPGRADE_CMD=(sudo apt-get install --only-upgrade -y)
+        QUERY_CMD=(dpkg -s)
     elif command -v dnf >/dev/null 2>&1; then
         PM="dnf"
-        UPDATE_CMD="sudo dnf makecache -q"
-        INSTALL_CMD="sudo dnf install -y"
-        QUERY_CMD="rpm -q"
-        SEARCH_CMD="dnf list available"
+        UPDATE_CMD=(sudo dnf makecache -q)
+        INSTALL_CMD=(sudo dnf install -y)
+        UPGRADE_CMD=(sudo dnf upgrade -y)
+        QUERY_CMD=(rpm -q)
     elif command -v yum >/dev/null 2>&1 && ! command -v dnf >/dev/null 2>&1; then
         PM="yum"
-        UPDATE_CMD="sudo yum makecache -q"
-        INSTALL_CMD="sudo yum install -y"
-        QUERY_CMD="rpm -q"
-        SEARCH_CMD="yum list available"
+        UPDATE_CMD=(sudo yum makecache -q)
+        INSTALL_CMD=(sudo yum install -y)
+        UPGRADE_CMD=(sudo yum update -y)
+        QUERY_CMD=(rpm -q)
     elif command -v pacman >/dev/null 2>&1; then
         PM="pacman"
-        UPDATE_CMD="sudo pacman -Syy --noconfirm"
-        INSTALL_CMD="sudo pacman -S --noconfirm"
-        QUERY_CMD="pacman -Q"
-        SEARCH_CMD="pacman -Ss"
+        UPDATE_CMD=(sudo pacman -Syy --noconfirm)
+        INSTALL_CMD=(sudo pacman -S --noconfirm)
+        UPGRADE_CMD=(sudo pacman -Syu --noconfirm)
+        QUERY_CMD=(pacman -Q)
     elif command -v zypper >/dev/null 2>&1; then
         PM="zypper"
-        UPDATE_CMD="sudo zypper --quiet refresh"
-        INSTALL_CMD="sudo zypper --non-interactive install"
-        QUERY_CMD="rpm -q"
-        SEARCH_CMD="zypper search -x"
+        UPDATE_CMD=(sudo zypper --quiet refresh)
+        INSTALL_CMD=(sudo zypper --non-interactive install)
+        UPGRADE_CMD=(sudo zypper --non-interactive update)
+        QUERY_CMD=(rpm -q)
     elif command -v apk >/dev/null 2>&1; then
         PM="apk"
-        UPDATE_CMD="sudo apk update"
-        INSTALL_CMD="sudo apk add"
-        QUERY_CMD="apk info -e"
-        SEARCH_CMD="apk search"
+        UPDATE_CMD=(sudo apk update)
+        INSTALL_CMD=(sudo apk add)
+        UPGRADE_CMD=(sudo apk upgrade)
+        QUERY_CMD=(apk info -e)
     else
         echo "Error: Could not detect a supported package manager (apt/dnf/yum/pacman/zypper/apk)" >&2
         return 1
@@ -71,23 +74,24 @@ install_package() {
 
     case "$PM" in
         apt)
-            $SEARCH_CMD "$pkg" 2>/dev/null | grep -q -E "(Candidate:.*[0-9]|Installed:.*[0-9])"
-            [[ $? -eq 0 ]] && available=true
+            apt-cache policy "$pkg" 2>/dev/null \
+                | grep -q -E "(Candidate:.*[0-9]|Installed:.*[0-9])" \
+                && available=true
             ;;
         dnf|yum)
-            # `dnf repoquery` is the script-friendly query: it tolerates broken
-            # sibling repos and works across dnf4/dnf5. The previous check used
-            # `dnf list available`, which fails wholesale if any enabled repo
-            # can't fetch metadata (e.g. EOL/pgdg/NVIDIA repos returning 404).
+            # `dnf repoquery` is the script-friendly query: tolerates broken
+            # sibling repos and works across dnf4/dnf5. Avoids `dnf list
+            # available`, which fails wholesale if any enabled repo can't
+            # fetch metadata (e.g. EOL/pgdg/NVIDIA 404s).
             # `</dev/null` prevents interactive GPG-key import prompts.
-            $PM repoquery --quiet "$pkg" </dev/null 2>/dev/null | grep -q . && available=true
+            "$PM" repoquery --quiet "$pkg" </dev/null 2>/dev/null \
+                | grep -q . && available=true
             ;;
         pacman)
             pacman -Ss "^${pkg}$" >/dev/null 2>&1 && available=true
             ;;
         zypper)
-            $SEARCH_CMD "$pkg" 2>/dev/null | grep -q "$pkg"
-            [[ $? -eq 0 ]] && available=true
+            zypper search -x "$pkg" 2>/dev/null | grep -q "$pkg" && available=true
             ;;
         apk)
             apk search "^${pkg}$" >/dev/null 2>&1 && available=true
@@ -103,58 +107,25 @@ install_package() {
     # 3. Check if already installed
     # ────────────────────────────────────────────────
     local is_installed=false
-
-    case "$PM" in
-        apt)
-            $QUERY_CMD "$pkg" >/dev/null 2>&1 && is_installed=true
-            ;;
-        dnf|yum|zypper)
-            $QUERY_CMD "$pkg" >/dev/null 2>&1 && is_installed=true
-            ;;
-        pacman)
-            $QUERY_CMD "$pkg" >/dev/null 2>&1 && is_installed=true
-            ;;
-        apk)
-            $QUERY_CMD "$pkg" >/dev/null 2>&1 && is_installed=true
-            ;;
-    esac
+    "${QUERY_CMD[@]}" "$pkg" >/dev/null 2>&1 && is_installed=true
 
     # ────────────────────────────────────────────────
     # 4. Act accordingly
     # ────────────────────────────────────────────────
     if $is_installed; then
         echo "Package '$pkg' is already installed → checking for upgrade..."
-        case "$PM" in
-            apt)
-                sudo apt-get install --only-upgrade -y "$pkg"
-                ;;
-            dnf)
-                sudo dnf upgrade -y "$pkg"
-                ;;
-            yum)
-                sudo yum update -y "$pkg"
-                ;;
-            pacman)
-                sudo pacman -Syu --noconfirm "$pkg"
-                ;;
-            zypper)
-                sudo zypper update -y "$pkg"
-                ;;
-            apk)
-                sudo apk upgrade "$pkg"
-                ;;
-        esac
+        "${UPGRADE_CMD[@]}" "$pkg"
     else
         echo "Installing '$pkg'..."
-        # For apt we usually want to update cache first
+        # For apt, refresh cache first (others handle this in the install txn).
         if [[ "$PM" == "apt" ]]; then
-            $UPDATE_CMD
+            "${UPDATE_CMD[@]}"
         fi
-        $INSTALL_CMD "$pkg"
+        "${INSTALL_CMD[@]}" "$pkg"
     fi
 
     # Final status
-    if command -v "$pkg" >/dev/null 2>&1 || $QUERY_CMD "$pkg" >/dev/null 2>&1; then
+    if command -v "$pkg" >/dev/null 2>&1 || "${QUERY_CMD[@]}" "$pkg" >/dev/null 2>&1; then
         echo "Success: '$pkg' is now installed / up to date"
         return 0
     else
