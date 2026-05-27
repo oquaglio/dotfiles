@@ -147,6 +147,7 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 | `rl` | Re-source shell config without pulling. Also warns about any missing deps. |
 | `ipkg <pkg>` | Distro-agnostic package install (apt/dnf/yum/pacman/zypper/apk). |
 | `install_deps` | List missing CLI deps the dotfiles use. `-i` to install, `-u` to also upgrade. |
+| `e [<term>]` | Print env vars (sorted, with match count). Optional `<term>` filters case-insensitively and highlights. |
 | `paths` | Print `$PATH`, `$MANPATH`, `$PYTHONPATH`, etc. line-by-line. |
 
 ### Navigation
