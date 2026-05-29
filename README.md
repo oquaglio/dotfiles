@@ -229,6 +229,17 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 | `venvs` | Audit Python venvs on disk (size, last-used). |
 | `venvs_clean` | Interactive cleanup of stale venvs. |
 
+### System info
+
+| Command | What it does |
+|---|---|
+| `sys` | System overview: distro, kernel, CPU, memory, disk, uptime. |
+| `load` | Load averages shown as per-CPU % (color-coded) plus memory used. |
+| `kern` | Kernel version, architecture, loaded module count, available kernels. |
+| `svc` | Detected init system (systemd/sysVinit/openrc) and its running services. |
+| `meminfo` | `free -m -l -t -h` — memory and swap totals (incl. low/high). |
+| `cpi` | `lscpu` — CPU details. |
+
 ### Files & processes
 
 | Command | What it does |
@@ -242,7 +253,6 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 | `psk <pid>` | `kill -9` (SIGKILL — unmaskable). |
 | `pst <pid>` | `kill -15` (SIGTERM — graceful). |
 | `ports` | List listening sockets (`ss -tulanp`). |
-| `meminfo`, `cpi` | Memory / CPU info. |
 
 ### Productivity shortcuts
 
