@@ -20,9 +20,11 @@
 # POSIX awk parser (so it's fine under Ubuntu's mawk). Note: this shadows
 # samba's `net` in interactive shells — `command net` still reaches that if set.
 
-# Internal: section header (cyan) with a dim explanation line under it.
+# Internal: section header (cyan) + dim explanation. Optional $3 is the
+# command behind the section, shown dimmed so the report says how it was built.
 _net_h() {
     printf '\033[1;36m== %s\033[0m  \033[2m%s\033[0m\n' "$1" "$2"
+    [ -n "$3" ] && printf '   \033[2m$ %s\033[0m\n' "$3"
 }
 
 net() {
@@ -42,9 +44,10 @@ net() {
 
     # Use passwordless sudo only if it won't prompt — keeps this a glance, not a
     # password gate. Without it, other users' process names are hidden by the kernel.
-    local use_sudo=0
+    local use_sudo=0 sx=""
     if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
         use_sudo=1
+        sx="sudo "   # prefix for the reproducible commands shown in headers
     fi
     _net_ss() { if [ "$use_sudo" = 1 ]; then sudo ss "$@"; else ss "$@"; fi; }
 
@@ -122,19 +125,23 @@ net() {
         printf '\033[2m(WSL2: "exposed" = open within the WSL virtual network; not on your LAN unless Windows forwards the port.)\033[0m\n\n'
     fi
 
-    _net_h "Exposed" "open to OTHER machines — your attack surface; each should be deliberate"
+    _net_h "Exposed" "open to OTHER machines — your attack surface; each should be deliberate" \
+        "${sx}ss -tulnp   # listening; address = 0.0.0.0 / :: / *"
     _net_listeners exposed
     printf '\n'
 
-    _net_h "Interface" "bound to one specific IP (a LAN/VPN interface)"
+    _net_h "Interface" "bound to one specific IP (a LAN/VPN interface)" \
+        "${sx}ss -tulnp   # listening; address = a specific IP"
     _net_listeners iface
     printf '\n'
 
-    _net_h "Local only" "loopback (127.0.0.1 / ::1) — safe, this machine only"
+    _net_h "Local only" "loopback (127.0.0.1 / ::1) — safe, this machine only" \
+        "${sx}ss -tulnp   # listening; address = 127.x / ::1"
     _net_listeners local
     printf '\n'
 
-    _net_h "Active" "connections to OTHER machines — who your programs are talking to now"
+    _net_h "Active" "connections to OTHER machines — who your programs are talking to now" \
+        "${sx}ss -tunp state established   # peer not loopback"
     # Drop loopback<->loopback (local IPC like editors/dev servers) — not "across
     # the network", and it drowns out the real traffic.
     local active
@@ -161,7 +168,7 @@ net() {
     n_iface=$(printf '%s\n' "$parsed" | awk -F'\t' '$1=="L"&&$2=="iface"{c++}   END{print c+0}')
     n_local=$(printf '%s\n' "$parsed" | awk -F'\t' '$1=="L"&&$2=="local"{c++}   END{print c+0}')
 
-    _net_h "Summary" "the numbers at a glance"
+    _net_h "Summary" "the numbers at a glance" "ip -br addr show scope global   |   ip route show default"
     printf '  \033[2mlisteners   \033[0m %s exposed, %s on an interface, %s local-only\n' "$n_exp" "$n_iface" "$n_local"
     printf '  \033[2macross net  \033[0m %s connection(s) to other machines\n' "$n_active"
     if command -v ip >/dev/null 2>&1; then
