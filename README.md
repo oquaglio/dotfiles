@@ -246,6 +246,7 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 |---|---|
 | `sfch` | Snapshot filesystem timestamps now (see "Using the fch Function" below). |
 | `fch [path]` | Show files changed since the last `sfch`. |
+| `probe <name\|path>` | Inspect a file, binary, or command: PATH/type resolution, realpath & symlink chain, file/MIME type, stat metadata, owning package, checksums, linked libs. Each section notes the command used. |
 | `extract <archive>` | Distro/format-agnostic archive extractor. |
 | `fkill` | fzf-pick a process and kill it. |
 | `psm` / `psm10` | Processes sorted by memory (top 10 variant). |
