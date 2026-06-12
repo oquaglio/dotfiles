@@ -16,9 +16,14 @@
 # Every external tool is probed with `command -v` first and silently skipped
 # when absent — this runs on machines that may lack file/ldd/stat/etc.
 
-# Internal: section header.
+# Internal: section header. Optional $2 is the command(s) used for the
+# section, shown dimmed so the report doubles as a "how was this found" note.
 _probe_h() {
-    printf '\033[1;36m== %s\033[0m\n' "$1"
+    if [ -n "$2" ]; then
+        printf '\033[1;36m== %s\033[0m  \033[2m[%s]\033[0m\n' "$1" "$2"
+    else
+        printf '\033[1;36m== %s\033[0m\n' "$1"
+    fi
 }
 
 # Internal: "key: value" row with a dim key.
@@ -50,7 +55,7 @@ _probe_pkg_owner() {
 _probe_file() {
     local f="$1"
 
-    _probe_h "Location"
+    _probe_h "Location" "realpath / readlink"
     local real
     real=$(realpath -- "$f" 2>/dev/null || readlink -f -- "$f" 2>/dev/null)
     _probe_kv "given" "$f"
@@ -69,13 +74,13 @@ _probe_file() {
         done
     fi
 
-    _probe_h "Type"
+    _probe_h "Type" "file -b / file --mime-type"
     if command -v file >/dev/null 2>&1; then
         _probe_kv "file" "$(file -b -- "$f" 2>/dev/null)"
         _probe_kv "mime" "$(file -b --mime-type -- "$f" 2>/dev/null)"
     fi
 
-    _probe_h "Metadata"
+    _probe_h "Metadata" "stat"
     if command -v stat >/dev/null 2>&1; then
         # GNU stat first; fall back to BSD/busybox -f format.
         if stat -c '%A %U:%G %s' -- "$f" >/dev/null 2>&1; then
@@ -93,21 +98,25 @@ _probe_file() {
         ls -ldh -- "$f" 2>/dev/null | sed 's/^/  /'
     fi
 
-    # Package ownership (resolve symlink target for the lookup too).
-    local owner
+    # Package ownership (resolve symlink target for the lookup too). Note the
+    # PM query that would have produced the answer on this host.
+    local owner pkgcmd
+    for pm in 'dpkg -S' 'rpm -qf' 'pacman -Qo' 'apk info --who-owns'; do
+        command -v "${pm%% *}" >/dev/null 2>&1 && { pkgcmd="$pm"; break; }
+    done
     owner=$(_probe_pkg_owner "${real:-$f}") || owner=$(_probe_pkg_owner "$f")
-    [ -n "$owner" ] && { _probe_h "Package"; printf '  %s\n' "$owner"; }
+    [ -n "$owner" ] && { _probe_h "Package" "$pkgcmd"; printf '  %s\n' "$owner"; }
 
     # Regular-file extras: hashes + (for binaries) linked libraries.
     if [ -f "$f" ]; then
-        _probe_h "Checksums"
+        _probe_h "Checksums" "sha256sum / md5sum"
         command -v sha256sum >/dev/null 2>&1 && _probe_kv "sha256" "$(sha256sum -- "$f" 2>/dev/null | awk '{print $1}')"
         command -v md5sum    >/dev/null 2>&1 && _probe_kv "md5"    "$(md5sum -- "$f" 2>/dev/null | awk '{print $1}')"
 
         # Shared-library dependencies for ELF binaries.
         if command -v file >/dev/null 2>&1 && file -b -- "$f" 2>/dev/null | grep -q 'ELF'; then
             if command -v ldd >/dev/null 2>&1; then
-                _probe_h "Linked libraries"
+                _probe_h "Linked libraries" "ldd"
                 ldd -- "$f" 2>/dev/null | sed 's/^/  /'
             fi
         fi
@@ -135,7 +144,7 @@ probe() {
     fi
 
     # Otherwise treat it as a command name.
-    _probe_h "Command"
+    _probe_h "Command" "type -a"
     # Shell's own view: alias / function / builtin / keyword / file.
     if command -v type >/dev/null 2>&1; then
         type -a "$arg" 2>/dev/null | sed 's/^/  /'
@@ -143,10 +152,12 @@ probe() {
 
     # All executables of this name on PATH, in precedence order. Keep only
     # real file paths — zsh's `which -a` also echoes alias/function bodies.
-    local raw hits
+    local raw hits pathcmd
     if command -v which >/dev/null 2>&1; then
+        pathcmd="which -a"
         raw=$(which -a "$arg" 2>/dev/null)
     else
+        pathcmd="command -v"
         raw=$(command -v "$arg" 2>/dev/null)
     fi
     hits=$(printf '%s\n' "$raw" | while IFS= read -r line; do [ -e "$line" ] && printf '%s\n' "$line"; done)
@@ -156,7 +167,7 @@ probe() {
         return 1
     fi
 
-    _probe_h "On PATH"
+    _probe_h "On PATH" "$pathcmd"
     printf '%s\n' "$hits" | sed 's/^/  /'
 
     # Deep-dive the first resolved, real file.
