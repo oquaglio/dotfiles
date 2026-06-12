@@ -240,6 +240,14 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 | `meminfo` | `free -m -l -t -h` — memory and swap totals (incl. low/high). |
 | `cpi` | `lscpu` — CPU details. |
 
+### Network
+
+| Command | What it does |
+|---|---|
+| `net [<term>]` | Plain-English network overview: ports **exposed** to other machines (your attack surface), interface-bound and **local-only** listeners, and **active** connections to remote hosts (loopback IPC filtered out) — with the program behind each. Ends with a counts summary, host IPs and gateway. Optional `<term>` filters by port/program/IP. Tries passwordless `sudo` for full program names. |
+| `conn [<term>]` | Raw `ss` socket dump (all states) with the owning user resolved per PID. Optional `<term>` filters. |
+| `ports` | `ss -tulanp` — listening TCP/UDP sockets with process. |
+
 ### Files & processes
 
 | Command | What it does |
@@ -253,7 +261,6 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 | `psc` / `psc10` | Processes sorted by CPU (top 10 variant). |
 | `psk <pid>` | `kill -9` (SIGKILL — unmaskable). |
 | `pst <pid>` | `kill -15` (SIGTERM — graceful). |
-| `ports` | List listening sockets (`ss -tulanp`). |
 
 ### Productivity shortcuts
 

@@ -1,0 +1,177 @@
+# A plain-English network overview: what's open to the world, what's listening
+# only locally, and which programs are actively talking across the network.
+#
+# Usage:
+#   net            full overview
+#   net <term>     filter every section to lines matching <term> (port, program,
+#                  IP — case-insensitive), e.g. `net ssh`, `net 443`, `net firefox`
+#
+# Sections:
+#   Exposed     listeners on 0.0.0.0 / :: / * — reachable from OTHER machines.
+#               This is your attack surface; each one should be deliberate.
+#   Interface   listeners bound to one specific IP (a LAN/VPN interface).
+#   Local only  listeners on 127.0.0.1 / ::1 — safe, this machine only.
+#   Active      established connections — programs currently talking outbound/in.
+#
+# Program names for processes you don't own need root. `net` tries passwordless
+# sudo (`sudo -n`); if that's unavailable those show as `-` and a hint is printed.
+#
+# Works on zsh/bash, Fedora/Ubuntu, native and WSL2. Uses `ss` (iproute2) and a
+# POSIX awk parser (so it's fine under Ubuntu's mawk). Note: this shadows
+# samba's `net` in interactive shells — `command net` still reaches that if set.
+
+# Internal: section header (cyan) with a dim explanation line under it.
+_net_h() {
+    printf '\033[1;36m== %s\033[0m  \033[2m%s\033[0m\n' "$1" "$2"
+}
+
+net() {
+    # Keep the report clean even under xtrace/verbose.
+    if [ -n "${ZSH_VERSION:-}" ]; then
+        setopt localoptions no_xtrace no_verbose
+    else
+        local -; set +xv
+    fi
+
+    if ! command -v ss >/dev/null 2>&1; then
+        echo "net: 'ss' not found — install iproute2 (ipkg iproute2 / ipkg iproute)." >&2
+        return 1
+    fi
+
+    local filter="$1"
+
+    # Use passwordless sudo only if it won't prompt — keeps this a glance, not a
+    # password gate. Without it, other users' process names are hidden by the kernel.
+    local use_sudo=0
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+        use_sudo=1
+    fi
+    _net_ss() { if [ "$use_sudo" = 1 ]; then sudo ss "$@"; else ss "$@"; fi; }
+
+    # One pull of every TCP/UDP socket with process info; -H drops the header,
+    # -n keeps it numeric (no slow DNS/port-name lookups).
+    local raw
+    raw=$(_net_ss -tuanpH 2>/dev/null)
+    if [ -z "$raw" ]; then
+        echo "net: no socket data from ss." >&2
+        return 1
+    fi
+
+    # Normalise each socket into TSV. POSIX awk only (mawk-safe): no gensub,
+    # no 3-arg match. Columns from `ss -tuan`: Netid State _ _ Local Peer Process.
+    #   listeners → L<TAB>class<TAB>proto<TAB>port<TAB>prog<TAB>pid<TAB>addr
+    #   active    → A<TAB>proto<TAB>prog<TAB>pid<TAB>local<TAB>peer
+    local parsed
+    parsed=$(printf '%s\n' "$raw" | awk '
+        function hostport(a) {
+            if (a ~ /^\[/) {                 # [ipv6]:port
+                PORT = a; sub(/.*\]:/, "", PORT)
+                HOST = a; sub(/\]:.*/, "", HOST); sub(/^\[/, "", HOST)
+            } else {                          # ipv4:port  or  *:port
+                PORT = a; sub(/.*:/, "", PORT)
+                HOST = a; sub(/:[^:]*$/, "", HOST)
+            }
+        }
+        function progpid(line) {
+            PROG = "-"; PID = "-"
+            if (match(line, /\("[^"]+"/))     # users:(("name",...
+                PROG = substr(line, RSTART + 2, RLENGTH - 3)
+            if (match(line, /pid=[0-9]+/))
+                PID = substr(line, RSTART + 4, RLENGTH - 4)
+        }
+        {
+            proto = $1; state = $2; laddr = $5; paddr = $6
+            progpid($0)
+
+            # Listener: tcp LISTEN, or udp UNCONN (no established peer).
+            if (state == "LISTEN" || (proto == "udp" && state == "UNCONN")) {
+                hostport(laddr)
+                class = "iface"
+                if (HOST == "0.0.0.0" || HOST == "::" || HOST == "*") class = "exposed"
+                else if (HOST ~ /^127\./ || HOST == "::1")            class = "local"
+                printf "L\t%s\t%s\t%s\t%s\t%s\t%s\n", class, proto, PORT, PROG, PID, HOST
+            }
+            # Active: an established connection in either direction.
+            else if (state == "ESTAB") {
+                printf "A\t%s\t%s\t%s\t%s\t%s\n", proto, PROG, PID, laddr, paddr
+            }
+        }
+    ')
+
+    [ -n "$filter" ] && parsed=$(printf '%s\n' "$parsed" | grep -i -- "$filter")
+
+    # Internal: render one listener class. $1=tag $2=PROTO label, reads parsed.
+    _net_listeners() {
+        local class="$1"
+        local rows
+        rows=$(printf '%s\n' "$parsed" | awk -F'\t' -v c="$class" '$1=="L" && $2==c {
+            # PORT PROTO PROGRAM PID ADDRESS  (sortable by numeric port first)
+            printf "%s\t%s\t%s\t%s\t%s\n", $4, $3, $5, $6, $7
+        }' | awk '!seen[$0]++' | sort -t$'\t' -k1,1n)
+        if [ -z "$rows" ]; then
+            printf '  (none)\n'
+            return
+        fi
+        { printf 'PORT\tPROTO\tPROGRAM\tPID\tADDRESS\n'; printf '%s\n' "$rows"; } \
+            | column -t -s $'\t' | sed 's/^/  /'
+    }
+
+    # WSL banner: "exposed" means exposed inside the WSL vNAT, not your LAN,
+    # unless the port is forwarded from Windows. Easy to forget — so say it.
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        printf '\033[2m(WSL2: "exposed" = open within the WSL virtual network; not on your LAN unless Windows forwards the port.)\033[0m\n\n'
+    fi
+
+    _net_h "Exposed" "open to OTHER machines — your attack surface; each should be deliberate"
+    _net_listeners exposed
+    printf '\n'
+
+    _net_h "Interface" "bound to one specific IP (a LAN/VPN interface)"
+    _net_listeners iface
+    printf '\n'
+
+    _net_h "Local only" "loopback (127.0.0.1 / ::1) — safe, this machine only"
+    _net_listeners local
+    printf '\n'
+
+    _net_h "Active" "connections to OTHER machines — who your programs are talking to now"
+    # Drop loopback<->loopback (local IPC like editors/dev servers) — not "across
+    # the network", and it drowns out the real traffic.
+    local active
+    active=$(printf '%s\n' "$parsed" | awk -F'\t' '$1=="A" {
+        peer = $6
+        if (peer ~ /^127\./ || peer ~ /^\[?::1\]?:/) next
+        printf "%s\t%s\t%s\t%s\t%s\n", $3, $4, $2, $5, $6   # PROGRAM PID PROTO LOCAL REMOTE
+    }' | sort -u)
+    local n_active
+    if [ -z "$active" ]; then
+        printf '  (none)\n'
+        n_active=0
+    else
+        { printf 'PROGRAM\tPID\tPROTO\tLOCAL\tREMOTE\n'; printf '%s\n' "$active"; } \
+            | column -t -s $'\t' | sed 's/^/  /'
+        n_active=$(printf '%s\n' "$active" | grep -c .)
+    fi
+    printf '\n'
+
+    # Summary: counts + this host's own addresses and default route, so you know
+    # which IPs the "exposed" services actually answer on.
+    local n_exp n_iface n_local
+    n_exp=$(printf   '%s\n' "$parsed" | awk -F'\t' '$1=="L"&&$2=="exposed"{c++} END{print c+0}')
+    n_iface=$(printf '%s\n' "$parsed" | awk -F'\t' '$1=="L"&&$2=="iface"{c++}   END{print c+0}')
+    n_local=$(printf '%s\n' "$parsed" | awk -F'\t' '$1=="L"&&$2=="local"{c++}   END{print c+0}')
+
+    _net_h "Summary" "the numbers at a glance"
+    printf '  \033[2mlisteners   \033[0m %s exposed, %s on an interface, %s local-only\n' "$n_exp" "$n_iface" "$n_local"
+    printf '  \033[2macross net  \033[0m %s connection(s) to other machines\n' "$n_active"
+    if command -v ip >/dev/null 2>&1; then
+        # Skip docker/bridge/veth/virtual clutter — show the real interfaces.
+        local ips gw
+        ips=$(ip -br -4 addr show scope global 2>/dev/null \
+            | awk '$1 !~ /^(docker|br-|veth|virbr|cni|flannel|vmnet|tailscale|wg)/ {printf "%s(%s) ", $1, $3}')
+        gw=$(ip -4 route show default 2>/dev/null | awk '{print $3; exit}')
+        [ -n "$ips" ] && printf '  \033[2mhost IPs    \033[0m %s\n' "$ips"
+        [ -n "$gw" ]  && printf '  \033[2mgateway     \033[0m %s\n' "$gw"
+    fi
+    [ "$use_sudo" != 1 ] && printf '  \033[2mnote        \033[0m run `sudo -v` first (or as root) to see all program names; some show as `-`.\n'
+}
