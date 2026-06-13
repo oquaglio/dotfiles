@@ -1,0 +1,60 @@
+# Secrets to manage - edit this list
+_PASS_SECRETS=(
+    "aws/access-key-id:AWS_ACCESS_KEY_ID"
+    "aws/secret-access-key:AWS_SECRET_ACCESS_KEY"
+    "snowflake/password:SNOWFLAKE_PASSWORD"
+    "github/token:GITHUB_TOKEN"
+)
+
+load_secrets() {
+    local set_vars=()
+    local missing=()
+
+    for entry in "${_PASS_SECRETS[@]}"; do
+        local pass_path="${entry%%:*}"
+        local env_var="${entry##*:}"
+
+        if pass show "$pass_path" &>/dev/null; then
+            export "$env_var"="$(pass show "$pass_path" 2>/dev/null)"
+            set_vars+=("$env_var")
+        else
+            missing+=("$pass_path → $env_var")
+        fi
+    done
+
+    if [[ ${#set_vars[@]} -gt 0 ]]; then
+        echo "✓ Loaded:"
+        for v in "${set_vars[@]}"; do echo "    $v"; done
+    fi
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo "✗ Not found in pass (not set):"
+        for m in "${missing[@]}"; do echo "    $m"; done
+    fi
+}
+
+remove_secrets() {
+    local unset_vars=()
+    local already_unset=()
+
+    for entry in "${_PASS_SECRETS[@]}"; do
+        local env_var="${entry##*:}"
+
+        if [[ -n "${(P)env_var}" ]]; then
+            unset "$env_var"
+            unset_vars+=("$env_var")
+        else
+            already_unset+=("$env_var")
+        fi
+    done
+
+    if [[ ${#unset_vars[@]} -gt 0 ]]; then
+        echo "✓ Unset:"
+        for v in "${unset_vars[@]}"; do echo "    $v"; done
+    fi
+
+    if [[ ${#already_unset[@]} -gt 0 ]]; then
+        echo "- Already unset:"
+        for v in "${already_unset[@]}"; do echo "    $v"; done
+    fi
+}
