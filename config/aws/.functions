@@ -22,6 +22,15 @@ aws() {
     fi
 }
 
+load_aws_profile() {
+    local profile="${1:-personal}"
+    export AWS_PROFILE="$profile"
+    export AWS_ACCESS_KEY_ID=$(pass show aws/$profile/access-key-id)
+    export AWS_SECRET_ACCESS_KEY=$(pass show aws/$profile/secret-access-key)
+    export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+    echo "✓ AWS profile loaded: $profile"
+}
+
 awskill() {
     # Clean environment variables
     unset AWS_PROFILE
@@ -89,7 +98,6 @@ s3cat() {
     # Remove temporary file
     rm -f "$temp_file"
 }
-
 
 set_aws_vars() {
 
