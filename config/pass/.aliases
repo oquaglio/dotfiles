@@ -1,0 +1,5 @@
+# Default store (personal) - just use pass normally
+alias pass='pass'
+
+# Work store
+alias wpass='PASSWORD_STORE_DIR=~/.password-store-work pass'
