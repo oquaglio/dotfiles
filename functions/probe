@@ -91,6 +91,11 @@ _probe_file() {
             _probe_kv "modified" "$(stat -c '%y' -- "$f")"
             _probe_kv "accessed" "$(stat -c '%x' -- "$f")"
             _probe_kv "changed"  "$(stat -c '%z' -- "$f")"
+            # Birth/creation time: %w is '-' when the fs/kernel doesn't record it.
+            local birth
+            birth=$(stat -c '%w' -- "$f" 2>/dev/null)
+            [ "$birth" = "-" ] && birth="(not recorded by filesystem)"
+            _probe_kv "birth"    "$birth"
         else
             stat -- "$f" 2>/dev/null | sed 's/^/  /'
         fi
