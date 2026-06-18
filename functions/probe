@@ -179,7 +179,6 @@ probe() {
     local first
     first=$(printf '%s\n' "$hits" | head -n1)
     if [ -e "$first" ]; then
-        printf '\n'
         _probe_file "$first"
     fi
 }
