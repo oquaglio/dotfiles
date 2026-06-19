@@ -160,6 +160,19 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 | `-` | Toggle between current and last dir (`cd -`). |
 | `..`, `..2`, `..3`, `..4`, `..5` | Up N levels. |
 
+At the `f` prompt you can use fzf's extended-search syntax to narrow the
+directory list. Terms are space-separated and ANDed together:
+
+```
+'matchword !excludeword 'andthisword
+```
+
+- `'matchword` — exact (non-fuzzy) match on `matchword`
+- `!excludeword` — exclude any path containing `excludeword`
+- `'andthisword` — also require an exact match on `andthisword`
+
+Other operators: `^prefix`, `suffix$`, and `foo | bar` for OR.
+
 ### Listing & searching
 
 | Command | What it does |
