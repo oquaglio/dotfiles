@@ -154,7 +154,7 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 
 | Command | What it does |
 |---|---|
-| `z <term>` | Jump to most-used dir matching `<term>` (zoxide). `z foo bar` matches both. |
+| `z <term>` | Jump to most-used dir matching `<term>` ([zoxide](https://github.com/ajeetdsouza/zoxide)). `z foo bar` matches both. |
 | `zi [<term>]` | Interactive fzf picker over the zoxide db. |
 | `f` | Fuzzy-pick a directory under `.` (with `eza` tree preview) and `cd` into it. |
 | `-` | Toggle between current and last dir (`cd -`). |
