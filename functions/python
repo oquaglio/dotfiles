@@ -193,3 +193,13 @@ venvs_clean() {
         fi
     done
 }
+
+# Delete every venv under the current directory (recursive). Thin wrapper over
+# venvs_clean, so it keeps the same safety: conda envs skipped, per-venv
+# confirmation by default, -y / --yes to delete without prompting.
+#
+#   venvs_clean_here        confirm each venv below $PWD
+#   venvs_clean_here -y     delete them all, no prompts
+venvs_clean_here() {
+    venvs_clean "$@" "$PWD"
+}

@@ -241,6 +241,7 @@ Other operators: `^prefix`, `suffix$`, and `foo | bar` for OR.
 |---|---|
 | `venvs` | Audit Python venvs on disk (size, last-used). |
 | `venvs_clean` | Interactive cleanup of stale venvs. |
+| `venvs_clean_here [-y]` | Delete every venv under `$PWD` (recursive). Confirms each; `-y` skips prompts. Conda envs skipped. |
 
 ### System info
 
