@@ -164,7 +164,12 @@
 	# existing tag" and, because fetch then exits non-zero, abort the whole update.
 	# Branch safety is unaffected — local branches still only ever fast-forward.
 	# (This does NOT delete local-only tags; add --prune-tags if you want that.)
-	up = "!f(){ git fetch --all --prune --tags --force || return 1; cur=$(git symbolic-ref --quiet --short HEAD); git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads | while read -r b u; do [ -z \"$u\" ] && continue; if [ \"$b\" = \"$cur\" ]; then git merge --ff-only \"$u\" >/dev/null 2>&1 && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged or dirty)\"; else git fetch -q . \"$u:$b\" 2>/dev/null && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged)\"; fi; done; };f"
+	#
+	# Ends with a one-line summary tallied from the fetch output and the ff loop:
+	#   Summary: N fast-forwarded, N skipped | tags: N new, N moved | pruned: N
+	# ('pruned' = stale remote-tracking branches removed by --prune). Written in
+	# POSIX sh (git runs aliases under /bin/sh, i.e. dash on Debian/Ubuntu).
+	up = "!f(){ out=$(LC_ALL=C git fetch --all --prune --tags --force 2>&1); [ -n \"$out\" ] && echo \"$out\"; nt=$(printf '%s\\n' \"$out\" | grep -cF '[new tag]'); mt=$(printf '%s\\n' \"$out\" | grep -cF '[tag update]'); dt=$(printf '%s\\n' \"$out\" | grep -cF '[deleted]'); cur=$(git symbolic-ref --quiet --short HEAD); res=$(git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads | while read -r b u; do [ -z \"$u\" ] && continue; if [ \"$b\" = \"$cur\" ]; then git merge --ff-only \"$u\" >/dev/null 2>&1 && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged or dirty)\"; else git fetch -q . \"$u:$b\" 2>/dev/null && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged)\"; fi; done); [ -n \"$res\" ] && echo \"$res\"; ff=$(printf '%s\\n' \"$res\" | grep -c 'ff   '); sk=$(printf '%s\\n' \"$res\" | grep -c 'skip '); echo \"Summary: $ff fast-forwarded, $sk skipped | tags: $nt new, $mt moved | pruned: $dt\"; };f"
 
 	ms = "!f(){ git checkout master && git merge --squash \"$1\" && git commit; };f"	# squash merge <commit> onto master brach, e.g. "g ms <non master branch>"
 	m = merge
