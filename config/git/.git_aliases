@@ -158,7 +158,13 @@
 	# loss), and the current branch/worktree is never switched. Non-current
 	# branches are advanced in place via `fetch . <upstream>:<branch>`, which git
 	# refuses unless it's a fast-forward.
-	up = "!f(){ git fetch --all --prune --tags || return 1; cur=$(git symbolic-ref --quiet --short HEAD); git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads | while read -r b u; do [ -z \"$u\" ] && continue; if [ \"$b\" = \"$cur\" ]; then git merge --ff-only \"$u\" >/dev/null 2>&1 && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged or dirty)\"; else git fetch -q . \"$u:$b\" 2>/dev/null && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged)\"; fi; done; };f"
+	#
+	# --force on the fetch makes local tags mirror the remote: moving tags (CI
+	# 'nightly'/'latest', or a re-created tag) otherwise error with "would clobber
+	# existing tag" and, because fetch then exits non-zero, abort the whole update.
+	# Branch safety is unaffected — local branches still only ever fast-forward.
+	# (This does NOT delete local-only tags; add --prune-tags if you want that.)
+	up = "!f(){ git fetch --all --prune --tags --force || return 1; cur=$(git symbolic-ref --quiet --short HEAD); git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads | while read -r b u; do [ -z \"$u\" ] && continue; if [ \"$b\" = \"$cur\" ]; then git merge --ff-only \"$u\" >/dev/null 2>&1 && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged or dirty)\"; else git fetch -q . \"$u:$b\" 2>/dev/null && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged)\"; fi; done; };f"
 
 	ms = "!f(){ git checkout master && git merge --squash \"$1\" && git commit; };f"	# squash merge <commit> onto master brach, e.g. "g ms <non master branch>"
 	m = merge
