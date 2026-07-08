@@ -166,10 +166,13 @@
 	# (This does NOT delete local-only tags; add --prune-tags if you want that.)
 	#
 	# Ends with a one-line summary tallied from the fetch output and the ff loop:
-	#   Summary: N fast-forwarded, N skipped | tags: N new, N moved | pruned: N
-	# ('pruned' = stale remote-tracking branches removed by --prune). Written in
-	# POSIX sh (git runs aliases under /bin/sh, i.e. dash on Debian/Ubuntu).
-	up = "!f(){ out=$(LC_ALL=C git fetch --all --prune --tags --force 2>&1); [ -n \"$out\" ] && echo \"$out\"; nt=$(printf '%s\\n' \"$out\" | grep -cF '[new tag]'); mt=$(printf '%s\\n' \"$out\" | grep -cF '[tag update]'); dt=$(printf '%s\\n' \"$out\" | grep -cF '[deleted]'); cur=$(git symbolic-ref --quiet --short HEAD); res=$(git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads | while read -r b u; do [ -z \"$u\" ] && continue; if [ \"$b\" = \"$cur\" ]; then git merge --ff-only \"$u\" >/dev/null 2>&1 && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged or dirty)\"; else git fetch -q . \"$u:$b\" 2>/dev/null && echo \"  ff   $b <- $u\" || echo \"  skip $b (diverged)\"; fi; done); [ -n \"$res\" ] && echo \"$res\"; ff=$(printf '%s\\n' \"$res\" | grep -c 'ff   '); sk=$(printf '%s\\n' \"$res\" | grep -c 'skip '); echo \"Summary: $ff fast-forwarded, $sk skipped | tags: $nt new, $mt moved | pruned: $dt\"; };f"
+	#   Summary: N advanced, N already current, N skipped | tags: N new, N moved | pruned: N
+	# 'advanced' counts only branches whose SHA actually moved (compared before/
+	# after), so branches already up to date fall under 'already current' instead
+	# of inflating the count. 'skipped' = diverged/dirty (left untouched); 'pruned'
+	# = stale remote-tracking branches removed by --prune. Only advanced/skipped
+	# branches are printed above the summary. POSIX sh (git runs aliases under sh).
+	up = "!f(){ out=$(LC_ALL=C git fetch --all --prune --tags --force 2>&1); [ -n \"$out\" ] && echo \"$out\"; nt=$(printf '%s\\n' \"$out\" | grep -cF '[new tag]'); mt=$(printf '%s\\n' \"$out\" | grep -cF '[tag update]'); dt=$(printf '%s\\n' \"$out\" | grep -cF '[deleted]'); cur=$(git symbolic-ref --quiet --short HEAD); res=$(git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads | while read -r b u; do [ -z \"$u\" ] && continue; if [ \"$b\" = \"$cur\" ]; then old=$(git rev-parse --verify -q HEAD); if git merge --ff-only \"$u\" >/dev/null 2>&1; then [ \"$old\" != \"$(git rev-parse --verify -q HEAD)\" ] && echo \"ADV $b <- $u\" || echo \"UTD $b\"; else echo \"SKIP $b (diverged or dirty)\"; fi; else old=$(git rev-parse --verify -q \"refs/heads/$b\"); if git fetch -q . \"$u:$b\" 2>/dev/null; then [ \"$old\" != \"$(git rev-parse --verify -q \"refs/heads/$b\")\" ] && echo \"ADV $b <- $u\" || echo \"UTD $b\"; else echo \"SKIP $b (diverged)\"; fi; fi; done); printf '%s\\n' \"$res\" | sed -n 's/^ADV /  ff   /p; s/^SKIP /  skip /p'; adv=$(printf '%s\\n' \"$res\" | grep -c '^ADV '); utd=$(printf '%s\\n' \"$res\" | grep -c '^UTD '); sk=$(printf '%s\\n' \"$res\" | grep -c '^SKIP '); echo \"Summary: $adv advanced, $utd already current, $sk skipped | tags: $nt new, $mt moved | pruned: $dt\"; };f"
 
 	ms = "!f(){ git checkout master && git merge --squash \"$1\" && git commit; };f"	# squash merge <commit> onto master brach, e.g. "g ms <non master branch>"
 	m = merge
