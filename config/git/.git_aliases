@@ -223,23 +223,39 @@
 	# Tagging
 	####################################################################
 
-	# Create and push a tag (but check if exists first)
+	# Create an annotated tag locally, then push it to origin. The two steps are
+	# independent: a tag that already exists locally is left as-is (notify, skip
+	# create) but is still pushed — so this also recovers a tag you tagged but
+	# forgot to push. A tag already present on origin is left alone (notify, skip
+	# push). Usage: git push-tag <name> [message]
 	push-tag = "!f() { \
-		if git rev-parse $1 >/dev/null 2>&1; then \
-			echo \"Tag '$1' already exists.\"; \
+		[ -z \"$1\" ] && { echo \"usage: git push-tag <name> [message]\"; return 1; }; \
+		if git rev-parse -q --verify \"refs/tags/$1\" >/dev/null 2>&1; then \
+			echo \"Local tag '$1' already exists — skipping create.\"; \
 		else \
-			git tag -a $1 -m \"${2:-}\" && \
-			git push origin $1; \
+			git tag -a \"$1\" -m \"${2:-}\" && echo \"Created local tag '$1'.\"; \
+		fi; \
+		if git ls-remote --exit-code --tags origin \"refs/tags/$1\" >/dev/null 2>&1; then \
+			echo \"Remote tag '$1' already exists on origin — skipping push.\"; \
+		else \
+			git push origin \"$1\" && echo \"Pushed tag '$1' to origin.\"; \
 		fi \
 	}; f"
 
-	# Delete tag from local and remote
+	# Delete a tag from local and origin. Independent like push-tag: each side is
+	# removed if present and skipped-with-notice if not, so a tag that exists on
+	# only one side still gets cleaned up. Usage: git delete-tag <name>
 	delete-tag = "!f() { \
-		if git rev-parse $1 >/dev/null 2>&1; then \
-			git tag -d $1 && echo \"Deleted local tag $1\"; \
-			git push --delete origin $1 && echo \"Deleted remote tag $1\"; \
+		[ -z \"$1\" ] && { echo \"usage: git delete-tag <name>\"; return 1; }; \
+		if git rev-parse -q --verify \"refs/tags/$1\" >/dev/null 2>&1; then \
+			git tag -d \"$1\" >/dev/null && echo \"Deleted local tag '$1'.\"; \
 		else \
-			echo \"Tag '$1' does not exist.\"; \
+			echo \"Local tag '$1' does not exist — skipping.\"; \
+		fi; \
+		if git ls-remote --exit-code --tags origin \"refs/tags/$1\" >/dev/null 2>&1; then \
+			git push --delete origin \"$1\" >/dev/null 2>&1 && echo \"Deleted remote tag '$1' from origin.\"; \
+		else \
+			echo \"Remote tag '$1' does not exist on origin — skipping.\"; \
 		fi \
 	}; f"
 

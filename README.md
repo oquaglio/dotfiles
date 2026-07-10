@@ -196,6 +196,8 @@ Other operators: `^prefix`, `suffix$`, and `foo | bar` for OR.
 | `gitprune` | Interactively delete stale local branches. |
 | `fbr`, `gco`, `fadd` | fzf-powered branch/checkout/add helpers. |
 | `nukegitdirs` | Recursively delete nested `.git` dirs (with confirmation prompt). |
+| `g push-tag <name> [msg]` | Create annotated tag `<name>` locally and push it to `origin`, each step independent: skips (with a notice) the side that already has it, so a tag you tagged locally but forgot to push still gets pushed. `msg` is the optional annotation. |
+| `g delete-tag <name>` | Delete tag `<name>` from local **and** `origin`, each side independent: removes whichever side has it and skips (with a notice) the side that doesn't. |
 
 ### Docker
 
