@@ -166,13 +166,16 @@
 	# (This does NOT delete local-only tags; add --prune-tags if you want that.)
 	#
 	# Ends with a one-line summary tallied from the fetch output and the ff loop:
-	#   Summary: N advanced, N already current, N skipped | tags: N new, N moved | pruned: N
+	#   Summary: N advanced, N already current, N diverged, N dirty | tags: N new, N moved | pruned: N
 	# 'advanced' counts only branches whose SHA actually moved (compared before/
-	# after), so branches already up to date fall under 'already current' instead
-	# of inflating the count. 'skipped' = diverged/dirty (left untouched); 'pruned'
-	# = stale remote-tracking branches removed by --prune. Only advanced/skipped
+	# after), so branches already up to date fall under 'already current'. Failures
+	# are split by asking whether an ff was even possible (merge-base --is-ancestor):
+	# 'diverged' = real divergence (handle separately); 'dirty' = ff was possible but
+	# blocked by local state (uncommitted changes on the current branch, or a branch
+	# checked out in another worktree). Both are left untouched. 'pruned' = stale
+	# remote-tracking branches removed by --prune. Only advanced/diverged/dirty
 	# branches are printed above the summary. POSIX sh (git runs aliases under sh).
-	up = "!f(){ out=$(LC_ALL=C git fetch --all --prune --tags --force 2>&1); [ -n \"$out\" ] && echo \"$out\"; nt=$(printf '%s\\n' \"$out\" | grep -cF '[new tag]'); mt=$(printf '%s\\n' \"$out\" | grep -cF '[tag update]'); dt=$(printf '%s\\n' \"$out\" | grep -cF '[deleted]'); cur=$(git symbolic-ref --quiet --short HEAD); res=$(git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads | while read -r b u; do [ -z \"$u\" ] && continue; if [ \"$b\" = \"$cur\" ]; then old=$(git rev-parse --verify -q HEAD); if git merge --ff-only \"$u\" >/dev/null 2>&1; then [ \"$old\" != \"$(git rev-parse --verify -q HEAD)\" ] && echo \"ADV $b <- $u\" || echo \"UTD $b\"; else echo \"SKIP $b (diverged or dirty)\"; fi; else old=$(git rev-parse --verify -q \"refs/heads/$b\"); if git fetch -q . \"$u:$b\" 2>/dev/null; then [ \"$old\" != \"$(git rev-parse --verify -q \"refs/heads/$b\")\" ] && echo \"ADV $b <- $u\" || echo \"UTD $b\"; else echo \"SKIP $b (diverged)\"; fi; fi; done); printf '%s\\n' \"$res\" | sed -n 's/^ADV /  ff   /p; s/^SKIP /  skip /p'; adv=$(printf '%s\\n' \"$res\" | grep -c '^ADV '); utd=$(printf '%s\\n' \"$res\" | grep -c '^UTD '); sk=$(printf '%s\\n' \"$res\" | grep -c '^SKIP '); echo \"Summary: $adv advanced, $utd already current, $sk skipped | tags: $nt new, $mt moved | pruned: $dt\"; };f"
+	up = "!f(){ out=$(LC_ALL=C git fetch --all --prune --tags --force 2>&1); [ -n \"$out\" ] && echo \"$out\"; nt=$(printf '%s\\n' \"$out\" | grep -cF '[new tag]'); mt=$(printf '%s\\n' \"$out\" | grep -cF '[tag update]'); dt=$(printf '%s\\n' \"$out\" | grep -cF '[deleted]'); cur=$(git symbolic-ref --quiet --short HEAD); res=$(git for-each-ref --format='%(refname:short) %(upstream:short)' refs/heads | while read -r b u; do [ -z \"$u\" ] && continue; if [ \"$b\" = \"$cur\" ]; then old=$(git rev-parse --verify -q HEAD); if git merge --ff-only \"$u\" >/dev/null 2>&1; then [ \"$old\" != \"$(git rev-parse --verify -q HEAD)\" ] && echo \"ADV $b <- $u\" || echo \"UTD $b\"; elif git merge-base --is-ancestor HEAD \"$u\" 2>/dev/null; then echo \"DRT $b (dirty)\"; else echo \"DIV $b (diverged)\"; fi; else old=$(git rev-parse --verify -q \"refs/heads/$b\"); if git fetch -q . \"$u:$b\" 2>/dev/null; then [ \"$old\" != \"$(git rev-parse --verify -q \"refs/heads/$b\")\" ] && echo \"ADV $b <- $u\" || echo \"UTD $b\"; elif git merge-base --is-ancestor \"refs/heads/$b\" \"$u\" 2>/dev/null; then echo \"DRT $b (in use)\"; else echo \"DIV $b (diverged)\"; fi; fi; done); printf '%s\\n' \"$res\" | sed -n 's/^ADV /  ff   /p; s/^DIV /  skip /p; s/^DRT /  skip /p'; adv=$(printf '%s\\n' \"$res\" | grep -c '^ADV '); utd=$(printf '%s\\n' \"$res\" | grep -c '^UTD '); div=$(printf '%s\\n' \"$res\" | grep -c '^DIV '); drt=$(printf '%s\\n' \"$res\" | grep -c '^DRT '); echo \"Summary: $adv advanced, $utd already current, $div diverged, $drt dirty | tags: $nt new, $mt moved | pruned: $dt\"; };f"
 
 	ms = "!f(){ git checkout master && git merge --squash \"$1\" && git commit; };f"	# squash merge <commit> onto master brach, e.g. "g ms <non master branch>"
 	m = merge
