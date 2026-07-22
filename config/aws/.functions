@@ -99,6 +99,69 @@ s3cat() {
     rm -f "$temp_file"
 }
 
+# s3trigger — download an S3 object and re-upload it to the same key to fire a
+# fresh s3:ObjectCreated event (handy for replaying a Lambda/SQS/EventBridge
+# trigger without changing the object's contents).
+#
+#   s3trigger s3://bucket/path/to/key
+#
+# Content-Type and user metadata are read from the existing object (head-object)
+# and passed back on upload, so the re-put doesn't degrade the object to
+# octet-stream / strip metadata. NOT preserved: SSE/KMS key (falls back to the
+# bucket default), storage class, ACL, tags. Large objects re-upload via
+# multipart, so the event is ObjectCreated:CompleteMultipartUpload rather than
+# :Put — fine if your notification filters on s3:ObjectCreated:*.
+#
+# (An in-place `aws s3 cp s3://k s3://k --metadata-directive REPLACE` would fire
+# an ObjectCreated:Copy without downloading, but the ask here is a real re-put.)
+s3trigger() {
+    local uri="$1"
+    if [[ -z "$uri" || "$uri" != s3://* ]]; then
+        echo "Usage: s3trigger s3://bucket/path/to/key" >&2
+        return 1
+    fi
+
+    # Split s3://bucket/key into bucket + key for head-object.
+    local rest="${uri#s3://}"
+    local bucket="${rest%%/*}"
+    local key="${rest#*/}"
+    if [[ "$bucket" == "$rest" || -z "$key" ]]; then
+        echo "Error: could not parse bucket/key from '$uri'." >&2
+        return 1
+    fi
+
+    # Read existing Content-Type + user metadata so the re-upload preserves them.
+    local head
+    head=$(command aws s3api head-object --bucket "$bucket" --key "$key" 2>&1) || {
+        echo "Error: object not found or access denied: $uri" >&2
+        echo "$head" >&2
+        return 1
+    }
+    local content_type metadata
+    content_type=$(echo "$head" | jq -r '.ContentType // empty')
+    metadata=$(echo "$head" | jq -r 'if (.Metadata // {} | length) > 0 then (.Metadata | to_entries | map("\(.key)=\(.value)") | join(",")) else empty end')
+
+    local tmp
+    tmp=$(mktemp) || { echo "mktemp failed" >&2; return 1; }
+
+    if ! command aws s3 cp "$uri" "$tmp" --quiet; then
+        echo "Error: failed to download $uri" >&2
+        rm -f "$tmp"; return 1
+    fi
+
+    # Re-upload (PutObject), re-applying the preserved attributes.
+    local args=("$tmp" "$uri" --quiet)
+    [[ -n "$content_type" ]] && args+=(--content-type "$content_type")
+    [[ -n "$metadata" ]] && args+=(--metadata "$metadata")
+    if ! command aws s3 cp "${args[@]}"; then
+        echo "Error: failed to re-upload $uri" >&2
+        rm -f "$tmp"; return 1
+    fi
+
+    rm -f "$tmp"
+    echo "✓ Re-uploaded $uri — fresh s3:ObjectCreated event fired."
+}
+
 set_aws_vars() {
 
     if [ -n "$AWS_PROFILE" ]; then
