@@ -1,0 +1,119 @@
+# Terraform local-state discovery.
+#
+# Commands:
+#   tfstates [root]   list every LOCAL terraform state file under <root>
+#                     (default $HOME) that still tracks managed resources —
+#                     i.e. WIP projects you probably need to `terraform destroy`.
+#
+# Detection: files matching *.tfstate (excluding *.tfstate.backup), walking
+# past .git, node_modules and .terraform. That last prune matters: .terraform/
+# holds only the backend pointer + provider cache, never real local state, so
+# skipping it also avoids projects that use a remote backend (their resources
+# live in S3/TFC, not on disk — nothing here to destroy). Workspace states
+# under terraform.tfstate.d/<ws>/terraform.tfstate are NOT pruned, so they show.
+#
+# "Active" = at least one *managed* resource (data sources are ignored — you
+# don't destroy those). Empty states are tallied but not listed. Counts use jq
+# when present; without it, a grep of '"mode": "managed"' lines is the fallback.
+#
+# IMPORTANT: this only FINDS state. Deleting a .tfstate file does NOT destroy
+# anything — it orphans the real cloud resources. To tear a project down, cd
+# into its directory and run `terraform destroy`.
+#
+# Note: du/find/grep below use `command` to bypass user aliases (e.g. an
+# `alias du='du -ch'` would inject a total line and break size parsing).
+
+# Internal: emit one *.tfstate path per line under <root>.
+_tfstates_find() {
+    local root="${1:-$HOME}"
+    command find "$root" \
+        -type d \( -name .git -o -name node_modules -o -name .terraform \) -prune -o \
+        -type f -name '*.tfstate' ! -name '*.tfstate.backup' -print 2>/dev/null
+}
+
+# Internal: count managed resources in a state file (0 on any error).
+_tfstate_managed() {
+    local f="$1"
+    if command -v jq >/dev/null 2>&1; then
+        jq -r '[.resources[]? | select(.mode=="managed")] | length' "$f" 2>/dev/null
+    else
+        command grep -c '"mode": "managed"' "$f" 2>/dev/null
+    fi
+}
+
+# Internal: state serial number (a rough "how much has happened here" proxy).
+_tfstate_serial() {
+    local f="$1"
+    if command -v jq >/dev/null 2>&1; then
+        jq -r '.serial // "?"' "$f" 2>/dev/null
+    else
+        command grep -m1 '"serial"' "$f" 2>/dev/null | command grep -o '[0-9]\+' | head -n1
+    fi
+}
+
+# Internal: human-friendly size; uses numfmt if available.
+_tf_human() {
+    if command -v numfmt >/dev/null 2>&1; then
+        numfmt --to=iec --suffix=B "$1"
+    else
+        printf '%sB' "$1"
+    fi
+}
+
+tfstates() {
+    # Keep the report clean even if the calling shell has xtrace/verbose on.
+    # zsh: localoptions auto-restores on return; bash: `local -` localizes $-.
+    if [ -n "${ZSH_VERSION:-}" ]; then
+        setopt localoptions no_xtrace no_verbose
+    else
+        local -; set +xv
+    fi
+
+    local root="${1:-$HOME}"
+    echo "Scanning $root for Terraform local state (this may take a minute)..." >&2
+
+    local tmp
+    tmp=$(mktemp) || { echo "mktemp failed" >&2; return 1; }
+
+    _tfstates_find "$root" | while IFS= read -r f; do
+        local n serial bytes human
+        n=$(_tfstate_managed "$f"); [ -z "$n" ] && n=0
+        # Empty / non-terraform / unreadable → tally as E and move on.
+        if ! [ "$n" -ge 1 ] 2>/dev/null; then
+            printf 'E\n' >> "$tmp"
+            continue
+        fi
+        serial=$(_tfstate_serial "$f"); [ -z "$serial" ] && serial='?'
+        bytes=$(command du -sb "$f" 2>/dev/null | awk '{print $1}')
+        human=$(_tf_human "${bytes:-0}")
+        # A <tab> resources <tab> bytes <tab> human <tab> serial <tab> path
+        printf 'A\t%s\t%s\t%s\t%s\t%s\n' "$n" "${bytes:-0}" "$human" "$serial" "$f" >> "$tmp"
+    done
+
+    if ! command grep -q '^A' "$tmp" 2>/dev/null; then
+        local skipped
+        skipped=$(command grep -c '^E' "$tmp" 2>/dev/null)
+        echo "No active local state found. (${skipped:-0} empty state file(s) skipped.)"
+        rm -f "$tmp"
+        return 0
+    fi
+
+    # Render: header + rows sorted by managed-resource count desc.
+    {
+        printf 'RESOURCES\tSERIAL\tSIZE\tSTATE FILE\n'
+        command grep '^A' "$tmp" \
+            | sort -t"$(printf '\t')" -k2,2nr \
+            | awk -F"$(printf '\t')" '{print $2"\t"$5"\t"$4"\t"$6}'
+    } | column -t -s "$(printf '\t')"
+
+    # Footer: totals + how many empty states were skipped.
+    local count total empty
+    count=$(command grep -c '^A' "$tmp")
+    total=$(awk -F"$(printf '\t')" '/^A/{s+=$2} END{print s+0}' "$tmp")
+    empty=$(command grep -c '^E' "$tmp")
+    printf '\n%d active state file(s), %d managed resource(s) total; %d empty skipped.\n' \
+        "$count" "$total" "$empty"
+    printf 'To tear one down: cd into its dir and run `terraform destroy` (deleting the file only orphans resources).\n'
+
+    rm -f "$tmp"
+}

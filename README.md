@@ -237,6 +237,12 @@ Other operators: `^prefix`, `suffix$`, and `foo | bar` for OR.
 | `awskill` | Unset all `AWS_*` env vars. |
 | `s3cat s3://...` | Cat an S3 object (pretty-prints JSON via `jq`). |
 
+### Terraform
+
+| Command | What it does |
+|---|---|
+| `tfstates [root]` | Recursively find LOCAL terraform state files under `<root>` (default `$HOME`) that still track **managed** resources — the WIP projects you likely need to `terraform destroy`. Sorted by resource count; shows serial + size. Ignores data sources, empty states, `*.backup`, and remote-backend projects (prunes `.terraform/`). Audit only — it never deletes state (that would orphan real resources). |
+
 ### Python
 
 | Command | What it does |
