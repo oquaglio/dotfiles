@@ -12,9 +12,15 @@
 # live in S3/TFC, not on disk — nothing here to destroy). Workspace states
 # under terraform.tfstate.d/<ws>/terraform.tfstate are NOT pruned, so they show.
 #
-# "Active" = at least one *managed* resource (data sources are ignored — you
-# don't destroy those). Empty states are tallied but not listed. Counts use jq
-# when present; without it, a grep of '"mode": "managed"' lines is the fallback.
+# "Active" = at least one live *managed instance* (an actual cloud object). This
+# is counted at the instance level, not the resource block: `terraform destroy`
+# removes resources from state entirely (leaving resources: []), but a partial
+# destroy / `state rm` / count=0 can leave a resource block with zero instances —
+# that's effectively destroyed, so it's treated as inactive. In short: listed
+# here = something is still provisioned; not listed = already destroyed (or never
+# applied). Data sources are ignored (you don't destroy those). Instance counts
+# need jq; without it, a grep of '"mode": "managed"' resource blocks is a coarser
+# fallback (can't see the empty-instances case).
 #
 # IMPORTANT: this only FINDS state. Deleting a .tfstate file does NOT destroy
 # anything — it orphans the real cloud resources. To tear a project down, cd
@@ -31,11 +37,14 @@ _tfstates_find() {
         -type f -name '*.tfstate' ! -name '*.tfstate.backup' -print 2>/dev/null
 }
 
-# Internal: count managed resources in a state file (0 on any error).
-_tfstate_managed() {
+# Internal: count live managed *instances* (actual cloud objects) in a state
+# file — 0 means the resources were destroyed/removed from state or never
+# applied. jq counts instances; the grep fallback counts managed resource
+# blocks (coarser: it can't tell a block with zero instances from a live one).
+_tfstate_objects() {
     local f="$1"
     if command -v jq >/dev/null 2>&1; then
-        jq -r '[.resources[]? | select(.mode=="managed")] | length' "$f" 2>/dev/null
+        jq -r '[.resources[]? | select(.mode=="managed") | .instances[]?] | length' "$f" 2>/dev/null
     else
         command grep -c '"mode": "managed"' "$f" 2>/dev/null
     fi
@@ -77,8 +86,9 @@ tfstates() {
 
     _tfstates_find "$root" | while IFS= read -r f; do
         local n serial bytes human
-        n=$(_tfstate_managed "$f"); [ -z "$n" ] && n=0
-        # Empty / non-terraform / unreadable → tally as E and move on.
+        n=$(_tfstate_objects "$f"); [ -z "$n" ] && n=0
+        # Empty (destroyed / never applied) / non-terraform / unreadable → tally
+        # as E and move on.
         if ! [ "$n" -ge 1 ] 2>/dev/null; then
             printf 'E\n' >> "$tmp"
             continue
@@ -86,32 +96,32 @@ tfstates() {
         serial=$(_tfstate_serial "$f"); [ -z "$serial" ] && serial='?'
         bytes=$(command du -sb "$f" 2>/dev/null | awk '{print $1}')
         human=$(_tf_human "${bytes:-0}")
-        # A <tab> resources <tab> bytes <tab> human <tab> serial <tab> path
+        # A <tab> objects <tab> bytes <tab> human <tab> serial <tab> path
         printf 'A\t%s\t%s\t%s\t%s\t%s\n' "$n" "${bytes:-0}" "$human" "$serial" "$f" >> "$tmp"
     done
 
     if ! command grep -q '^A' "$tmp" 2>/dev/null; then
         local skipped
         skipped=$(command grep -c '^E' "$tmp" 2>/dev/null)
-        echo "No active local state found. (${skipped:-0} empty state file(s) skipped.)"
+        echo "No active local state found. (${skipped:-0} empty/destroyed state file(s) skipped.)"
         rm -f "$tmp"
         return 0
     fi
 
-    # Render: header + rows sorted by managed-resource count desc.
+    # Render: header + rows sorted by live-object count desc.
     {
-        printf 'RESOURCES\tSERIAL\tSIZE\tSTATE FILE\n'
+        printf 'OBJECTS\tSERIAL\tSIZE\tSTATE FILE\n'
         command grep '^A' "$tmp" \
             | sort -t"$(printf '\t')" -k2,2nr \
             | awk -F"$(printf '\t')" '{print $2"\t"$5"\t"$4"\t"$6}'
     } | column -t -s "$(printf '\t')"
 
-    # Footer: totals + how many empty states were skipped.
+    # Footer: totals + how many empty/destroyed states were skipped.
     local count total empty
     count=$(command grep -c '^A' "$tmp")
     total=$(awk -F"$(printf '\t')" '/^A/{s+=$2} END{print s+0}' "$tmp")
     empty=$(command grep -c '^E' "$tmp")
-    printf '\n%d active state file(s), %d managed resource(s) total; %d empty skipped.\n' \
+    printf '\n%d active state file(s), %d live managed object(s) total; %d empty/destroyed skipped.\n' \
         "$count" "$total" "$empty"
     printf 'To tear one down: cd into its dir and run `terraform destroy` (deleting the file only orphans resources).\n'
 
