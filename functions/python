@@ -3,6 +3,7 @@
 # Commands:
 #   venvs [root]              list every venv under <root> (default $HOME), sorted by size desc
 #   venvs_clean [-y] [root]   interactively delete venvs; -y / --yes skips prompts
+#   venvinfo [dir]            describe the venv active in this shell (or <dir>)
 #
 # Detection: pyvenv.cfg, bin/activate, or Scripts/activate(.bat). Confirmed
 # by a python interpreter at bin/python or Scripts/python.exe. Broken-symlink
@@ -55,6 +56,7 @@ _venvs_classify() {
     case "$dir" in
         */pipx/venvs/*)              kind="pipx" ;;
         */.virtualenvs/*)            kind="virtualenvwrapper" ;;
+        */.local/share/virtualenvs/*) kind="pipenv" ;;
         */pyenv/versions/*/envs/*)   kind="pyenv-virtualenv" ;;
         */.cache/pypoetry/virtualenvs/*) kind="poetry" ;;
     esac
@@ -63,7 +65,9 @@ _venvs_classify() {
     if [ -f "$dir/pyvenv.cfg" ]; then
         if command grep -q '^uv =' "$dir/pyvenv.cfg" 2>/dev/null; then
             kind="uv"
-        elif command grep -q '^home =.*pyenv/versions' "$dir/pyvenv.cfg" 2>/dev/null; then
+        elif [ "$kind" = "venv" ] && command grep -q '^home =.*pyenv/versions' "$dir/pyvenv.cfg" 2>/dev/null; then
+            # Only a fallback: `home` names the base interpreter, not the tool
+            # that built the venv, so a path tag above always wins.
             kind="pyenv"
         fi
     fi
@@ -202,4 +206,252 @@ venvs_clean() {
 #   venvs_clean_here -y     delete them all, no prompts
 venvs_clean_here() {
     venvs_clean "$@" "$PWD"
+}
+
+# ---------------------------------------------------------------------------
+# venvinfo — everything discoverable about the venv active in *this* shell.
+# ---------------------------------------------------------------------------
+#
+#   venvinfo          report on the current shell
+#   venvinfo <dir>    report on <dir> as if it were active (no activation)
+#
+# Answers, in order: is one active, which one, what kind, which interpreter,
+# where its packages live, what the project around $PWD expects, and which
+# Python env vars are set. Everything is derived at call time — nothing is
+# cached, so it stays honest after a manual PATH edit or a deleted venv.
+#
+# The interpreter is the source of truth: sys.prefix != sys.base_prefix is
+# the only reliable "I am in a venv" signal. $VIRTUAL_ENV is just a hint and
+# is reported separately so a stale/mismatched value is visible rather than
+# silently trusted (see the MISMATCH warning).
+
+# Internal: aligned "label  value" line.
+_venvinfo_row() {
+    printf '  %-22s %s\n' "$1" "$2"
+}
+
+# Internal: print "NAME=value" for each env var name given that is set,
+# masking any user:password@ embedded in a URL value.
+_venvinfo_env() {
+    local name value
+    for name in "$@"; do
+        eval "value=\${$name-}"
+        [ -n "$value" ] || continue
+        case "$value" in
+            *://*:*@*) value=$(printf '%s' "$value" | sed -E 's#(://)[^/@:]+:[^/@]*@#\1***:***@#g') ;;
+        esac
+        _venvinfo_row "$name" "$value"
+    done
+}
+
+# Internal: nearest ancestor of $1 containing $2; echoes the dir or nothing.
+_venvinfo_findup() {
+    local dir="$1" name="$2"
+    while [ -n "$dir" ] && [ "$dir" != "/" ]; do
+        [ -e "$dir/$name" ] && { echo "$dir"; return 0; }
+        dir=$(dirname "$dir")
+    done
+    [ -e "/$name" ] && echo "/"
+}
+
+venvinfo() {
+    local want="${1-}"
+    local py prefix base_prefix exe version purelib impl platform active venv
+
+    # --- interpreter --------------------------------------------------------
+    # Explicit dir argument: interrogate that venv's own interpreter.
+    if [ -n "$want" ]; then
+        want=$(cd "$want" 2>/dev/null && pwd) || { echo "venvinfo: no such directory: $1" >&2; return 1; }
+        for py in "$want/bin/python" "$want/bin/python3" "$want/Scripts/python.exe"; do
+            [ -e "$py" ] && break
+            py=""
+        done
+        [ -n "$py" ] || { echo "venvinfo: no interpreter under $want" >&2; return 1; }
+    else
+        py=$(command -v python 2>/dev/null) || py=""
+        [ -n "$py" ] || py=$(command -v python3 2>/dev/null) || py=""
+    fi
+
+    if [ -z "$py" ]; then
+        echo "No python on PATH."
+        _venvinfo_env VIRTUAL_ENV CONDA_PREFIX PYENV_VERSION
+        return 1
+    fi
+
+    # One interpreter round-trip for everything the runtime knows about itself.
+    local probe
+    probe=$("$py" -c 'import sys, sysconfig
+p = sysconfig.get_paths()
+print(sys.executable)
+print(sys.prefix)
+print(getattr(sys, "base_prefix", sys.prefix))
+print(sys.version.split()[0])
+print(p.get("purelib", ""))
+print(sys.implementation.name)
+print(sysconfig.get_platform())' 2>/dev/null)
+
+    if [ -z "$probe" ]; then
+        echo "venvinfo: $py exists but failed to run (broken symlink?)" >&2
+        _venvinfo_row "interpreter" "$py -> $(readlink "$py" 2>/dev/null || echo '?')"
+        return 1
+    fi
+
+    { read -r exe
+      read -r prefix
+      read -r base_prefix
+      read -r version
+      read -r purelib
+      read -r impl
+      read -r platform
+    } <<PROBE
+$probe
+PROBE
+
+    active=0
+    [ "$prefix" != "$base_prefix" ] && active=1
+    [ -n "${CONDA_PREFIX-}" ] && [ "${CONDA_PREFIX-}" = "$prefix" ] && active=1
+    [ -d "$prefix/conda-meta" ] && active=1
+    venv="$prefix"
+
+    # --- status -------------------------------------------------------------
+    echo
+    if [ -n "$want" ]; then
+        echo "Inspecting (not activated): $venv"
+    elif [ "$active" -eq 1 ]; then
+        echo "ACTIVE virtual environment"
+    else
+        echo "NO virtual environment active — this is a system/base interpreter."
+    fi
+    echo
+
+    if [ "$active" -eq 1 ] || [ -n "$want" ]; then
+        local prompt created bytes
+        prompt=$(command grep -s '^prompt' "$venv/pyvenv.cfg" 2>/dev/null | cut -d= -f2- | sed 's/^ *//')
+        # $VIRTUAL_ENV_PROMPT describes *this* shell, so it only speaks for the
+        # active env — never for a directory passed in as an argument.
+        [ -z "$want" ] && prompt="${VIRTUAL_ENV_PROMPT:-$prompt}"
+        created=$(command find "$venv/pyvenv.cfg" "$venv/conda-meta" -maxdepth 0 -printf '%TY-%Tm-%Td %TH:%TM\n' 2>/dev/null | head -n1)
+        bytes=$(_venvs_bytes "$venv")
+
+        _venvinfo_row "path" "$venv"
+        _venvinfo_row "name" "$(basename "$venv")"
+        _venvinfo_row "type" "$(_venvs_classify "$venv")"
+        [ -n "$prompt" ]  && _venvinfo_row "prompt" "$prompt"
+        [ -n "$created" ] && _venvinfo_row "created" "$created"
+        [ -n "$bytes" ]   && _venvinfo_row "size on disk" "$(_venvs_human "$bytes" | sed 's/^ *//')"
+    else
+        # Not a venv — don't classify or `du` a system prefix like /usr.
+        _venvinfo_row "prefix" "$prefix"
+        _venvinfo_row "inspect a venv" "venvinfo <dir>  (no activation needed)"
+    fi
+
+    # --- interpreter --------------------------------------------------------
+    echo
+    echo "Interpreter"
+    _venvinfo_row "sys.executable" "$exe"
+    _venvinfo_row "version" "$impl $version ($platform)"
+    _venvinfo_row "sys.prefix" "$prefix"
+    _venvinfo_row "sys.base_prefix" "$base_prefix"
+    if [ -L "$venv/bin/python" ]; then
+        local target
+        target=$(readlink -f "$venv/bin/python" 2>/dev/null || readlink "$venv/bin/python")
+        _venvinfo_row "bin/python ->" "${target:-<dangling>}"
+        [ -e "$venv/bin/python" ] || _venvinfo_row "" "!! dangling symlink — this venv is broken"
+    fi
+    local cfg_home
+    cfg_home=$(command grep -s '^home' "$venv/pyvenv.cfg" 2>/dev/null | cut -d= -f2- | sed 's/^ *//')
+    [ -n "$cfg_home" ] && _venvinfo_row "built from (home)" "$cfg_home"
+    if [ -f "$venv/pyvenv.cfg" ]; then
+        local syssite
+        syssite=$(command grep -s '^include-system-site-packages' "$venv/pyvenv.cfg" | cut -d= -f2- | sed 's/^ *//')
+        [ -n "$syssite" ] && _venvinfo_row "system site-packages" "$syssite"
+    fi
+
+    # --- packages -----------------------------------------------------------
+    echo
+    echo "Packages"
+    _venvinfo_row "site-packages" "${purelib:-<unknown>}"
+    if [ -d "$purelib" ]; then
+        local n
+        n=$(command find "$purelib" -maxdepth 1 -name '*.dist-info' -o -maxdepth 1 -name '*.egg-link' 2>/dev/null | command grep -c . )
+        _venvinfo_row "installed dists" "$n"
+        _venvinfo_row "editable installs" "$(command find "$purelib" -maxdepth 1 \( -name '*.pth' -not -name '_*' \) 2>/dev/null | command grep -c .)"
+    fi
+    local pipv
+    pipv=$("$py" -m pip --version 2>/dev/null | awk '{print $2}')
+    _venvinfo_row "pip" "${pipv:-<not installed>}"
+
+    # --- shell integration --------------------------------------------------
+    if [ -z "$want" ]; then
+        echo
+        echo "Shell"
+        case ":$PATH:" in
+            ":$venv/bin:"*)  _venvinfo_row "PATH" "$venv/bin is first" ;;
+            *":$venv/bin:"*) _venvinfo_row "PATH" "$venv/bin present but NOT first — another python shadows it" ;;
+            *)               _venvinfo_row "PATH" "$venv/bin is NOT on PATH" ;;
+        esac
+        if command -v deactivate >/dev/null 2>&1; then
+            _venvinfo_row "deactivate()" "defined (activate script was sourced)"
+        else
+            _venvinfo_row "deactivate()" "not defined (PATH-only or auto-activated)"
+        fi
+        _venvinfo_row "which python" "$(command -v python 2>/dev/null || echo '<none>')"
+        _venvinfo_row "which python3" "$(command -v python3 2>/dev/null || echo '<none>')"
+        _venvinfo_row "which pip" "$(command -v pip 2>/dev/null || echo '<none>')"
+
+        # $VIRTUAL_ENV is a hint, not the truth — surface disagreement loudly.
+        if [ -n "${VIRTUAL_ENV-}" ] && [ "${VIRTUAL_ENV%/}" != "${prefix%/}" ]; then
+            echo
+            _venvinfo_row "!! MISMATCH" "VIRTUAL_ENV=$VIRTUAL_ENV"
+            _venvinfo_row "" "but python resolves to $prefix"
+            [ -d "$VIRTUAL_ENV" ] || _venvinfo_row "" "and \$VIRTUAL_ENV no longer exists"
+        fi
+    fi
+
+    # --- environment --------------------------------------------------------
+    echo
+    echo "Environment"
+    _venvinfo_env VIRTUAL_ENV VIRTUAL_ENV_PROMPT VIRTUAL_ENV_DISABLE_PROMPT \
+                  CONDA_PREFIX CONDA_DEFAULT_ENV CONDA_SHLVL \
+                  PIPENV_ACTIVE POETRY_ACTIVE PDM_PROJECT_ROOT HATCH_ENV_ACTIVE \
+                  PYENV_VERSION PYENV_ROOT \
+                  PYTHONPATH PYTHONHOME PYTHONSTARTUP PYTHONNOUSERSITE PYTHONUSERBASE \
+                  PIP_INDEX_URL PIP_EXTRA_INDEX_URL PIP_REQUIRE_VIRTUALENV PIP_CONFIG_FILE \
+                  UV_PYTHON UV_PROJECT_ENVIRONMENT UV_INDEX_URL UV_CACHE_DIR
+
+    # --- project context ----------------------------------------------------
+    echo
+    echo "Project ($PWD)"
+    local marker root found=0
+    for marker in pyproject.toml poetry.lock Pipfile pdm.lock uv.lock requirements.txt .python-version .venv setup.py environment.yml; do
+        root=$(_venvinfo_findup "$PWD" "$marker")
+        [ -n "$root" ] || continue
+        found=1
+        if [ "$root" = "$PWD" ]; then
+            _venvinfo_row "$marker" "./"
+        else
+            _venvinfo_row "$marker" "$root/"
+        fi
+    done
+    [ "$found" -eq 0 ] && _venvinfo_row "markers" "none found above $PWD"
+
+    # A project .venv that is *not* the active one is the usual "wrong env" bug.
+    root=$(_venvinfo_findup "$PWD" .venv)
+    if [ -n "$root" ] && [ "${root%/}/.venv" != "${prefix%/}" ]; then
+        _venvinfo_row "!! note" "$root/.venv exists but is not the active env"
+    fi
+
+    # --- tooling ------------------------------------------------------------
+    echo
+    echo "Tooling on PATH"
+    local tool ver
+    for tool in uv poetry pdm hatch pipenv pyenv conda pipx virtualenv; do
+        command -v "$tool" >/dev/null 2>&1 || continue
+        ver=$("$tool" --version 2>/dev/null | head -n1)
+        _venvinfo_row "$tool" "${ver:-$(command -v "$tool")}"
+    done
+    if command -v pyenv >/dev/null 2>&1; then
+        _venvinfo_row "pyenv version" "$(pyenv version 2>/dev/null | head -n1)"
+    fi
+    echo
 }

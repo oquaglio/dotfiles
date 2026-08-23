@@ -250,6 +250,7 @@ Other operators: `^prefix`, `suffix$`, and `foo | bar` for OR.
 | `venvs` | Audit Python venvs on disk (size, last-used). |
 | `venvs_clean` | Interactive cleanup of stale venvs. |
 | `venvs_clean_here [-y]` | Delete every venv under `$PWD` (recursive). Confirms each; `-y` skips prompts. Conda envs skipped. |
+| `venvinfo [dir]` | Everything discoverable about the venv active in this shell: path, type, interpreter, site-packages, PATH state, env vars, project markers, tooling. Pass a dir to inspect a venv without activating it. |
 
 ### System info
 

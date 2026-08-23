@@ -51,6 +51,7 @@ Most code targets both zsh and bash. Watch for:
 - `ipkg <pkg>` — distro-agnostic install via `functions/install_package` (apt/dnf/yum/pacman/zypper/apk).
 - `sfch` / `fch <path>` — mark-and-diff filesystem snapshot (see README for the sudo invocation pattern).
 - `venvs` / `venvs_clean` — Python venv disk audit + cleanup (`functions/python`).
+- `venvinfo` — full report on the venv active in the current shell (`functions/python`).
 - `docker_du` / `docker_clean` — Docker disk audit + cleanup (`functions/docker`).
 - `gitstale` / `gitprune` — list / interactively delete stale local branches (`functions/git`).
 
