@@ -4,3 +4,11 @@ git_files_info() {
 }
 alias gf='git_files_info'
 
+gitup-all() {
+  local g d root=${1:-.}
+  while IFS= read -r -d '' g; do
+    d=${g%/.git}
+    printf '\n== %s\n' "$d"
+    ( cd "$d" && git up ) || printf '!! failed: %s\n' "$d"
+  done < <(find "$root" -type d -name .git -prune -print0)
+}
