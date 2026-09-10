@@ -146,6 +146,7 @@ Anything wrapping an external binary (`fzf`, `eza`, `bat`, `rg`, `fd`, `zoxide`,
 | `up` | Pull latest dotfiles from origin and reload the shell. |
 | `rl` | Re-source shell config without pulling. Also warns about any missing deps. |
 | `ipkg <pkg>` | Distro-agnostic package install (apt/dnf/yum/pacman/zypper/apk). |
+| `tools [pattern]` | Inventory every user-installed tool on the box with the package manager it came from. Covers native (apt/dnf/yum/pacman/apk/zypper), brew, snap, flatpak, nix, pipx, uv tool, cargo, go, npm, pnpm, gem. Lists only what was explicitly requested, not pulled-in dependencies, wherever the manager tracks that. `-s <source>` restricts to one manager, `-c` shows counts only. |
 | `install_deps` | List missing CLI deps the dotfiles use. `-i` to install, `-u` to also upgrade. |
 | `e [<term>]` | Print env vars (sorted, with match count). Optional `<term>` filters case-insensitively and highlights. |
 | `paths` | Print `$PATH`, `$MANPATH`, `$PYTHONPATH`, etc. line-by-line. |

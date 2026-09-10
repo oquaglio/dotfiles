@@ -1,0 +1,219 @@
+# tools - inventory of user-installed tools across every package manager on the box.
+#
+# "User-installed" means explicitly requested, not pulled in as a dependency,
+# wherever the manager can tell the difference (apt manual set, dnf/rpm
+# userinstalled, pacman explicit, apk world, brew leaves). Managers with no such
+# concept are listed in full.
+#
+# Usage:
+#   tools                   list everything, grouped by source
+#   tools <pattern>         filter by name (case-insensitive substring)
+#   tools -s <source>       restrict to one source (e.g. brew, dnf, cargo)
+#   tools -c                counts per source only, no package list
+#   tools -h                help
+#
+# Examples:
+#   tools git               every git-ish thing and where it came from
+#   tools -s cargo          just the Rust binaries
+#   tools -c                how much lives in each manager
+#
+# Covered: apt, dnf/yum, pacman, apk, zypper, brew (+casks), snap, flatpak,
+#          nix, pipx, uv tool, cargo, go, npm, pnpm, gem.
+# Not covered: runtime version managers (pyenv, nvm, mise, asdf) - those install
+#          language runtimes, not tools. Plain `pip install` is skipped too; it
+#          is mostly libraries. Use pipx / uv tool for CLI installs.
+#
+# Note: querying npm goes through the lazy-load NVM shim, so the first run in a
+# shell pays the one-off nvm source cost.
+
+_tools_have() { command -v "$1" >/dev/null 2>&1; }
+
+# ── Native distro package managers ──────────────────────────────────────────
+_tools_native() {
+    if _tools_have apt-mark && _tools_have dpkg-query; then
+        # Join the manual-install set against the installed-version table in one
+        # pass; a dpkg-query per package would be hundreds of forks.
+        awk -F'\t' 'NR==FNR {m[$0]; next} $1 in m {printf "apt\t%s\t%s\n", $1, $2}' \
+            <(apt-mark showmanual 2>/dev/null) \
+            <(dpkg-query -W -f='${Package}\t${Version}\n' 2>/dev/null)
+    fi
+
+    local dnf=""
+    _tools_have dnf && dnf=dnf
+    [ -z "$dnf" ] && _tools_have yum && dnf=yum
+    if [ -n "$dnf" ]; then
+        # -C keeps it off the network: --userinstalled reads the rpmdb anyway.
+        # </dev/null suppresses interactive GPG-key import prompts.
+        "$dnf" repoquery --quiet -C --userinstalled \
+            --qf '%{name}\t%{evr}' </dev/null 2>/dev/null \
+            | awk -F'\t' 'NF {printf "%s\t%s\t%s\n", "'"$dnf"'", $1, $2}'
+    elif _tools_have rpm && _tools_have zypper; then
+        zypper --quiet --no-refresh search --installed-only --type package --details 2>/dev/null \
+            | awk -F' *\\| *' '$2 && $2 != "Name" {printf "zypper\t%s\t%s\n", $2, $4}'
+    fi
+
+    if _tools_have pacman; then
+        pacman -Qe 2>/dev/null | awk '{printf "pacman\t%s\t%s\n", $1, $2}'
+    fi
+
+    if _tools_have apk && [ -r /etc/apk/world ]; then
+        awk 'NR==FNR {w[$0]; next}
+             {
+                 # apk info -v glues name and version: foo-1.2.3-r0
+                 if (match($0, /-[0-9][^-]*-r[0-9]+$/)) {
+                     n = substr($0, 1, RSTART - 1); v = substr($0, RSTART + 1)
+                 } else { n = $0; v = "-" }
+                 if (n in w) printf "apk\t%s\t%s\n", n, v
+             }' /etc/apk/world <(apk info -v 2>/dev/null)
+    fi
+}
+
+# ── Homebrew ────────────────────────────────────────────────────────────────
+_tools_brew() {
+    _tools_have brew || return 0
+    local leaves
+    leaves=$(brew leaves --installed-on-request 2>/dev/null)
+    [ -n "$leaves" ] || leaves=$(brew leaves 2>/dev/null)
+    [ -n "$leaves" ] || return 0
+
+    # brew list --versions can emit several versions per formula; keep the first.
+    printf '%s\n' "$leaves" \
+        | awk 'NR==FNR {m[$0]; next} $1 in m && !seen[$1]++ {printf "brew\t%s\t%s\n", $1, $2}' \
+            - <(brew list --versions 2>/dev/null)
+
+    brew list --cask --versions 2>/dev/null \
+        | awk 'NF {printf "brew-cask\t%s\t%s\n", $1, $2}'
+}
+
+# ── Sandboxed app formats ───────────────────────────────────────────────────
+_tools_sandboxed() {
+    if _tools_have snap; then
+        snap list 2>/dev/null | awk 'NR > 1 && NF {printf "snap\t%s\t%s\n", $1, $2}'
+    fi
+    if _tools_have flatpak; then
+        flatpak list --app --columns=application,version 2>/dev/null \
+            | awk -F'\t' 'NF {printf "flatpak\t%s\t%s\n", $1, ($2 ? $2 : "-")}'
+    fi
+    if _tools_have nix-env; then
+        # nix-env -q glues name and version: nix-2.18.1
+        nix-env -q 2>/dev/null | awk 'NF {
+            if (match($0, /-[0-9]/)) printf "nix\t%s\t%s\n", substr($0, 1, RSTART - 1), substr($0, RSTART + 1)
+            else printf "nix\t%s\t-\n", $0
+        }'
+    fi
+}
+
+# ── Language-ecosystem tool installers ──────────────────────────────────────
+_tools_lang() {
+    if _tools_have pipx; then
+        pipx list --short 2>/dev/null | awk 'NF == 2 {printf "pipx\t%s\t%s\n", $1, $2}'
+    fi
+
+    if _tools_have uv; then
+        # Top-level lines are "name vX.Y.Z"; the "- binary" lines below them are
+        # the shims that tool provides, not separate tools.
+        uv tool list 2>/dev/null | awk '$1 != "-" && NF == 2 {printf "uv\t%s\t%s\n", $1, $2}'
+    fi
+
+    if _tools_have cargo; then
+        # "just v1.52.0:" heads each block; indented lines are its binaries.
+        cargo install --list 2>/dev/null \
+            | awk '/^[^ ]/ && NF >= 2 {v = $2; sub(/:$/, "", v); printf "cargo\t%s\t%s\n", $1, v}'
+    fi
+
+    if _tools_have go; then
+        # `local` is only valid in the function body proper, not inside the
+        # subshell the pipeline creates, so both vars are declared up here.
+        local gobin bin ver
+        gobin=$(go env GOBIN 2>/dev/null)
+        [ -n "$gobin" ] || gobin="$(go env GOPATH 2>/dev/null)/bin"
+        if [ -d "$gobin" ]; then
+            find "$gobin" -maxdepth 1 -type f -perm -u+x 2>/dev/null \
+            | while IFS= read -r bin; do
+                ver=$(go version -m "$bin" 2>/dev/null | awk '$1 == "mod" {print $3; exit}')
+                printf 'go\t%s\t%s\n' "${bin##*/}" "${ver:--}"
+            done
+        fi
+    fi
+
+    local npm_mgr
+    for npm_mgr in npm pnpm; do
+        _tools_have "$npm_mgr" || continue
+        # Tree output is "├── pkg@1.2.3"; scoped names carry their own @, so
+        # split on the LAST one.
+        "$npm_mgr" ls -g --depth=0 2>/dev/null | awk -v mgr="$npm_mgr" '
+            /@/ {
+                e = $NF; at = 0
+                for (i = length(e); i > 1; i--) if (substr(e, i, 1) == "@") { at = i; break }
+                if (at > 1) printf "%s\t%s\t%s\n", mgr, substr(e, 1, at - 1), substr(e, at + 1)
+            }'
+    done
+
+    if _tools_have gem; then
+        # Skip gems shipped with the interpreter - "(default: 1.2.3)".
+        gem list --local 2>/dev/null | awk '
+            /^[A-Za-z0-9_.-]+ \(/ {
+                v = $0
+                sub(/^[^(]*\(/, "", v); sub(/\).*$/, "", v)
+                if (v ~ /default:/) next
+                sub(/,.*/, "", v)
+                printf "gem\t%s\t%s\n", $1, v
+            }'
+    fi
+}
+
+tools() {
+    local source_filter="" counts_only=false pattern=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -h|--help)
+                # Print this file's leading comment block as the help text.
+                awk '/^#/ {sub(/^# ?/, ""); print; next} {exit}' \
+                    "${DOTFILES_ROOT:-$HOME/.dotfiles}/functions/tools" 2>/dev/null \
+                    || echo "tools [-s <source>] [-c] [pattern]"
+                return 0
+                ;;
+            -s|--source) source_filter="$2"; shift 2 ;;
+            -c|--counts)  counts_only=true; shift ;;
+            -*) echo "tools: unknown option '$1' (try -h)" >&2; return 1 ;;
+            *)  pattern="$1"; shift ;;
+        esac
+    done
+
+    local rows
+    rows=$( { _tools_native; _tools_brew; _tools_sandboxed; _tools_lang; } 2>/dev/null | awk 'NF' )
+
+    if [ -n "$source_filter" ]; then
+        rows=$(printf '%s\n' "$rows" | awk -F'\t' -v s="$source_filter" '$1 == s')
+        if [ -z "$rows" ]; then
+            echo "tools: no source '$source_filter' on this machine" >&2
+            return 1
+        fi
+    fi
+
+    if [ -n "$pattern" ]; then
+        rows=$(printf '%s\n' "$rows" | awk -F'\t' -v p="$pattern" 'tolower($2) ~ tolower(p)')
+    fi
+
+    if [ -z "$rows" ]; then
+        echo "No matching tools found"
+        return 1
+    fi
+
+    if ! $counts_only; then
+        {
+            printf 'SOURCE\tNAME\tVERSION\n'
+            printf '%s\n' "$rows" | LC_ALL=C sort -t"$(printf '\t')" -k1,1 -k2,2
+        } | column -t -s "$(printf '\t')"
+        printf '\n'
+    fi
+
+    printf '=== BY SOURCE ===\n'
+    {
+        printf 'SOURCE\tCOUNT\n'
+        printf '%s\n' "$rows" | awk -F'\t' '{c[$1]++} END {for (s in c) printf "%s\t%d\n", s, c[s]}' \
+            | LC_ALL=C sort -t"$(printf '\t')" -k2,2nr
+        printf 'TOTAL\t%s\n' "$(printf '%s\n' "$rows" | wc -l | tr -d ' ')"
+    } | column -t -s "$(printf '\t')"
+}

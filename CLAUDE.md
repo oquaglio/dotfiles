@@ -49,6 +49,7 @@ Most code targets both zsh and bash. Watch for:
 - `up` — pull latest from origin and reload shell (auto-stashes local changes first).
 - `rl` — re-source rc files without pulling.
 - `ipkg <pkg>` — distro-agnostic install via `functions/install_package` (apt/dnf/yum/pacman/zypper/apk).
+- `tools` — inventory of user-installed tools across every package manager, with source (`functions/tools`).
 - `sfch` / `fch <path>` — mark-and-diff filesystem snapshot (see README for the sudo invocation pattern).
 - `venvs` / `venvs_clean` — Python venv disk audit + cleanup (`functions/python`).
 - `venvinfo` — full report on the venv active in the current shell (`functions/python`).
