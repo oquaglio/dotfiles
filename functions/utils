@@ -1,17 +1,73 @@
 # print environment
 # takes a param that is a string to search for
+#
+# Lists every shell parameter that matches, not only the exported ones: defaults
+# assigned with `: "${VAR:=x}"` are shell-local and never reach `printenv`, so an
+# environment-only view hides them and makes a variable look unset when it is not.
+# Each line is marked with how far it reaches:
+#   x  exported — in the environment, inherited by child processes
+#   -  shell-only — this shell sees it, children do not
+# Pass -x / --exported for the old environment-only listing.
+#
+# Internals are named _e_* so that listing every parameter does not list them.
 e() {
     # Define colors
-    GREEN="\033[0;32m"
-    YELLOW="\033[1;33m"
-    NC="\033[0m" # No Color
+    local _e_green="\033[0;32m"
+    local _e_yellow="\033[1;33m"
+    local _e_dim="\033[2m"
+    local _e_nc="\033[0m" # No Color
+    local _e_only_exported="" _e_pat _e_names _e_set _e_name _e_val _e_mark _e_out _e_n
+    local _e_nl=$'\n'
 
-    # Print matched environment variables with highlighting for the search term
-    printenv | grep -i --color=always "$1" | sort
+    case "$1" in
+        -x | --exported) _e_only_exported=1; shift ;;
+        -a | --all) shift ;; # already the default; accepted so the flag is harmless
+    esac
+    _e_pat="$1"
 
-    # Count matches and print the total with color
-    matches=$(printenv | grep -i -c "$1")
-    printf "${YELLOW}Matches: ${GREEN}${matches}${NC}\n"
+    # Exported names as ":A:B:" so membership is a glob test, not a grep per variable.
+    # Continuation lines of multi-line values do not match NAME=, so they drop out.
+    _e_set=":$(printenv | sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' | sort | tr '\n' ':')"
+
+    # Candidate names. zsh and bash share no way to list non-exported parameters,
+    # hence the branch — keep both when editing.
+    if [ -n "$_e_only_exported" ]; then
+        _e_names=$(printf '%s' "${_e_set#:}" | tr ':' '\n')
+    elif [ -n "$ZSH_VERSION" ]; then
+        _e_names=$(typeset +m "*" | sort)
+    else
+        _e_names=$(compgen -v | sort)
+    fi
+
+    # Mark each name, then highlight the search term the way the old version did.
+    _e_out=$(printf '%s\n' "$_e_names" | while IFS= read -r _e_name; do
+        # Skip this function's own locals and specials like !, #, * — eval-ing
+        # those as a name is not meaningful.
+        case "$_e_name" in '' | _e_* | *[!A-Za-z0-9_]*) continue ;; esac
+        eval "_e_val=\${$_e_name}"
+        # zsh's special parameters (functions, history, parameters, …) are assoc
+        # arrays that expand to huge multi-line blobs. Nothing environment-like is
+        # multi-line, so skipping those keeps the listing readable.
+        case "$_e_val" in *"$_e_nl"*) continue ;; esac
+        case "$_e_set" in
+            *":$_e_name:"*) _e_mark="${_e_green}x${_e_nc}" ;;
+            *) _e_mark="${_e_dim}-${_e_nc}" ;;
+        esac
+        printf '%b %s=%s\n' "$_e_mark" "$_e_name" "$_e_val"
+    done | grep -a -i --color=always "$_e_pat")
+
+    _e_n=0
+    if [ -n "$_e_out" ]; then
+        printf '%s\n' "$_e_out"
+        _e_n=$(printf '%s\n' "$_e_out" | wc -l | tr -d ' ')
+    fi
+
+    printf '%bMatches: %b%s%b' "$_e_yellow" "$_e_green" "$_e_n" "$_e_nc"
+    if [ -n "$_e_only_exported" ]; then
+        printf ' %b(exported only)%b\n' "$_e_dim" "$_e_nc"
+    else
+        printf '   %bx%b%b = exported, - = shell-only%b\n' "$_e_green" "$_e_nc" "$_e_dim" "$_e_nc"
+    fi
 }
 
 # conn - Display active TCP/UDP connections with owning process and user
