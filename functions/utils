@@ -19,11 +19,12 @@ e() {
     local _e_only_exported="" _e_pat _e_names _e_set _e_name _e_val _e_mark _e_out _e_n
     local _e_nl=$'\n'
 
-    case "$1" in
+    # ${1:-} rather than $1 so a no-argument call still works under `set -u`.
+    case "${1:-}" in
         -x | --exported) _e_only_exported=1; shift ;;
         -a | --all) shift ;; # already the default; accepted so the flag is harmless
     esac
-    _e_pat="$1"
+    _e_pat="${1:-}"
 
     # Exported names as ":A:B:" so membership is a glob test, not a grep per variable.
     # Continuation lines of multi-line values do not match NAME=, so they drop out.
@@ -33,7 +34,7 @@ e() {
     # hence the branch — keep both when editing.
     if [ -n "$_e_only_exported" ]; then
         _e_names=$(printf '%s' "${_e_set#:}" | tr ':' '\n')
-    elif [ -n "$ZSH_VERSION" ]; then
+    elif [ -n "${ZSH_VERSION:-}" ]; then
         _e_names=$(typeset +m "*" | sort)
     else
         _e_names=$(compgen -v | sort)
@@ -44,7 +45,9 @@ e() {
         # Skip this function's own locals and specials like !, #, * — eval-ing
         # those as a name is not meaningful.
         case "$_e_name" in '' | _e_* | *[!A-Za-z0-9_]*) continue ;; esac
-        eval "_e_val=\${$_e_name}"
+        # The `-` default keeps a declared-but-unset name (bash lists those, e.g.
+        # BASH_ARGV) from aborting the loop under `set -u`.
+        eval "_e_val=\${$_e_name-}"
         # zsh's special parameters (functions, history, parameters, …) are assoc
         # arrays that expand to huge multi-line blobs. Nothing environment-like is
         # multi-line, so skipping those keeps the listing readable.
@@ -54,7 +57,7 @@ e() {
             *) _e_mark="${_e_dim}-${_e_nc}" ;;
         esac
         printf '%b %s=%s\n' "$_e_mark" "$_e_name" "$_e_val"
-    done | grep -a -i --color=always "$_e_pat")
+    done | grep -a -i --color=always "$_e_pat") || true # grep exits 1 on no match
 
     _e_n=0
     if [ -n "$_e_out" ]; then
