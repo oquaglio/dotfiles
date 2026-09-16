@@ -2,21 +2,37 @@
 # Machine-specific bits come from the environment (see ~/.dotfiles-local):
 #   DOCKER_SOCK            socket to expose to Portainer (default /var/run/docker.sock)
 #   PORTAINER_HOST_PORT    published port (default 9000)
+#   PORTAINER_URL          override only if the host/scheme differs
 #   PORTAINER_DOCKER_HINT  extra line printed when the daemon is unreachable
 : "${PORTAINER_CONTAINER_NAME:=portainer}"
 : "${PORTAINER_CONTAINER_PORT:=9000}"
 : "${PORTAINER_HOST_PORT:=9000}"
-: "${PORTAINER_URL:=http://127.0.0.1:${PORTAINER_HOST_PORT}}"
+# PORTAINER_URL is deliberately NOT defaulted here: this file is sourced before
+# ~/.dotfiles-local, so a URL built now would freeze the default port. It is
+# derived at call time instead — set it only to override the host/scheme.
+
+# Effective URL: explicit PORTAINER_URL, else built from the current host port.
+portainer-url() { echo "${PORTAINER_URL:-http://127.0.0.1:${PORTAINER_HOST_PORT:-9000}}"; }
+
+# Host binding an existing container actually publishes, e.g. "127.0.0.1:9104".
+# Reads HostConfig so a stopped container still answers. Empty when there is none.
+portainer-published() {
+  local out
+  out=$(docker inspect "$PORTAINER_CONTAINER_NAME" --format \
+    "{{range (index .HostConfig.PortBindings \"${PORTAINER_CONTAINER_PORT}/tcp\")}}{{.HostIp}}:{{.HostPort}} {{end}}" \
+    2>/dev/null) || return 0
+  echo "${out% }"
+}
 
 portainer-status() {
-  local code
-  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "$PORTAINER_URL" 2>/dev/null)
+  local code url="$(portainer-url)"
+  code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "$url" 2>/dev/null)
   if [[ "$code" == "200" || "$code" == "302" || "$code" == "401" ]]; then  # 401 = login page, which is good
-    echo "🟢 Portainer is UP (${code}) → ${PORTAINER_URL}"
+    echo "🟢 Portainer is UP (${code}) → ${url}"
   elif [[ -n "$code" && "$code" != "000" ]]; then  # curl prints 000 when it never connected
-    echo "🟡 Portainer responding but code=${code} → ${PORTAINER_URL}"
+    echo "🟡 Portainer responding but code=${code} → ${url}"
   else
-    echo "🔴 Portainer DOWN or not reachable → ${PORTAINER_URL}"
+    echo "🔴 Portainer DOWN or not reachable → ${url}"
   fi
 }
 
@@ -31,7 +47,9 @@ portainer-hash() {
 # (Re)create Portainer against whatever daemon this shell is pointed at,
 # keeping its /data volume.
 portainer-up() {
-  local sock="${DOCKER_SOCK:-/var/run/docker.sock}" vol hash err
+  local sock="${DOCKER_SOCK:-/var/run/docker.sock}" url="$(portainer-url)" vol hash err
+  local force= published wanted reply
+  [[ "${1:-}" == "-f" || "${1:-}" == "--force" ]] && force=1
 
   # Ask the daemon rather than probing a socket path: works for a local socket,
   # a remote endpoint, or a context, and the error says which one failed.
@@ -45,6 +63,27 @@ portainer-up() {
     echo "🔴 ${sock} is not a socket — set DOCKER_SOCK to the socket Portainer should manage"
     return 1
   }
+
+  # One daemon can be shared by several distros (and WSL2 mirrored networking makes
+  # published ports VM-wide), so the container may already exist on a port other than
+  # the one this shell asks for. Recreating it would silently move the UI out from
+  # under whoever is using it — confirm instead.
+  published=$(portainer-published)
+  wanted="127.0.0.1:${PORTAINER_HOST_PORT}"
+  if [[ -z "$force" && -n "$published" && "$published" != "$wanted" ]]; then
+    echo "⚠️  ${PORTAINER_CONTAINER_NAME} already publishes ${published}, this shell wants ${wanted}"
+    echo "   Another distro on this daemon, or an older PORTAINER_HOST_PORT, created it."
+    if [[ ! -t 0 ]]; then
+      echo "   not a terminal — rerun with -f, or set PORTAINER_HOST_PORT=${published##*:}"
+      return 1
+    fi
+    printf "   Recreate it on %s? [y/N] " "$wanted"
+    read -r reply
+    [[ "$reply" == [yY]* ]] || {
+      echo "   left as it is → http://${published}"
+      return 1
+    }
+  fi
 
   vol=$(docker inspect "$PORTAINER_CONTAINER_NAME" \
     --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Name}}{{end}}{{end}}' 2>/dev/null)
@@ -67,6 +106,6 @@ portainer-up() {
     -v "${vol}:/data" \
     portainer/portainer-ce:latest "$@" >/dev/null || return 1
 
-  curl -s -o /dev/null --retry 15 --retry-connrefused --retry-delay 1 --max-time 30 "$PORTAINER_URL"
+  curl -s -o /dev/null --retry 15 --retry-connrefused --retry-delay 1 --max-time 30 "$url"
   portainer-status
 }
