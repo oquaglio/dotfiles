@@ -1,47 +1,71 @@
+# Portable Portainer helpers: no assumptions about where the daemon lives.
+# Machine-specific bits come from the environment (see ~/.dotfiles-local):
+#   DOCKER_SOCK            socket to expose to Portainer (default /var/run/docker.sock)
+#   PORTAINER_HOST_PORT    published port (default 9000)
+#   PORTAINER_DOCKER_HINT  extra line printed when the daemon is unreachable
+: "${PORTAINER_CONTAINER_NAME:=portainer}"
+: "${PORTAINER_CONTAINER_PORT:=9000}"
+: "${PORTAINER_HOST_PORT:=9000}"
+: "${PORTAINER_URL:=http://127.0.0.1:${PORTAINER_HOST_PORT}}"
+
 portainer-status() {
   local code
   code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 "$PORTAINER_URL" 2>/dev/null)
   if [[ "$code" == "200" || "$code" == "302" || "$code" == "401" ]]; then  # 401 = login page, which is good
     echo "🟢 Portainer is UP (${code}) → ${PORTAINER_URL}"
-  elif [[ -n "$code" ]]; then
+  elif [[ -n "$code" && "$code" != "000" ]]; then  # curl prints 000 when it never connected
     echo "🟡 Portainer responding but code=${code} → ${PORTAINER_URL}"
   else
     echo "🔴 Portainer DOWN or not reachable → ${PORTAINER_URL}"
   fi
 }
 
-# (Re)create Portainer against the shared Docker daemon (the `docker` WSL distro),
+# bcrypt hash of $PORTAINER_PASSWORD, for Portainer's --admin-password.
+# The password goes in on stdin, never in argv, so it stays out of `ps`.
+portainer-hash() {
+  [[ -n "$PORTAINER_PASSWORD" ]] || { echo "🔴 PORTAINER_PASSWORD is not set" >&2; return 1; }
+  command -v htpasswd >/dev/null || { echo "🔴 htpasswd not found (httpd-tools / apache2-utils)" >&2; return 1; }
+  printf '%s\n' "$PORTAINER_PASSWORD" | htpasswd -niB "${PORTAINER_USERNAME:-admin}" | cut -d: -f2
+}
+
+# (Re)create Portainer against whatever daemon this shell is pointed at,
 # keeping its /data volume.
 portainer-up() {
-  local sock="${DOCKER_SOCK:-/mnt/wsl/docker/docker.sock}" var vol
-  for var in PORTAINER_CONTAINER_NAME PORTAINER_HOST_PORT PORTAINER_CONTAINER_PORT PORTAINER_HASHED_PASSWORD PORTAINER_URL; do
-    [[ -n "$(printenv "$var")" ]] || { echo "🔴 $var is not set"; return 1; }
-  done
-  [[ -S "$sock" ]] || {
-    echo "🔴 shared Docker socket not found: ${sock}"
-    echo "   is the docker distro up?  wsl.exe -d docker -u root -- sleep infinity"
+  local sock="${DOCKER_SOCK:-/var/run/docker.sock}" vol hash err
+
+  # Ask the daemon rather than probing a socket path: works for a local socket,
+  # a remote endpoint, or a context, and the error says which one failed.
+  err=$(docker version --format '{{.Server.Version}}' 2>&1 >/dev/null) || {
+    echo "🔴 no Docker daemon (DOCKER_HOST=${DOCKER_HOST:-unset}, context=$(docker context show 2>/dev/null))"
+    [[ -n "$err" ]] && echo "   ${err%%$'\n'*}"
+    [[ -n "$PORTAINER_DOCKER_HINT" ]] && echo "   ${PORTAINER_DOCKER_HINT}"
     return 1
   }
-  # Reachability, not just presence: the socket file survives the distro stopping,
-  # and a shell started before `dockerhost` was added still can't open it.
-  docker version --format '{{.Server.Version}}' >/dev/null 2>&1 || {
-    echo "🔴 cannot talk to the daemon on ${sock} (DOCKER_HOST=${DOCKER_HOST:-unset})"
-    id -nG | grep -qw dockerhost || echo "   this shell is not in the 'dockerhost' group — open a fresh login shell, or retry with: sg dockerhost -c portainer-up"
+  [[ -S "$sock" ]] || {
+    echo "🔴 ${sock} is not a socket — set DOCKER_SOCK to the socket Portainer should manage"
     return 1
   }
 
   vol=$(docker inspect "$PORTAINER_CONTAINER_NAME" \
     --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Name}}{{end}}{{end}}' 2>/dev/null)
+  vol="${vol:-portainer_data}"
+
+  # --admin-password is only honoured on a fresh /data; passing it otherwise just
+  # parks the hash in `docker inspect` for good.
+  set --
+  if ! docker volume inspect "$vol" >/dev/null 2>&1; then
+    hash=$(portainer-hash) || return 1
+    set -- --admin-password "$hash"
+    echo "ℹ️  new volume ${vol} — initialising admin account '${PORTAINER_USERNAME:-admin}'"
+  fi
+
   docker rm -f "$PORTAINER_CONTAINER_NAME" >/dev/null 2>&1
 
-  # ${sock} is under /mnt/wsl, which is the same shared tmpfs inside the docker
-  # distro, so the daemon resolves this bind source to the same socket.
   docker run -d --name "$PORTAINER_CONTAINER_NAME" --restart unless-stopped \
     -p "127.0.0.1:${PORTAINER_HOST_PORT}:${PORTAINER_CONTAINER_PORT}" \
     -v "${sock}:/var/run/docker.sock" \
-    -v "${vol:-portainer_data}:/data" \
-    portainer/portainer-ce:latest \
-    --admin-password "$PORTAINER_HASHED_PASSWORD" >/dev/null || return 1
+    -v "${vol}:/data" \
+    portainer/portainer-ce:latest "$@" >/dev/null || return 1
 
   curl -s -o /dev/null --retry 15 --retry-connrefused --retry-delay 1 --max-time 30 "$PORTAINER_URL"
   portainer-status
