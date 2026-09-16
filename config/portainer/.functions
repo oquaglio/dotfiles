@@ -9,3 +9,40 @@ portainer-status() {
     echo "🔴 Portainer DOWN or not reachable → ${PORTAINER_URL}"
   fi
 }
+
+# (Re)create Portainer against the shared Docker daemon (the `docker` WSL distro),
+# keeping its /data volume.
+portainer-up() {
+  local sock="${DOCKER_SOCK:-/mnt/wsl/docker/docker.sock}" var vol
+  for var in PORTAINER_CONTAINER_NAME PORTAINER_HOST_PORT PORTAINER_CONTAINER_PORT PORTAINER_HASHED_PASSWORD PORTAINER_URL; do
+    [[ -n "$(printenv "$var")" ]] || { echo "🔴 $var is not set"; return 1; }
+  done
+  [[ -S "$sock" ]] || {
+    echo "🔴 shared Docker socket not found: ${sock}"
+    echo "   is the docker distro up?  wsl.exe -d docker -u root -- sleep infinity"
+    return 1
+  }
+  # Reachability, not just presence: the socket file survives the distro stopping,
+  # and a shell started before `dockerhost` was added still can't open it.
+  docker version --format '{{.Server.Version}}' >/dev/null 2>&1 || {
+    echo "🔴 cannot talk to the daemon on ${sock} (DOCKER_HOST=${DOCKER_HOST:-unset})"
+    id -nG | grep -qw dockerhost || echo "   this shell is not in the 'dockerhost' group — open a fresh login shell, or retry with: sg dockerhost -c portainer-up"
+    return 1
+  }
+
+  vol=$(docker inspect "$PORTAINER_CONTAINER_NAME" \
+    --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Name}}{{end}}{{end}}' 2>/dev/null)
+  docker rm -f "$PORTAINER_CONTAINER_NAME" >/dev/null 2>&1
+
+  # ${sock} is under /mnt/wsl, which is the same shared tmpfs inside the docker
+  # distro, so the daemon resolves this bind source to the same socket.
+  docker run -d --name "$PORTAINER_CONTAINER_NAME" --restart unless-stopped \
+    -p "127.0.0.1:${PORTAINER_HOST_PORT}:${PORTAINER_CONTAINER_PORT}" \
+    -v "${sock}:/var/run/docker.sock" \
+    -v "${vol:-portainer_data}:/data" \
+    portainer/portainer-ce:latest \
+    --admin-password "$PORTAINER_HASHED_PASSWORD" >/dev/null || return 1
+
+  curl -s -o /dev/null --retry 15 --retry-connrefused --retry-delay 1 --max-time 30 "$PORTAINER_URL"
+  portainer-status
+}
