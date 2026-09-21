@@ -27,3 +27,7 @@ alias nukegitdirs='sh -c '\''read -p "⚠️  This will DELETE all nested .git d
 
 # aliases to bin ###########################################################
 alias gw='git-wtf'
+
+# gitinfo ##################################################################
+# [g]it [info] - full situational report on the current repo (functions/git)
+alias ginfo='gitinfo'

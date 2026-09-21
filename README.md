@@ -193,6 +193,7 @@ Other operators: `^prefix`, `suffix$`, and `foo | bar` for OR.
 | `gf` | List tracked files by last-modified, with size. |
 | `gfe` | Find empty dirs (git won't track them). |
 | `gke` | Drop a `.gitkeep` into every empty dir to make git track them. |
+| `gitinfo` / `ginfo` | Full situational report on the current repo: remotes, local & remote branches with per-branch ahead/behind, unpushed commits, sync state and last-fetch age, working tree, stashes, tags, submodules, worktrees, installed hooks, and any in-progress merge/rebase. Offline by default — `-f` fetches first, `-a` uncaps long lists. |
 | `gitstale` | List local branches that look stale (no upstream, merged, etc.). |
 | `gitprune` | Interactively delete stale local branches. |
 | `fbr`, `gco`, `fadd` | fzf-powered branch/checkout/add helpers. |
