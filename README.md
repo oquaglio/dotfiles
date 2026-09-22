@@ -193,7 +193,8 @@ Other operators: `^prefix`, `suffix$`, and `foo | bar` for OR.
 | `gf` | List tracked files by last-modified, with size. |
 | `gfe` | Find empty dirs (git won't track them). |
 | `gke` | Drop a `.gitkeep` into every empty dir to make git track them. |
-| `gitinfo` / `ginfo` | Full situational report on the current repo: remotes, local & remote branches with per-branch ahead/behind, unpushed commits, sync state and last-fetch age, working tree, stashes, tags, submodules, worktrees, installed hooks, and any in-progress merge/rebase. Offline by default — `-f` fetches first, `-a` uncaps long lists. |
+| `gitinfo` / `ginfo` | Full situational report on the current repo: remotes, push credentials (see below), local & remote branches with per-branch ahead/behind, unpushed commits, sync state and last-fetch age, working tree, stashes, tags, submodules, worktrees, installed hooks, and any in-progress merge/rebase. Offline by default — `-f` fetches first, `-a` uncaps long lists. |
+| `gitinfo` push credentials | Derived without connecting: which remote a bare `git push` targets and why (`branch.<b>.pushRemote` / `remote.pushDefault` / `branch.<b>.remote`), the transport, and what would authenticate it — for ssh, the login `ssh -G` resolves plus the key file(s) on disk, agent keys and `IdentitiesOnly` ordering; for https, the credential helper that answers for that URL, **which config file it comes from**, and where it keeps its secret (plaintext store + whether it holds an entry for the host, keychain, GCM, `gh`). Flags loose file modes, credentials embedded in the remote URL, `http://`, `sslVerify=false` and `http.extraHeader`. Never prints key, token or password material. |
 | `gitstale` | List local branches that look stale (no upstream, merged, etc.). |
 | `gitprune` | Interactively delete stale local branches. |
 | `fbr`, `gco`, `fadd` | fzf-powered branch/checkout/add helpers. |

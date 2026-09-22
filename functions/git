@@ -172,8 +172,14 @@ fadd() {
 # so ahead/behind is only as fresh as your last fetch. The Sync section prints
 # that age and warns when it has gone stale.
 #
-# Credentials embedded in remote URLs are masked in the output and called out
-# as a finding — they sit in plaintext in .git/config.
+# The Push credentials section derives — without ever pushing or connecting —
+# which remote a bare `git push` targets, which transport it uses, and what
+# would authenticate it: the ssh key(s) and agent that `ssh -G` says apply, or
+# the credential helper that answers for the URL and where that helper keeps
+# its secret. It prints presence, paths, file modes and public key comments
+# only; no key, token or password is ever read or displayed, and credentials
+# embedded in a remote URL are masked and called out as a finding — they sit
+# in plaintext in .git/config.
 #
 # Alias: ginfo
 ###############################################################################
@@ -204,6 +210,288 @@ _gitinfo_kv() {
 # Internal: hide any user:password@ / token@ embedded in a remote URL.
 _gitinfo_mask_url() {
     printf '%s\n' "$1" | sed -E 's#(://)[^/@]+@#\1***@#'
+}
+
+# Internal: expand a leading ~ in a path. Git runs credential helpers through
+# the shell, so a helper configured as `store --file ~/x` really does resolve
+# against $HOME — resolve it the same way before looking at the file.
+_gitinfo_expand_tilde() {
+    case "$1" in
+        '~/'*) printf '%s\n' "$HOME/${1#\~/}" ;;
+        *)     printf '%s\n' "$1" ;;
+    esac
+}
+
+# Internal: classify a remote URL by transport.
+_gitinfo_transport() {
+    case "$1" in
+        https://*)              printf 'https\n' ;;
+        http://*)               printf 'http\n' ;;
+        ssh://*)                printf 'ssh\n' ;;
+        git://*)                printf 'git\n' ;;
+        file://*)               printf 'local\n' ;;
+        /* | ./* | ../* | '~'*) printf 'local\n' ;;
+        *:*)                    printf 'ssh\n' ;;   # scp-like [user@]host:path
+        *)                      printf 'unknown\n' ;;
+    esac
+}
+
+# Internal: split an ssh remote URL (either form) into "user|host|port".
+_gitinfo_ssh_parts() {
+    local url="$1" rest user='' host='' port=''
+    case "$url" in
+        ssh://*)
+            rest=${url#ssh://}
+            rest=${rest%%/*}
+            case "$rest" in *@*) user=${rest%%@*}; rest=${rest#*@} ;; esac
+            case "$rest" in *:*) port=${rest##*:}; host=${rest%%:*} ;; *) host=$rest ;; esac
+            ;;
+        *)  # scp-like: everything before the first colon is [user@]host
+            rest=${url%%:*}
+            case "$rest" in *@*) user=${rest%%@*}; host=${rest#*@} ;; *) host=$rest ;; esac
+            ;;
+    esac
+    printf '%s|%s|%s\n' "$user" "$host" "$port"
+}
+
+# Internal: octal mode of a file, empty if absent. Secret-bearing files that
+# anyone but the owner can read are worth shouting about.
+_gitinfo_mode() {
+    stat -c '%a' "$1" 2>/dev/null || stat -f '%OLp' "$1" 2>/dev/null
+}
+
+# Internal: render a mode as a dim note, or a red one if it's too permissive.
+_gitinfo_mode_note() {
+    case "$1" in
+        600 | 400 | '') printf '%smode %s%s' "$_gi_dim" "${1:-?}" "$_gi_nc" ;;
+        *)              printf '%smode %s — readable beyond you; chmod 600%s' "$_gi_bad" "$1" "$_gi_nc" ;;
+    esac
+}
+
+# Internal: which remote a bare `git push` would target, and why.
+_gitinfo_push_remote() {
+    local branch="$1" r
+    if [ -n "$branch" ]; then
+        r=$(git config --get "branch.$branch.pushRemote" 2>/dev/null)
+        [ -n "$r" ] && { printf '%s|branch.%s.pushRemote\n' "$r" "$branch"; return; }
+    fi
+    r=$(git config --get remote.pushDefault 2>/dev/null)
+    [ -n "$r" ] && { printf '%s|remote.pushDefault\n' "$r"; return; }
+    if [ -n "$branch" ]; then
+        r=$(git config --get "branch.$branch.remote" 2>/dev/null)
+        [ -n "$r" ] && { printf '%s|branch.%s.remote\n' "$r" "$branch"; return; }
+    fi
+    if git remote get-url origin >/dev/null 2>&1; then
+        printf 'origin|default\n'
+        return
+    fi
+    r=$(git remote 2>/dev/null | head -1)
+    [ -n "$r" ] && printf '%s|first remote\n' "$r"
+    return 0
+}
+
+# Internal: ssh half of the credentials report — which key(s) would be offered
+# for the remote URL $1, and from where. Everything printed here is public
+# material (paths, modes, key types and comments); key contents are not read.
+_gitinfo_creds_ssh() {
+    local url="$1" parts user host port rest cfg
+
+    if ! command -v ssh >/dev/null 2>&1; then
+        _gitinfo_kv "ssh" "${_gi_warn}ssh not on PATH${_gi_nc}"
+        return 0
+    fi
+
+    parts=$(_gitinfo_ssh_parts "$url")
+    user=${parts%%|*}; rest=${parts#*|}; host=${rest%%|*}; port=${rest##*|}
+
+    # `ssh -G` resolves ~/.ssh/config and /etc/ssh/ssh_config without opening a
+    # connection, so this stays offline while matching what a real push does.
+    if [ -n "$port" ] && [ -n "$user" ]; then
+        cfg=$(ssh -G -p "$port" -l "$user" "$host" 2>/dev/null)
+    elif [ -n "$port" ]; then
+        cfg=$(ssh -G -p "$port" "$host" 2>/dev/null)
+    elif [ -n "$user" ]; then
+        cfg=$(ssh -G -l "$user" "$host" 2>/dev/null)
+    else
+        cfg=$(ssh -G "$host" 2>/dev/null)
+    fi
+    if [ -z "$cfg" ]; then
+        _gitinfo_kv "ssh target" "${user:+$user@}${host}${port:+:$port}"
+        _gitinfo_kv "" "${_gi_warn}ssh -G failed — cannot resolve which key applies${_gi_nc}"
+        return 0
+    fi
+
+    local e_user e_host e_port e_only e_agent e_proxy
+    e_user=$(printf  '%s\n' "$cfg" | awk '$1=="user"           {print $2; exit}')
+    e_host=$(printf  '%s\n' "$cfg" | awk '$1=="hostname"       {print $2; exit}')
+    e_port=$(printf  '%s\n' "$cfg" | awk '$1=="port"           {print $2; exit}')
+    e_only=$(printf  '%s\n' "$cfg" | awk '$1=="identitiesonly" {print $2; exit}')
+    e_agent=$(printf '%s\n' "$cfg" | awk '$1=="identityagent"  {$1=""; sub(/^ /,""); print; exit}')
+    e_proxy=$(printf '%s\n' "$cfg" | awk '$1=="proxycommand" || $1=="proxyjump" {$1=""; sub(/^ /,""); print; exit}')
+
+    _gitinfo_kv "ssh login" "${e_user}@${e_host}:${e_port}"
+    if [ -f "$HOME/.ssh/config" ] || [ "$e_host" != "$host" ]; then
+        _gitinfo_kv "" "${_gi_dim}resolved from ${host} through ~/.ssh/config + /etc/ssh/ssh_config${_gi_nc}"
+    fi
+
+    # Candidate identity files. ssh -G lists the built-in defaults even when
+    # nothing exists, so report the ones actually on disk.
+    local ids id path mode found=0
+    ids=$(printf '%s\n' "$cfg" | awk '$1=="identityfile" {$1=""; sub(/^ /,""); print}')
+    while IFS= read -r id; do
+        [ -z "$id" ] && continue
+        path=$(_gitinfo_expand_tilde "$id")
+        [ -f "$path" ] || continue
+        found=$((found + 1))
+        mode=$(_gitinfo_mode "$path")
+        if [ "$found" = 1 ]; then
+            _gitinfo_kv "ssh key" "$id  $(_gitinfo_mode_note "$mode")"
+        else
+            _gitinfo_kv "" "$id  $(_gitinfo_mode_note "$mode")"
+        fi
+    done <<EOF
+$ids
+EOF
+    if [ "$found" = 0 ]; then
+        _gitinfo_kv "ssh key" "${_gi_warn}no candidate key file exists${_gi_nc}"
+        printf '%s\n' "$ids" | head -3 | sed "s/^/                 ${_gi_dim}looked for: /;s/\$/${_gi_nc}/"
+    elif [ "$found" -gt 1 ]; then
+        _gitinfo_kv "" "${_gi_dim}offered in this order until one is accepted${_gi_nc}"
+    fi
+
+    local cert certs=''
+    while IFS= read -r cert; do
+        [ -n "$cert" ] && [ -f "$(_gitinfo_expand_tilde "$cert")" ] && certs="$certs $cert"
+    done <<EOF
+$(printf '%s\n' "$cfg" | awk '$1=="certificatefile" {$1=""; sub(/^ /,""); print}')
+EOF
+    [ -n "$certs" ] && _gitinfo_kv "ssh cert" "${certs# }"
+
+    # Agent keys are offered ahead of the files above unless IdentitiesOnly=yes.
+    local agent_keys nagent
+    agent_keys=$(ssh-add -l 2>/dev/null \
+        | awk 'NF > 2 { t = $NF; gsub(/[()]/, "", t); c = $3; for (i = 4; i < NF; i++) c = c " " $i; print t " " c }')
+    if [ -n "$agent_keys" ]; then
+        nagent=$(printf '%s\n' "$agent_keys" | wc -l | tr -d ' ')
+        _gitinfo_kv "ssh agent" "${nagent} key(s) loaded${_gi_dim} via ${e_agent:-\$SSH_AUTH_SOCK}${_gi_nc}"
+        printf '%s\n' "$agent_keys" | sed 's/^/                 /'
+        if [ "$e_only" = "yes" ]; then
+            _gitinfo_kv "" "${_gi_dim}IdentitiesOnly=yes — only the file(s) above are offered${_gi_nc}"
+        elif [ "$found" -gt 0 ]; then
+            _gitinfo_kv "" "${_gi_dim}IdentitiesOnly=no — agent keys go first, then the file(s) above${_gi_nc}"
+        fi
+    elif [ "$found" -gt 0 ]; then
+        _gitinfo_kv "ssh agent" "${_gi_dim}no keys loaded — the key file is read directly (passphrase prompt if it has one)${_gi_nc}"
+    else
+        _gitinfo_kv "ssh agent" "${_gi_bad}no agent keys and no key file — push would fail${_gi_nc}"
+    fi
+
+    [ -n "$e_proxy" ] && [ "$e_proxy" != "none" ] && _gitinfo_kv "ssh proxy" "$e_proxy"
+
+    local sshcmd
+    sshcmd=$(git config --get core.sshCommand 2>/dev/null)
+    [ -n "$sshcmd" ] && _gitinfo_kv "sshCommand" "$sshcmd ${_gi_dim}(core.sshCommand)${_gi_nc}"
+    [ -n "${GIT_SSH_COMMAND-}" ] && _gitinfo_kv "sshCommand" "$GIT_SSH_COMMAND ${_gi_dim}(\$GIT_SSH_COMMAND — overrides core.sshCommand)${_gi_nc}"
+    return 0
+}
+
+# Internal: http(s) half of the credentials report — which helper answers for
+# the remote URL $1, where that helper is configured, and where it keeps the
+# secret. Secrets themselves are never read or printed: only presence, path
+# and file mode.
+_gitinfo_creds_https() {
+    local url="$1" host rest helper origins nhelpers cuser
+    rest=${url#*://}
+    rest=${rest#*@}
+    host=${rest%%/*}
+    host=${host%%:*}
+
+    helper=$(git config --get-urlmatch credential.helper "$url" 2>/dev/null)
+    nhelpers=$(git config --get-all credential.helper 2>/dev/null | grep -c . || true)
+
+    if [ -z "$helper" ]; then
+        _gitinfo_kv "helper" "${_gi_warn}none — git prompts for username/password on every push${_gi_nc}"
+    else
+        _gitinfo_kv "helper" "$helper"
+        # Where it's configured matters as much as what it is: a repo-local or
+        # includeIf'd helper is easy to forget you're using.
+        origins=$(git config --show-origin --get-all credential.helper 2>/dev/null | cut -f1 | sort -u)
+        [ -n "$origins" ] && printf '%s\n' "$origins" \
+            | sed "s/^/                 ${_gi_dim}from /;s/\$/${_gi_nc}/"
+        [ "${nhelpers:-0}" -gt 1 ] \
+            && _gitinfo_kv "" "${_gi_dim}${nhelpers} helpers configured — tried in order until one answers${_gi_nc}"
+    fi
+
+    # Where the answering helper keeps the secret.
+    local store spath smode entries
+    case "$helper" in
+        *store*)
+            case "$helper" in
+                *--file=*)   store=${helper##*--file=}; store=${store%% *} ;;
+                *'--file '*) store=${helper##*--file }; store=${store%% *} ;;
+                *)           store='~/.git-credentials' ;;
+            esac
+            spath=$(_gitinfo_expand_tilde "$store")
+            if [ -f "$spath" ]; then
+                smode=$(_gitinfo_mode "$spath")
+                # Count matching lines only — the file itself is never printed.
+                entries=$(grep -cE "@${host}(/|:|\$)" "$spath" 2>/dev/null || true)
+                _gitinfo_kv "secret store" "$store ${_gi_dim}(plaintext file)${_gi_nc}  $(_gitinfo_mode_note "$smode")"
+                if [ "${entries:-0}" -gt 0 ]; then
+                    _gitinfo_kv "" "${_gi_ok}holds an entry for ${host}${_gi_nc} — push should not prompt"
+                else
+                    _gitinfo_kv "" "${_gi_warn}no entry for ${host} — first push prompts, then saves${_gi_nc}"
+                fi
+            else
+                _gitinfo_kv "secret store" "$store ${_gi_warn}(missing — first push prompts and creates it)${_gi_nc}"
+            fi
+            ;;
+        *cache*)       _gitinfo_kv "secret store" "git credential-cache daemon ${_gi_dim}(memory only, expires)${_gi_nc}" ;;
+        *manager*)     _gitinfo_kv "secret store" "Git Credential Manager ${_gi_dim}(OS keystore; under WSL, the Windows host's)${_gi_nc}" ;;
+        *libsecret* | *gnome-keyring*) _gitinfo_kv "secret store" "libsecret ${_gi_dim}(desktop keyring)${_gi_nc}" ;;
+        *osxkeychain*) _gitinfo_kv "secret store" "macOS keychain" ;;
+        *wincred*)     _gitinfo_kv "secret store" "Windows Credential Manager" ;;
+        *'gh auth'*)
+            _gitinfo_kv "secret store" "gh CLI ${_gi_dim}(~/.config/gh/hosts.yml or \$GH_TOKEN)${_gi_nc}"
+            [ -f "$HOME/.config/gh/hosts.yml" ] \
+                && _gitinfo_kv "" "${_gi_dim}hosts.yml present — \`gh auth status\` confirms it (network)${_gi_nc}"
+            ;;
+        '!'*)          _gitinfo_kv "secret store" "${_gi_dim}custom shell helper — storage unknown${_gi_nc}" ;;
+    esac
+
+    cuser=$(git config --get-urlmatch credential.username "$url" 2>/dev/null)
+    [ -n "$cuser" ] && _gitinfo_kv "username" "$cuser ${_gi_dim}(credential.username)${_gi_nc}"
+
+    # What happens when no helper answers.
+    local askpass
+    if [ -n "${GIT_ASKPASS-}" ]; then
+        _gitinfo_kv "askpass" "$GIT_ASKPASS ${_gi_dim}(\$GIT_ASKPASS)${_gi_nc}"
+    else
+        askpass=$(git config --get core.askPass 2>/dev/null)
+        if [ -n "$askpass" ]; then
+            _gitinfo_kv "askpass" "$askpass ${_gi_dim}(core.askPass)${_gi_nc}"
+        elif [ -z "$helper" ]; then
+            _gitinfo_kv "askpass" "${_gi_dim}none — git reads the terminal${_gi_nc}"
+        fi
+    fi
+    [ -f "$HOME/.netrc" ] \
+        && _gitinfo_kv "netrc" "~/.netrc exists  $(_gitinfo_mode_note "$(_gitinfo_mode "$HOME/.netrc")")${_gi_dim} (only read by the netrc helper)${_gi_nc}"
+
+    # Env vars that commonly feed a helper or askpass — presence only.
+    local v tokens=''
+    for v in GITHUB_TOKEN GH_TOKEN GITLAB_TOKEN GIT_TOKEN CODEARTIFACT_AUTH_TOKEN; do
+        if eval "[ -n \"\${$v-}\" ]"; then tokens="$tokens $v"; fi
+    done
+    [ -n "$tokens" ] && _gitinfo_kv "token env" "${tokens# } ${_gi_warn}set${_gi_nc}${_gi_dim} (values hidden; used only if a helper reads them)${_gi_nc}"
+
+    # Anything that weakens or sidesteps the above.
+    local extra sslverify
+    extra=$(git config --get-urlmatch http.extraHeader "$url" 2>/dev/null)
+    [ -n "$extra" ] && _gitinfo_kv "extraHeader" "${_gi_bad}set (masked) — almost certainly an Authorization token sitting in config${_gi_nc}"
+    sslverify=$(git config --get-urlmatch http.sslVerify "$url" 2>/dev/null)
+    [ "$sslverify" = "false" ] \
+        && _gitinfo_kv "sslVerify" "${_gi_bad}false — TLS unverified, credentials exposed to interception${_gi_nc}"
+    return 0
 }
 
 # Internal: cap a list, appending a "N more" note. $1 = limit (0 = unlimited).
@@ -359,6 +647,63 @@ $remotes
 EOF
         [ "$has_creds" = 1 ] && printf '  %s! credentials embedded in a remote URL — stored in plaintext in %s/config%s\n' \
             "$_gi_bad" "$git_dir" "$_gi_nc"
+    fi
+
+    # --- Push credentials ----------------------------------------------------
+    # Derived, never exercised: what `git push` from here would authenticate
+    # with and where that material lives. Only presence, paths and file modes
+    # are printed — no key, token or password is read or shown.
+    _gitinfo_h "Push credentials" "git config credential / ssh -G"
+    if [ -z "$remotes" ]; then
+        printf '  %s(no remote — nothing to authenticate to)%s\n' "$_gi_dim" "$_gi_nc"
+    else
+        local pr pr_why push_url transport rewrites other o ourl
+        pr=$(_gitinfo_push_remote "$head_branch")
+        pr_why=${pr#*|}; pr=${pr%%|*}
+        push_url=$(git remote get-url --push "$pr" 2>/dev/null)
+        transport=$(_gitinfo_transport "$push_url")
+        _gitinfo_kv "push remote" "$pr ${_gi_dim}(${pr_why})${_gi_nc}"
+        _gitinfo_kv "push url" "$(_gitinfo_mask_url "$push_url")"
+        _gitinfo_kv "transport" "$transport"
+
+        # insteadOf / pushInsteadOf silently rewrite a URL — and so silently
+        # swap which credentials apply. get-url already shows the rewritten
+        # form above; this just says a rewrite is in play.
+        rewrites=$(git config --get-regexp 'url\..*\.(push)?insteadof' 2>/dev/null)
+        [ -n "$rewrites" ] && _gitinfo_kv "" "${_gi_dim}url.*.insteadOf rules exist — the URL above is post-rewrite${_gi_nc}"
+
+        case "$push_url" in
+            *://*@*) _gitinfo_kv "" "${_gi_bad}! the push URL itself carries credentials, in plaintext in ${git_dir}/config${_gi_nc}" ;;
+        esac
+
+        case "$transport" in
+            ssh)   _gitinfo_creds_ssh "$push_url" ;;
+            https) _gitinfo_creds_https "$push_url" ;;
+            http)
+                _gitinfo_kv "" "${_gi_bad}! http:// — credentials would cross the network in cleartext${_gi_nc}"
+                _gitinfo_creds_https "$push_url" ;;
+            git)
+                _gitinfo_kv "auth" "${_gi_warn}git:// is anonymous and read-only — push will be rejected${_gi_nc}" ;;
+            local)
+                _gitinfo_kv "auth" "${_gi_dim}filesystem path — no credentials, just unix permissions${_gi_nc}" ;;
+            *)
+                _gitinfo_kv "auth" "${_gi_warn}unrecognised URL form — cannot derive credentials${_gi_nc}" ;;
+        esac
+
+        # Other remotes authenticate separately; a push to one of them may
+        # succeed or fail for entirely different reasons.
+        other=$(git remote 2>/dev/null | grep -vxF "$pr" || true)
+        if [ -n "$other" ]; then
+            printf '  %sother remotes (own credentials):%s\n' "$_gi_dim" "$_gi_nc"
+            while IFS= read -r o; do
+                [ -z "$o" ] && continue
+                ourl=$(git remote get-url --push "$o" 2>/dev/null)
+                printf '    %s%-12s %-6s %s%s\n' "$_gi_dim" "$o" \
+                    "$(_gitinfo_transport "$ourl")" "$(_gitinfo_mask_url "$ourl")" "$_gi_nc"
+            done <<EOF
+$other
+EOF
+        fi
     fi
 
     # --- Sync ----------------------------------------------------------------
