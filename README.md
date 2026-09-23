@@ -35,7 +35,7 @@ fi
 
 5. install deps: install_deps -i
 
-6. Run manual installs for atuin and starship
+6. Run manual installs for brew, atuin and starship (TODO: automate these)
 
 7. Add to ~/.gitconfig for git setup:
 
