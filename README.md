@@ -31,7 +31,11 @@ fi
 
 3. Reload shell (will also create symbolic links)
 
-4. Add to ~/.gitconfig for git setup:
+4. run 'up' alias to set up dotfiles
+
+5. install deps: install_deps -i
+
+6. Add to ~/.gitconfig for git setup:
 
 ```SH
 [commit]
