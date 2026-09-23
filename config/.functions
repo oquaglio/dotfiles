@@ -30,6 +30,9 @@ get_distro_glyph() {
   esac
 }
 
+# DISTRO_NAME is exported in config/.env (loaded before *.functions)
+export DISTRO_GLYPH=$(get_distro_glyph "$DISTRO_NAME")
+
 # alternate glyphs:
 # # Fedora
 # # Fedora
