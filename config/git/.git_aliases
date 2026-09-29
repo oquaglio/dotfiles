@@ -185,6 +185,42 @@
 	sa = stash
 	cp = cherry-pick
 	pl = pull --rebase
+
+	# Rebase the current branch onto its upstream — but ONLY if it will apply
+	# cleanly with zero intervention. Fetches the upstream's remote, then:
+	#   * refuses on detached HEAD, no upstream, or uncommitted changes
+	#   * nothing to do if upstream is already contained in HEAD
+	#   * fast-forwards if there are no local commits
+	#   * otherwise dry-runs the rebase in memory with `git replay` (git >= 2.44;
+	#     touches no refs, index or worktree) and only runs the real rebase if
+	#     every commit replays without conflict. If it would conflict, the branch
+	#     is left exactly as it was and the conflicting count is reported.
+	# On git without `replay`, falls back to attempting the rebase and running
+	# `rebase --abort` on conflict — same end result, nothing changed.
+	# `--ref-action=print` is needed on git >= 2.52, where replay updates refs by
+	# default; older replay only prints (and doesn't know the flag).
+	# Note: a false "would conflict" is possible (e.g. merge commits, which replay
+	# doesn't support yet) — that's the safe direction; nothing gets touched.
+	rb = "!f() { \
+		b=$(git symbolic-ref --quiet --short HEAD) || { echo 'rb: detached HEAD — check out a branch first'; return 1; }; \
+		u=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null) || { echo \"rb: '$b' has no upstream (git branch -u <remote>/<branch>)\"; return 1; }; \
+		{ git diff --quiet && git diff --cached --quiet; } || { echo 'rb: uncommitted changes — commit or stash first'; return 1; }; \
+		git fetch -q \"$(git config \"branch.$b.remote\")\" || { echo 'rb: fetch failed'; return 1; }; \
+		if git merge-base --is-ancestor \"$u\" HEAD; then echo \"rb: '$b' already contains $u — nothing to do\"; return 0; fi; \
+		if git merge-base --is-ancestor HEAD \"$u\"; then git merge --ff-only -q \"$u\" && echo \"rb: fast-forwarded '$b' to $u\"; return; fi; \
+		n=$(git rev-list --count \"$u..HEAD\"); \
+		if git replay -h 2>&1 | grep -q 'onto'; then \
+			ra=; git replay -h 2>&1 | grep -q 'ref-action' && ra=--ref-action=print; \
+			if git replay $ra --onto \"$u\" \"$u..refs/heads/$b\" >/dev/null 2>&1; then \
+				git rebase -q \"$u\" && echo \"rb: rebased $n commit(s) of '$b' onto $u\"; \
+			else \
+				echo \"rb: rebasing $n commit(s) of '$b' onto $u would conflict — nothing changed\"; return 1; \
+			fi; \
+		else \
+			if git rebase -q \"$u\" >/dev/null 2>&1; then echo \"rb: rebased $n commit(s) of '$b' onto $u\"; \
+			else git rebase --abort 2>/dev/null; echo \"rb: rebasing $n commit(s) of '$b' onto $u would conflict — aborted, nothing changed\"; return 1; fi; \
+		fi; \
+	}; f"
 	ss = show --stat            	# show the details of commit defaulting to last commit, e.g. "g ss", "g ss <tag>", "g ss <branch>" etc
 	pa = push --all origin
 
