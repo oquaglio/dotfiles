@@ -177,7 +177,9 @@ fadd() {
 # would authenticate it: the ssh key(s) and agent that `ssh -G` says apply, or
 # the credential helper that answers for the URL and where that helper keeps
 # its secret. It prints presence, paths, file modes and public key comments
-# only; no key, token or password is ever read or displayed, and credentials
+# only; for https it also runs `git credential fill` (some helpers, e.g. GCM,
+# may refresh a token over the network) and shows the username and password
+# length it returns. No key, token or password is ever displayed, and credentials
 # embedded in a remote URL are masked and called out as a finding — they sit
 # in plaintext in .git/config.
 #
@@ -397,8 +399,9 @@ EOF
 
 # Internal: http(s) half of the credentials report — which helper answers for
 # the remote URL $1, where that helper is configured, and where it keeps the
-# secret. Secrets themselves are never read or printed: only presence, path
-# and file mode.
+# secret, plus what `git credential fill` returns for the host. Secrets are
+# never printed: only presence, path, file mode and the length of any
+# password/token the helper hands back.
 _gitinfo_creds_https() {
     local url="$1" host rest helper origins nhelpers cuser
     rest=${url#*://}
@@ -458,6 +461,28 @@ _gitinfo_creds_https() {
             ;;
         '!'*)          _gitinfo_kv "secret store" "${_gi_dim}custom shell helper — storage unknown${_gi_nc}" ;;
     esac
+
+    # Ask the helper chain what a push would actually send. `fill` only reads
+    # (it never approves or stores), and every prompt is disabled so a miss is
+    # reported instead of blocking. Secret fields are reduced to their length.
+    if [ -n "$helper" ]; then
+        local filled
+        filled=$(printf 'protocol=%s\nhost=%s\n\n' "${url%%://*}" "$host" \
+            | GIT_TERMINAL_PROMPT=0 GIT_ASKPASS='' GCM_INTERACTIVE=never \
+              git credential fill 2>/dev/null)
+        if [ -n "$filled" ]; then
+            printf '%s\n' "$filled" | awk -v d="$_gi_dim" -v w="$_gi_warn" -v n="$_gi_nc" '
+                { k = $0; sub(/=.*/, "", k); v = substr($0, length(k) + 2) }
+                k == "protocol" || k == "host" { next }
+                k == "password" && v == "" {
+                    printf "  %s%-14s%s %sempty — helper answered but returned no secret%s\n", d, k, n, w, n; next }
+                k == "password" || k == "oauth_refresh_token" || k == "credential" {
+                    printf "  %s%-14s%s length %d %s(value hidden)%s\n", d, k, n, length(v), d, n; next }
+                { printf "  %s%-14s%s %s\n", d, k, n, v }'
+        else
+            _gitinfo_kv "fill" "${_gi_warn}no helper answered for ${host} — push would prompt${_gi_nc}"
+        fi
+    fi
 
     cuser=$(git config --get-urlmatch credential.username "$url" 2>/dev/null)
     [ -n "$cuser" ] && _gitinfo_kv "username" "$cuser ${_gi_dim}(credential.username)${_gi_nc}"
