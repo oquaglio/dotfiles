@@ -4,13 +4,13 @@ git_files_info() {
 }
 alias gf='git_files_info'
 
+# Stops descending at the first repo: nested repos/submodules are skipped.
 gitup-all() {
-  local g d root=${1:-.}
-  while IFS= read -r -d '' g; do
-    d=${g%/.git}
+  local d root=${1:-.}
+  while IFS= read -r -d '' d; do
     printf '\n== %s\n' "$d"
     ( cd "$d" && git up ) || printf '!! failed: %s\n' "$d"
-  done < <(find "$root" -type d -name .git -prune -print0)
+  done < <(find "$root" -type d -exec test -e '{}/.git' \; -print0 -prune 2>/dev/null)
 }
 
 # gitlast <user> [root] — find every git repo under [root] (default: .) and show
