@@ -12,3 +12,23 @@ gitup-all() {
     ( cd "$d" && git up ) || printf '!! failed: %s\n' "$d"
   done < <(find "$root" -type d -name .git -prune -print0)
 }
+
+# gitlast <user> [root] — find every git repo under [root] (default: .) and show
+# the last commit by <user>, newest first. <user> is matched case-insensitively
+# as a substring (or regex) against "Name <email>", across all branches.
+gitlast() {
+  if [ -z "$1" ]; then
+    echo "usage: gitlast <user> [root]" >&2
+    return 1
+  fi
+  local user=$1 root=${2:-.} g d line
+  while IFS= read -r -d '' g; do
+    d=${g%/.git}
+    line=$(git -C "$d" log --all -1 -i --author="$user" \
+      --date=format:'%Y-%m-%d %H:%M' --format='%ct%x09%cd%x09%s' 2>/dev/null) || continue
+    [ -n "$line" ] && printf '%s\t%s\n' "$line" "$d"
+  done < <(find "$root" -name .git -prune -print0 2>/dev/null) |
+    sort -t $'\t' -k1,1nr |
+    awk -F'\t' '{ r[NR]=$0; if (length($4) > w) w = length($4) }
+      END { for (i = 1; i <= NR; i++) { split(r[i], f, "\t"); printf "%s  %-*s  %s\n", f[2], w, f[4], f[3] } }'
+}
