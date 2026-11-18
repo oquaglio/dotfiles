@@ -31,3 +31,7 @@ alias gw='git-wtf'
 # gitinfo ##################################################################
 # [g]it [info] - full situational report on the current repo (functions/git)
 alias ginfo='gitinfo'
+
+# gitsum ###################################################################
+# [g]it [sum]mary - history/activity: churn, recent files, contributors (functions/git)
+alias gsum='gitsum'

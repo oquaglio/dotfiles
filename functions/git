@@ -870,3 +870,152 @@ EOF
 
     printf '\n'
 }
+
+###############################################################################
+# gitsum — history/activity summary for the repo at $PWD (complements gitinfo,
+# which reports *state*: remotes, creds, branches, sync).
+#
+# Usage:
+#   gitsum                     whole history, top 10 of each list
+#   gitsum src/ docs/          restrict everything to these paths
+#   gitsum -s '3 months ago'   only commits since <date> (anything git accepts)
+#   gitsum -n 20               show 20 rows per list
+#
+# Sections: Overview, Activity (commits/month, last 12 months), Recent commits,
+# Recently changed files, Most changed files (churn), Top contributors.
+# Churn walks every commit's numstat — on very large repos pass -s to bound it.
+#
+# Alias: gsum
+###############################################################################
+gitsum() {
+    local n=10 since="" arg
+    while [ $# -gt 0 ]; do
+        arg=$1
+        case "$arg" in
+            -n | --num)   n=${2:?gitsum: -n needs a number}; shift 2 ;;
+            -s | --since) since=${2:?gitsum: -s needs a date}; shift 2 ;;
+            -h | --help)
+                printf 'usage: gitsum [-n N] [-s DATE] [path...]\n'
+                printf '  -n N     rows per list (default 10)\n'
+                printf "  -s DATE  only commits since DATE (e.g. '2 weeks ago', 2025-01-01)\n"
+                return 0 ;;
+            --) shift; break ;;
+            -*) printf 'gitsum: unknown option %s\n' "$arg" >&2; return 2 ;;
+            *)  break ;;
+        esac
+    done
+
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "Not inside a git repo." >&2
+        return 1
+    fi
+    if ! git rev-parse --verify --quiet HEAD >/dev/null 2>&1; then
+        echo "No commits yet." >&2
+        return 1
+    fi
+
+    local _gi_hdr _gi_dim _gi_warn _gi_bad _gi_ok _gi_nc
+    _gitinfo_colours
+    local gcolor=--color=never
+    [ -n "$_gi_nc" ] && gcolor=--color=always
+
+    # Arrays expand the same way in bash and zsh via "${a[@]}"; empty is fine.
+    local -a paths range
+    paths=("$@")
+    range=()
+    [ -n "$since" ] && range=("--since=$since")
+
+    local root scope
+    root=$(git rev-parse --show-toplevel)
+    scope="all history"
+    [ -n "$since" ] && scope="since $since"
+    [ ${#paths[@]} -gt 0 ] && scope="$scope, paths: ${paths[*]}"
+
+    # --- Overview ------------------------------------------------------------
+    _gitinfo_h "Overview" "$scope"
+    local total first last contribs files wk mo
+    total=$(git rev-list --count "${range[@]}" HEAD -- "${paths[@]}")
+    if [ "$total" -eq 0 ]; then
+        printf '  %sno commits match%s\n\n' "$_gi_warn" "$_gi_nc"
+        return 0
+    fi
+    first=$(git log "${range[@]}" --format='%cd (%cr)' --date=short -- "${paths[@]}" | tail -n 1)
+    last=$(git log "${range[@]}" -1 --format='%cd (%cr)' --date=short -- "${paths[@]}")
+    contribs=$(git shortlog -sn "${range[@]}" HEAD -- "${paths[@]}" | wc -l)
+    files=$(git ls-files -- "${paths[@]}" | wc -l)
+    wk=$(git rev-list --count --since='7 days ago' HEAD -- "${paths[@]}")
+    mo=$(git rev-list --count --since='30 days ago' HEAD -- "${paths[@]}")
+    _gitinfo_kv "repo" "$(basename "$root")"
+    _gitinfo_kv "commits" "$total  ${_gi_dim}(${wk} in last 7d, ${mo} in last 30d)${_gi_nc}"
+    _gitinfo_kv "contributors" "$((contribs))"
+    _gitinfo_kv "tracked files" "$((files))"
+    _gitinfo_kv "first commit" "$first"
+    _gitinfo_kv "last commit" "$last"
+
+    # --- Activity ------------------------------------------------------------
+    # Always the trailing 12 months (zero months included) so gaps are visible.
+    _gitinfo_h "Activity" "commits per month, last 12 months"
+    git log --since='12 months ago' --format='%cd' --date=format:'%Y-%m' HEAD -- "${paths[@]}" |
+        awk -v y="$(date +%Y)" -v m="$(date +%m)" -v bar="$_gi_ok" -v dim="$_gi_dim" -v nc="$_gi_nc" '
+            { c[$1]++ }
+            END {
+                y += 0; m += 0
+                for (i = 11; i >= 0; i--) {
+                    mm = m - i; yy = y
+                    while (mm < 1) { mm += 12; yy-- }
+                    k = sprintf("%04d-%02d", yy, mm); keys[11 - i] = k
+                    if (c[k] > max) max = c[k]
+                }
+                for (i = 0; i < 12; i++) {
+                    k = keys[i]; v = c[k] + 0
+                    w = max ? int(v * 40 / max + 0.5) : 0
+                    if (v && !w) w = 1
+                    b = ""; for (j = 0; j < w; j++) b = b "█"
+                    printf "  %s%s%s %s%s%s %s\n", dim, k, nc, bar, b, nc, (v ? v : dim "·" nc)
+                }
+            }'
+
+    # --- Recent commits ------------------------------------------------------
+    _gitinfo_h "Recent commits" "git log -$n"
+    git log "$gcolor" "${range[@]}" -n "$n" --date=short \
+        --format='  %C(yellow)%h%C(reset) %C(dim)%ad%C(reset) %C(blue)%<(16,trunc)%an%C(reset) %s%C(auto)%d' \
+        -- "${paths[@]}"
+
+    # --- Recently changed files ----------------------------------------------
+    # Newest touch per file, walking back through recent commits. Log paths are
+    # root-relative, so compare against a root-relative ls-files listing.
+    _gitinfo_h "Recently changed files" "git log --name-only"
+    awk -v n="$n" -v dim="$_gi_dim" -v bad="$_gi_bad" -v nc="$_gi_nc" '
+        NR == FNR { tracked[$0] = 1; next }
+        /^\001/  { when = substr($0, 2); next }
+        $0 == "" || seen[$0]++ { next }
+        {
+            note = ($0 in tracked) ? "" : "  " bad "(deleted)" nc
+            printf "  %s%-16s%s %s%s\n", dim, when, nc, $0, note
+            if (++shown >= n) exit
+        }' \
+        <(git -C "$root" ls-files) \
+        <(git log "${range[@]}" -n 500 --no-renames --name-only --format=$'\001%cr' -- "${paths[@]}")
+
+    # --- Most changed files --------------------------------------------------
+    _gitinfo_h "Most changed files" "git log --numstat, by commit count"
+    git log "${range[@]}" --no-renames --numstat --format= -- "${paths[@]}" |
+        awk -F'\t' 'NF == 3 { c[$3]++; a[$3] += ($1 == "-" ? 0 : $1); d[$3] += ($2 == "-" ? 0 : $2) }
+            END { for (f in c) printf "%d\t%d\t%d\t%s\n", c[f], a[f], d[f], f }' |
+        sort -t $'\t' -k1,1nr -k2,2nr | head -n "$n" |
+        awk -F'\t' -v ok="$_gi_ok" -v bad="$_gi_bad" -v dim="$_gi_dim" -v nc="$_gi_nc" '
+            NR == FNR { tracked[$0] = 1; next }
+            { note = ($4 in tracked) ? "" : "  " bad "(deleted)" nc
+              printf "  %5d %scommits%s  %s%8s%s %s%8s%s  %s%s\n", $1, dim, nc,
+                     ok, "+" $2, nc, bad, "-" $3, nc, $4, note }' <(git -C "$root" ls-files) -
+
+    # --- Top contributors ----------------------------------------------------
+    # shortlog reads stdin when it is not a tty unless given a rev, hence HEAD.
+    _gitinfo_h "Top contributors" "git shortlog -sne"
+    git shortlog -sne "${range[@]}" HEAD -- "${paths[@]}" | head -n "$n" |
+        awk -v t="$total" -v dim="$_gi_dim" -v nc="$_gi_nc" '
+            { c = $1; sub(/^[ \t]*[0-9]+\t/, "")
+              printf "  %5d %s%5.1f%%%s  %s\n", c, dim, 100 * c / t, nc, $0 }'
+
+    printf '\n'
+}
