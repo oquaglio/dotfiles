@@ -14,6 +14,10 @@
 #   jenv_get   VAR [KEY]            print KEY's value (raw for strings, compact
 #                                   JSON otherwise), or the whole object
 #                                   pretty-printed. Returns 1 if KEY is missing.
+#   jenv_values [-n] VAR            print every leaf value, space-separated
+#                                   (-n: one per line). Nested values included.
+#   jenv_exec  VAR CMD [ARGS...]    run CMD ARGS... with each value as its own
+#                                   argument — safe for paths with spaces.
 #
 # KEY may be a dotted path (a.b.c) to address nested objects. Keys that
 # themselves contain a literal "." are not supported.
@@ -25,6 +29,8 @@
 #   jenv_get   TAGS owner.name            # otto
 #   jenv_unset TAGS owner.name            # owner pruned (now empty)
 #   jenv_set_path PROJ ~/code/api         # PROJ={"api":"/home/otto/code/api"}
+#   code $(jenv_values PROJ)              # fine unless a path has a space
+#   jenv_exec PROJ code                   # same, but space-safe
 
 # Internal: validate VAR name, check jq, and load current value into _jenv_cur.
 # Errors if the existing value is non-empty and not a JSON object, so we never
@@ -156,4 +162,44 @@ jenv_get() {
               else tojson end
         '
     fi
+}
+
+jenv_values() {
+    local sep=' ' var _jenv_cur
+    if [ "$1" = "-n" ]; then
+        sep=$'\n'
+        shift
+    fi
+    if [ $# -ne 1 ]; then
+        echo "Usage: jenv_values [-n] VAR" >&2
+        return 1
+    fi
+    var=$1
+    _jenv_load "$var" || return 1
+
+    # Leaf scalars in insertion order; nulls skipped.
+    printf '%s' "$_jenv_cur" | jq -r --arg sep "$sep" '
+        [.. | select(type == "string" or type == "number" or type == "boolean")
+            | tostring]
+        | join($sep)
+    '
+}
+
+# Builds argv from the values (one per line) so each value stays a single
+# argument, then runs it. Works with functions/aliases, unlike xargs.
+jenv_exec() {
+    local var values v
+    if [ $# -lt 2 ]; then
+        echo "Usage: jenv_exec VAR CMD [ARGS...]" >&2
+        return 1
+    fi
+    var=$1
+    shift
+    values=$(jenv_values -n "$var") || return 1
+    while IFS= read -r v; do
+        [ -n "$v" ] && set -- "$@" "$v"
+    done <<EOF
+$values
+EOF
+    "$@"
 }
