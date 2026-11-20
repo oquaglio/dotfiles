@@ -7,6 +7,8 @@
 #                                   VALUE is a string by default; with -j it is
 #                                   parsed as JSON (numbers, bools, null,
 #                                   arrays, objects).
+#   jenv_set_path VAR [DIR]         set KEY=<basename of DIR> to DIR's absolute
+#                                   path (DIR defaults to $PWD).
 #   jenv_unset VAR KEY              remove KEY from $VAR; prunes parent objects
 #                                   left empty; unsets $VAR when nothing remains.
 #   jenv_get   VAR [KEY]            print KEY's value (raw for strings, compact
@@ -22,6 +24,7 @@
 #   jenv_set   TAGS owner.name otto       # ...,"owner":{"name":"otto"}}
 #   jenv_get   TAGS owner.name            # otto
 #   jenv_unset TAGS owner.name            # owner pruned (now empty)
+#   jenv_set_path PROJ ~/code/api         # PROJ={"api":"/home/otto/code/api"}
 
 # Internal: validate VAR name, check jq, and load current value into _jenv_cur.
 # Errors if the existing value is non-empty and not a JSON object, so we never
@@ -73,6 +76,41 @@ jenv_set() {
         }
     fi
     export "$var=$new"
+}
+
+# Note: don't name a local `path` — in zsh it's tied to $PATH, so
+# `local path=...` would hide jq from everything this function calls.
+jenv_set_path() {
+    local var dir key
+    if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+        echo "Usage: jenv_set_path VAR [DIR]" >&2
+        return 1
+    fi
+    var=$1 dir=${2:-$PWD}
+
+    # Make absolute so the stored value is still valid from another cwd.
+    case "$dir" in
+        /*) ;;
+        *) dir="$PWD/$dir" ;;
+    esac
+    # Strip trailing slashes so the basename isn't empty (keep "/" itself).
+    while [ "$dir" != / ] && [ "${dir%/}" != "$dir" ]; do
+        dir=${dir%/}
+    done
+
+    key=${dir##*/}
+    case "$key" in
+        '')
+            echo "jenv: cannot derive a key from '$dir'" >&2
+            return 1
+            ;;
+        *.*)
+            # jenv_set would treat the dot as nesting (e.g. .config → {"":{"config":..}}).
+            echo "jenv: dir name '$key' contains '.', use jenv_set with an explicit key" >&2
+            return 1
+            ;;
+    esac
+    jenv_set "$var" "$key" "$dir"
 }
 
 jenv_unset() {
