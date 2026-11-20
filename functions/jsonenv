@@ -1,0 +1,121 @@
+# Manage env vars whose value is a JSON object (e.g. OTEL/AWS tag blobs,
+# feature-flag maps, tool configs passed via a single env var).
+#
+# Commands:
+#   jenv_set   [-j] VAR KEY VALUE   set/update KEY in $VAR and export it.
+#                                   Creates $VAR as {} if unset/empty.
+#                                   VALUE is a string by default; with -j it is
+#                                   parsed as JSON (numbers, bools, null,
+#                                   arrays, objects).
+#   jenv_unset VAR KEY              remove KEY from $VAR; prunes parent objects
+#                                   left empty; unsets $VAR when nothing remains.
+#   jenv_get   VAR [KEY]            print KEY's value (raw for strings, compact
+#                                   JSON otherwise), or the whole object
+#                                   pretty-printed. Returns 1 if KEY is missing.
+#
+# KEY may be a dotted path (a.b.c) to address nested objects. Keys that
+# themselves contain a literal "." are not supported.
+#
+# Examples:
+#   jenv_set   TAGS team platform         # TAGS={"team":"platform"}
+#   jenv_set -j TAGS retries 3            # TAGS={"team":"platform","retries":3}
+#   jenv_set   TAGS owner.name otto       # ...,"owner":{"name":"otto"}}
+#   jenv_get   TAGS owner.name            # otto
+#   jenv_unset TAGS owner.name            # owner pruned (now empty)
+
+# Internal: validate VAR name, check jq, and load current value into _jenv_cur.
+# Errors if the existing value is non-empty and not a JSON object, so we never
+# silently clobber something unexpected.
+_jenv_load() {
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "jenv: jq is required (ipkg jq)" >&2
+        return 1
+    fi
+    case "$1" in
+        '' | [0-9]* | *[!A-Za-z0-9_]*)
+            echo "jenv: invalid variable name: '$1'" >&2
+            return 1
+            ;;
+    esac
+    eval "_jenv_cur=\${$1-}"
+    if [ -z "$_jenv_cur" ]; then
+        _jenv_cur='{}'
+    elif ! printf '%s' "$_jenv_cur" | jq -e 'type == "object"' >/dev/null 2>&1; then
+        echo "jenv: \$$1 is set but is not a JSON object: $_jenv_cur" >&2
+        return 1
+    fi
+}
+
+jenv_set() {
+    local as_json=0 var key value new _jenv_cur
+    if [ "$1" = "-j" ]; then
+        as_json=1
+        shift
+    fi
+    if [ $# -ne 3 ]; then
+        echo "Usage: jenv_set [-j] VAR KEY VALUE" >&2
+        return 1
+    fi
+    var=$1 key=$2 value=$3
+    _jenv_load "$var" || return 1
+
+    if [ "$as_json" -eq 1 ]; then
+        new=$(printf '%s' "$_jenv_cur" | jq -c --arg k "$key" --argjson v "$value" \
+            'setpath($k | split("."); $v)' 2>/dev/null) || {
+            echo "jenv: invalid JSON value (or path collides with a non-object): $value" >&2
+            return 1
+        }
+    else
+        new=$(printf '%s' "$_jenv_cur" | jq -c --arg k "$key" --arg v "$value" \
+            'setpath($k | split("."); $v)' 2>/dev/null) || {
+            echo "jenv: cannot set '$key' (path collides with a non-object)" >&2
+            return 1
+        }
+    fi
+    export "$var=$new"
+}
+
+jenv_unset() {
+    local var key new _jenv_cur
+    if [ $# -ne 2 ]; then
+        echo "Usage: jenv_unset VAR KEY" >&2
+        return 1
+    fi
+    var=$1 key=$2
+    _jenv_load "$var" || return 1
+
+    # Delete the leaf, then walk back up deleting any ancestors left as {}.
+    new=$(printf '%s' "$_jenv_cur" | jq -c --arg k "$key" '
+        ($k | split(".")) as $p
+        | delpaths([$p])
+        | reduce range($p | length - 1; 0; -1) as $i (.;
+            if getpath($p[:$i]) == {} then delpaths([$p[:$i]]) else . end)
+    ') || return 1
+
+    if [ "$new" = '{}' ]; then
+        unset "$var"
+    else
+        export "$var=$new"
+    fi
+}
+
+jenv_get() {
+    local var key _jenv_cur
+    if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+        echo "Usage: jenv_get VAR [KEY]" >&2
+        return 1
+    fi
+    var=$1 key=${2-}
+    _jenv_load "$var" || return 1
+
+    if [ -z "$key" ]; then
+        printf '%s' "$_jenv_cur" | jq .
+    else
+        printf '%s' "$_jenv_cur" | jq -r --arg k "$key" '
+            getpath($k | split("."))
+            | if . == null then "" | halt_error(1)
+              elif type == "string" then .
+              else tojson end
+        '
+    fi
+}
