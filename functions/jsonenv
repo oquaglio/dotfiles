@@ -14,9 +14,11 @@
 #   jenv_get   VAR [KEY]            print KEY's value (raw for strings, compact
 #                                   JSON otherwise), or the whole object
 #                                   pretty-printed. Returns 1 if KEY is missing.
-#   jenv_values [-n] VAR            print every leaf value, space-separated
-#                                   (-n: one per line). Nested values included.
-#   jenv_exec  VAR CMD [ARGS...]    run CMD ARGS... with each value as its own
+#   jenv_values [-n] VAR [VAR...]   print every leaf value across the VARs,
+#                                   space-separated (-n: one per line). Nested
+#                                   values included; duplicates dropped.
+#   jenv_exec  VAR[,VAR...] CMD [ARGS...]
+#                                   run CMD ARGS... with each value as its own
 #                                   argument — safe for paths with spaces.
 #
 # KEY may be a dotted path (a.b.c) to address nested objects. Keys that
@@ -31,6 +33,7 @@
 #   jenv_set_path PROJ ~/code/api         # PROJ={"api":"/home/otto/code/api"}
 #   code $(jenv_values PROJ)              # fine unless a path has a space
 #   jenv_exec PROJ code                   # same, but space-safe
+#   jenv_exec PROJ,WORK code -n           # values from several vars
 
 # Internal: validate VAR name, check jq, and load current value into _jenv_cur.
 # Errors if the existing value is non-empty and not a JSON object, so we never
@@ -165,41 +168,57 @@ jenv_get() {
 }
 
 jenv_values() {
-    local sep=' ' var _jenv_cur
+    local sep=' ' var _jenv_cur out=''
     if [ "$1" = "-n" ]; then
-        sep=$'\n'
+        sep='\n'
         shift
     fi
-    if [ $# -ne 1 ]; then
-        echo "Usage: jenv_values [-n] VAR" >&2
+    if [ $# -lt 1 ]; then
+        echo "Usage: jenv_values [-n] VAR [VAR...]" >&2
         return 1
     fi
-    var=$1
-    _jenv_load "$var" || return 1
-
-    # Leaf scalars in insertion order; nulls skipped.
-    printf '%s' "$_jenv_cur" | jq -r --arg sep "$sep" '
-        [.. | select(type == "string" or type == "number" or type == "boolean")
-            | tostring]
-        | join($sep)
+    for var in "$@"; do
+        _jenv_load "$var" || return 1
+        # Leaf scalars in insertion order, one per line; nulls skipped.
+        out="$out$(printf '%s' "$_jenv_cur" | jq -r '
+            .. | select(type == "string" or type == "number" or type == "boolean")
+        ')
+"
+    done
+    # Drop blanks and duplicates (same path in two vars), keep first-seen
+    # order, join with sep.
+    printf '%s' "$out" | awk -v sep="$sep" '
+        $0 != "" && !seen[$0]++ { printf "%s%s", (n++ ? sep : ""), $0 }
+        END { if (n) print "" }
     '
 }
 
 # Builds argv from the values (one per line) so each value stays a single
 # argument, then runs it. Works with functions/aliases, unlike xargs.
+# Multiple vars are comma-separated (PROJ,WORK) rather than split by "--", so
+# a "--" inside CMD's own args (e.g. git log -- file) is never misread.
 jenv_exec() {
-    local var values v
+    local vars var values v all=''
     if [ $# -lt 2 ]; then
-        echo "Usage: jenv_exec VAR CMD [ARGS...]" >&2
+        echo "Usage: jenv_exec VAR[,VAR...] CMD [ARGS...]" >&2
         return 1
     fi
-    var=$1
+    vars=$1
     shift
-    values=$(jenv_values -n "$var") || return 1
+    while :; do
+        var=${vars%%,*}
+        values=$(jenv_values -n "$var") || return 1
+        all="$all$values
+"
+        [ "$var" = "$vars" ] && break
+        vars=${vars#*,}
+    done
+    # Dedupe across vars (jenv_values only dedupes within one call).
+    all=$(printf '%s' "$all" | awk '$0 != "" && !seen[$0]++')
     while IFS= read -r v; do
         [ -n "$v" ] && set -- "$@" "$v"
     done <<EOF
-$values
+$all
 EOF
     "$@"
 }
