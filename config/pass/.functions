@@ -58,3 +58,59 @@ remove_secrets() {
         for v in "${already_unset[@]}"; do echo "    $v"; done
     fi
 }
+
+# Helpers for the GPG-backed `pass` password store.
+#
+# Assumes the conventional multi-line entry format:
+#   <secret>            <- first line is the password/secret
+#   username: otto      <- remaining lines are "key: value" fields
+#   url: https://...
+#
+# Commands:
+#   pass_secret PATH        print the secret (first line) of PATH.
+#   pass_field  PATH KEY    print the value of field KEY in PATH. Key match is
+#                           case-insensitive; returns 1 if KEY isn't present.
+#
+# Examples:
+#   export DB_PASS=$(pass_secret work/db)
+#   pass_field work/db username
+
+pass_secret() {
+    if [ $# -ne 1 ]; then
+        echo "usage: pass_secret PATH" >&2
+        return 2
+    fi
+    command -v pass >/dev/null 2>&1 || { echo "pass_secret: pass not installed" >&2; return 127; }
+
+    local out
+    out=$(pass show "$1") || return $?
+    printf '%s\n' "${out%%$'\n'*}"
+}
+
+pass_field() {
+    if [ $# -ne 2 ]; then
+        echo "usage: pass_field PATH KEY" >&2
+        return 2
+    fi
+    command -v pass >/dev/null 2>&1 || { echo "pass_field: pass not installed" >&2; return 127; }
+
+    local out
+    out=$(pass show "$1") || return $?
+    printf '%s\n' "$out" | awk -v key="$2" '
+        NR == 1 { next }
+        {
+            i = index($0, ":")
+            if (i == 0) next
+            k = substr($0, 1, i - 1)
+            gsub(/^[ \t]+|[ \t]+$/, "", k)
+            if (tolower(k) == tolower(key)) {
+                v = substr($0, i + 1)
+                sub(/^[ \t]+/, "", v)
+                print v
+                found = 1
+                exit
+            }
+        }
+        END { exit !found }
+    ' || { echo "pass_field: no field \"$2\" in $1" >&2; return 1; }
+}
