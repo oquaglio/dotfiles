@@ -55,6 +55,7 @@ Most code targets both zsh and bash. Watch for:
 - `venvinfo` — full report on the venv active in the current shell (`functions/python`).
 - `docker_du` / `docker_clean` — Docker disk audit + cleanup (`functions/docker`).
 - `gitstale` / `gitprune` — list / interactively delete stale local branches (`functions/git`).
+- `pass_secret <path>` / `pass_field <path> <key>` — read the secret (first line) or a `key: value` field from a `pass` entry (`config/pass/.functions`).
 - `jenv_set` / `jenv_set_path` / `jenv_unset` / `jenv_get` / `jenv_values` / `jenv_exec` — manage keys inside a JSON-object env var (`functions/jsonenv`, needs jq).
 
 ## Linting
